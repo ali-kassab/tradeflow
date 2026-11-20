@@ -26,3 +26,20 @@ export interface Product {
   isActive: boolean;
   isLowStock: boolean;
 }
+
+export type StockMovementType = 'OPENING' | 'SALE' | 'SALE_CANCEL' | 'PURCHASE_RECEIPT' | 'ADJUSTMENT';
+
+export interface StockMovement {
+  id: number;
+  productId: number;
+  type: StockMovementType;
+  /** Signed: positive adds stock, negative removes it. */
+  quantity: number;
+  balanceAfter: number;
+  refType: string | null;
+  refId: number | null;
+  note: string | null;
+  userId: number;
+  createdAt: string;
+  product: { id: number; name: string; sku: string; unit: string };
+}

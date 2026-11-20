@@ -1,4 +1,4 @@
-import { LayoutDashboardIcon, LogOutIcon, PackageIcon, TagsIcon } from 'lucide-react';
+import { BoxesIcon, LayoutDashboardIcon, LogOutIcon, PackageIcon, TagsIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavLink, Outlet, useMatch, useResolvedPath } from 'react-router';
@@ -26,6 +26,7 @@ const NAV = [
   { to: '/', end: true, icon: LayoutDashboardIcon, label: 'nav.dashboard' },
   { to: '/products', end: false, icon: PackageIcon, label: 'nav.products' },
   { to: '/categories', end: false, icon: TagsIcon, label: 'nav.categories' },
+  { to: '/inventory', end: false, icon: BoxesIcon, label: 'nav.inventory' },
 ] as const;
 
 function NavItem({ to, end, children }: { to: string; end?: boolean; children: ReactNode }) {

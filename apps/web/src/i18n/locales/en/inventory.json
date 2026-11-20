@@ -1,0 +1,40 @@
+{
+  "title": "Inventory",
+  "description": "Every stock movement, with the balance after each one.",
+  "adjust": "Adjust stock",
+  "filters": {
+    "product": "Product",
+    "type": "Movement type",
+    "allTypes": "All types"
+  },
+  "columns": {
+    "date": "Date",
+    "product": "Product",
+    "type": "Type",
+    "quantity": "Quantity",
+    "balance": "Balance after",
+    "reference": "Reference",
+    "note": "Note"
+  },
+  "empty": "No matching movements.",
+  "form": {
+    "title": "Adjust stock",
+    "product": "Product",
+    "direction": "Adjustment",
+    "increase": "Add to stock",
+    "decrease": "Remove from stock",
+    "quantity": "Quantity",
+    "note": "Reason",
+    "notePlaceholder": "e.g. damaged, stock count, sample…",
+    "current": "Current stock",
+    "after": "Stock after adjustment",
+    "submit": "Save adjustment"
+  },
+  "validation": {
+    "product": "Choose a product.",
+    "quantity": "Enter a whole number above zero.",
+    "note": "Give a reason of at least 2 characters.",
+    "negative": "Not enough stock for this removal."
+  },
+  "saved": "Adjustment saved."
+}

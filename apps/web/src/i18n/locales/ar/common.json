@@ -74,5 +74,17 @@
     "summary": "صفحة {{page}} من {{pageCount}} — {{total}} عنصر",
     "previous": "السابق",
     "next": "التالي"
+  },
+  "picker": {
+    "product": "اختر منتجًا",
+    "searchProduct": "ابحث عن منتج…",
+    "anyProduct": "كل المنتجات"
+  },
+  "movementType": {
+    "OPENING": "رصيد افتتاحي",
+    "SALE": "بيع",
+    "SALE_CANCEL": "إلغاء بيع",
+    "PURCHASE_RECEIPT": "استلام مشتريات",
+    "ADJUSTMENT": "تسوية يدوية"
   }
 }

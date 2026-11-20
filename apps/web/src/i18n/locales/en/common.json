@@ -74,5 +74,17 @@
     "summary": "Page {{page}} of {{pageCount}} — {{total}} items",
     "previous": "Previous",
     "next": "Next"
+  },
+  "picker": {
+    "product": "Choose a product",
+    "searchProduct": "Search products…",
+    "anyProduct": "All products"
+  },
+  "movementType": {
+    "OPENING": "Opening stock",
+    "SALE": "Sale",
+    "SALE_CANCEL": "Sale cancelled",
+    "PURCHASE_RECEIPT": "Purchase received",
+    "ADJUSTMENT": "Manual adjustment"
   }
 }
