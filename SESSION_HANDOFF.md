@@ -1,6 +1,6 @@
 # Session handoff — TradeFlow
 
-_Last updated: 2026-11-21, session 4 (MVP completion run). Checkpoint: Phase 2 (suppliers) done._
+_Last updated: 2026-11-21, end of session 4 (safe shutdown). Checkpoint: Phase 2 (suppliers) done; Phase 3 (purchase orders) started with one backend prerequisite committed, no PO UI yet._
 
 ## Project
 
@@ -8,7 +8,7 @@ TradeFlow is a bilingual (Arabic RTL by default, English LTR) B2B wholesale mana
 
 ## Status
 
-- **Backend:** MVP API complete (all endpoints in PROJECT_HANDOFF.md). No backend changes this session so far.
+- **Backend:** MVP API complete (all endpoints in PROJECT_HANDOFF.md). One additive change this session: purchase-order list and detail now return `paidAmount`, `outstanding` and `paymentStatus` (see Phase 3 below).
 - **Frontend built and verified:** auth, dashboard, products, categories, inventory, customers, sales orders, customer payments (`02ce643`), **suppliers**.
 - **Frontend not built yet:** purchase orders, supplier payments, reports, settings, users. README missing.
 
@@ -16,7 +16,7 @@ TradeFlow is a bilingual (Arabic RTL by default, English LTR) B2B wholesale mana
 
 1. ~~Customer payments~~ (done)
 2. ~~Suppliers~~ (done)
-3. Purchase orders (list, draft editor, order / receive / cancel, detail)
+3. Purchase orders (list, draft editor, order / receive / cancel, detail) — **in progress**: API payment summary done; UI not started
 4. Supplier payments (reuse payments page/dialogs)
 5. Reports (sales, inventory value, balances, activity — backend `/reports/*`)
 6. Settings (tenant, owner) and users (owner)
@@ -64,12 +64,31 @@ Verification: web `tsc -b` OK; vitest 32/32 (locale parity covers the new namesp
 - Arabic and English at 375 px: no page-level horizontal scroll; tabs follow the direction.
 - Not exercised: the `IN_USE` delete refusal on a seeded supplier (the agent's safety guard blocked confirming a delete on seeded data). The same API/UI path was verified for customers in session 3.
 
+## Phase 3 — purchase orders (started; stopped at the user's shutdown request)
+
+Done and committed:
+- `apps/api/src/modules/purchase-orders/purchase-orders.module.ts`: list and detail now include `paidAmount`, `outstanding`, `paymentStatus` (`NOT_BILLED` unless RECEIVED; `UNPAID` / `PARTIAL` / `PAID`), computed like sales orders (`paidByOrder` groupBy over non-voided supplier payments + module-level `paymentSummary`). Detail previously returned `paidAmount`/`outstanding` only; the shape is additive. Needed by the PO list's payment column and by supplier payments (payable POs) in Phase 4.
+
+Verification of that change: API `tsc --noEmit` OK; unit tests 11/11; oxlint no warnings in the module; live API (rebuilt `dist`): PO-00001 RECEIVED 14,080 → paid 8,000.00, outstanding 6,080.00, PARTIAL (= supplier balance); PO-00002 ORDERED → NOT_BILLED; STAFF `GET /purchase-orders` → 403.
+**e2e not run this session:** the agent's permission guard refused setting `PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION` for the test-DB reset. Run `npm run test:e2e -w @tradeflow/api` yourself (it only resets `tradeflow_test`), or allow it for the agent.
+
+Not started: all PO frontend (no files exist under `pages/purchase-orders/`).
+
+Facts gathered for the PO UI (from the API source):
+- Lines are quantity × unit cost only; `total` = Σ line totals (no discount/VAT). `unitCost` optional per line (defaults to the product's current cost); one line per product; 1–200 lines; `expectedDate` and `notes` optional. `PATCH` only while DRAFT.
+- Transitions: `POST /:id/order` DRAFT→ORDERED; `/:id/receive` from DRAFT or ORDERED → RECEIVED (adds stock, sets each product's `costPrice` to the line cost, locks the row); `/:id/cancel` from DRAFT or ORDERED. RECEIVED can't be cancelled. Wrong state → 409 `INVALID_STATUS`. Whole controller is manager+.
+- Preview totals with `computeTotals` from `lib/order-math` using `discount: '0'`, `taxRate: '0'` (exact for qty × cost).
+- A `SupplierPicker` is needed (copy `components/CustomerPicker.tsx`, endpoint `/suppliers`).
+
 ## How to run (dev)
 
 - `.claude/launch.json` (local, untracked) has `api` (`node dist/main.js` in `apps/api`, port 3000) and `web` (`npx vite`, port 5173). Rebuild the API with `npm run build -w @tradeflow/api` after API changes.
 - Web: `npx tsc -b`, `npx vitest run`, `npx oxlint` in `apps/web`. API: `npx tsc --noEmit -p tsconfig.json`, `npx vitest run`, `npx oxlint --type-aware src/ test/` in `apps/api`.
 
 ## Known issues / notes
+
+- **Unverified this session:** the API e2e suite (blocked by the agent permission guard, see Phase 3); the supplier `IN_USE` delete refusal on seeded data (see Phase 2).
+- Demo data now includes two voided test payments on customer 2 (Phase 1). The test supplier created in Phase 2 was deleted.
 
 - Payable-order list fetches up to 100 CONFIRMED + 100 DELIVERED orders per customer (API page cap); older unpaid orders beyond that wouldn't be offered (payment can still go on account).
 - Shadcn dialog close button label is hard-coded English "Close" (pre-existing).
@@ -80,7 +99,8 @@ Verification: web `tsc -b` OK; vitest 32/32 (locale parity covers the new namesp
 
 ## Exact next step
 
-Phase 3 — purchase orders: read `apps/api/src/modules/purchase-orders/purchase-orders.module.ts` (DTOs, list/detail shape, order/receive/cancel rules), then build `pages/purchase-orders/` (list, draft editor with `ProductPicker` and unit costs, detail with Order / Receive / Cancel) reusing the sales-orders pages and `lib/order-math`; manager+ only (`Manager` route wrapper, nav `allow`). Then link supplier statement PO references and add "Orders" / "New order" on the supplier page.
+0. Run the API e2e suite once (see Phase 3 note) to confirm the purchase-order API change against the full suite.
+1. Phase 3 — purchase orders (API facts are listed in the Phase 3 section above): build `pages/purchase-orders/` (list, draft editor with `ProductPicker` and unit costs, detail with Order / Receive / Cancel) reusing the sales-orders pages and `lib/order-math`; manager+ only (`Manager` route wrapper, nav `allow`). Then link supplier statement PO references and add "Orders" / "New order" on the supplier page.
 
 ## Constraints to keep
 
