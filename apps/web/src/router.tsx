@@ -10,6 +10,8 @@ import { AppLayout } from '@/layout/AppLayout';
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
 const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'));
 const DashboardPage = lazy(() => import('@/pages/dashboard/DashboardPage'));
+const ProductsPage = lazy(() => import('@/pages/products/ProductsPage'));
+const CategoriesPage = lazy(() => import('@/pages/products/CategoriesPage'));
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'));
 
 function FullPageSpinner() {
@@ -55,6 +57,8 @@ export const router = createBrowserRouter([
     errorElement: <RouteError />,
     children: [
       { index: true, element: <Page><DashboardPage /></Page> },
+      { path: '/products', element: <Page><ProductsPage /></Page> },
+      { path: '/categories', element: <Page><CategoriesPage /></Page> },
       { path: '*', element: <Page><NotFoundPage /></Page> },
     ],
   },

@@ -1,0 +1,68 @@
+{
+  "title": "Products",
+  "description": "Items, selling prices and current stock.",
+  "add": "Add product",
+  "editTitle": "Edit product",
+  "addTitle": "New product",
+  "searchPlaceholder": "Search by name or SKU",
+  "filters": {
+    "category": "Category",
+    "allCategories": "All categories",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "all": "All",
+    "lowStock": "Below reorder level only"
+  },
+  "columns": {
+    "sku": "SKU",
+    "name": "Product",
+    "category": "Category",
+    "unit": "Unit",
+    "salePrice": "Sale price",
+    "costPrice": "Cost",
+    "stock": "Stock",
+    "status": "Status"
+  },
+  "fields": {
+    "sku": "SKU",
+    "skuHint": "Letters, digits and . _ - only",
+    "name": "Product name",
+    "unit": "Unit",
+    "unitPlaceholder": "piece, carton, bag…",
+    "category": "Category",
+    "noCategory": "No category",
+    "salePrice": "Sale price",
+    "costPrice": "Cost price",
+    "reorderLevel": "Reorder level",
+    "openingStock": "Opening stock",
+    "openingStockHint": "Recorded as an opening stock movement. Later changes go through the Inventory page.",
+    "isActive": "Product is active"
+  },
+  "validation": {
+    "required": "This field is required.",
+    "sku": "Use letters, digits and . _ - only (up to 60).",
+    "money": "Enter a valid amount (up to 2 decimals).",
+    "wholeNumber": "Enter a whole number, 0 or more.",
+    "tooLong": "Too long."
+  },
+  "lowStock": "Low",
+  "inactive": "Inactive",
+  "empty": "No matching products.",
+  "emptyAction": "Add your first product",
+  "deleteTitle": "Delete product?",
+  "deleteBody": "“{{name}}” and its stock movements will be deleted permanently. Products used in sales or purchase orders can’t be deleted — deactivate them instead.",
+  "created": "Product added.",
+  "categories": {
+    "title": "Categories",
+    "description": "Group products for easier search and reporting.",
+    "add": "Add category",
+    "name": "Category name",
+    "products": "Products",
+    "empty": "No categories yet.",
+    "renameTitle": "Rename category",
+    "addTitle": "New category",
+    "deleteTitle": "Delete category?",
+    "deleteBody": "“{{name}}” will be deleted. Categories that contain products can’t be deleted."
+  }
+}

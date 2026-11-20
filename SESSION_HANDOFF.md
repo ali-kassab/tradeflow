@@ -58,13 +58,22 @@ TradeFlow is a bilingual (Arabic RTL by default, English LTR) B2B wholesale mana
 ## Current state
 
 - The backend MVP (every module in PROJECT_HANDOFF.md) runs on SQL Server and is covered by e2e tests.
-- **Frontend:** only login, register, the dashboard and the 404 page exist. Every other module has no UI yet. This is the main remaining work.
+- **Frontend:** login, register, dashboard, **products** (`/products`: search, category/status/low-stock filters, pagination, create/edit dialog, delete with confirmation; cost column and all write controls hidden for STAFF) and **categories** (`/categories`: list with product counts, add/rename/delete) are built. Shared building blocks: `PageHeader`, `PaginationBar`, `ConfirmDialog`, `lib/notify.ts` (`toastError`), `lib/queries.ts`, `lib/types.ts`, `lib/use-debounced.ts`. The other modules have no UI yet.
+- Products/categories were verified in the browser against the live SQL Server API:
+  - validation messages and duplicate-SKU errors (case-insensitive);
+  - create → toast → list refresh, with opening stock recorded;
+  - edit with pre-filled values, and deactivation;
+  - search;
+  - deleting a product that is in orders is refused (IN_USE toast);
+  - category add, duplicate-name error, and delete;
+  - the STAFF view (no costs, no write controls).
+  The browser pane was hidden, so the forms were driven through DOM events rather than mouse clicks.
+- A product that was never on an order can be deleted together with its stock movements (`CatalogService.deleteProduct`); the confirmation text says so.
 - Processes left running: the built API (`node apps/api/dist/main.js`, started from a background task) and Vite in the Terminal tab "web dev server". Stop both when done.
 
 ## Exact next steps
 
-1. Build the frontend feature pages, in this order:
-   - products and categories (list with search/filter/low stock, create/edit; cost fields hidden for STAFF);
+1. Build the remaining frontend feature pages, in this order:
    - inventory (movements, adjustments);
    - customers (CRUD, customer prices, the ledger-style statement as the signature UI);
    - sales orders (draft editor, price resolution, confirm/deliver/cancel);

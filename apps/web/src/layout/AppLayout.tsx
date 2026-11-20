@@ -1,4 +1,4 @@
-import { LayoutDashboardIcon, LogOutIcon } from 'lucide-react';
+import { LayoutDashboardIcon, LogOutIcon, PackageIcon, TagsIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavLink, Outlet, useMatch, useResolvedPath } from 'react-router';
@@ -22,7 +22,11 @@ import {
 } from '@/components/ui/sidebar';
 
 // Only pages that exist are listed; feature pages are added here as they are built.
-const NAV = [{ to: '/', end: true, icon: LayoutDashboardIcon, label: 'nav.dashboard' }] as const;
+const NAV = [
+  { to: '/', end: true, icon: LayoutDashboardIcon, label: 'nav.dashboard' },
+  { to: '/products', end: false, icon: PackageIcon, label: 'nav.products' },
+  { to: '/categories', end: false, icon: TagsIcon, label: 'nav.categories' },
+] as const;
 
 function NavItem({ to, end, children }: { to: string; end?: boolean; children: ReactNode }) {
   const match = useMatch({ path: useResolvedPath(to).pathname, end: end ?? false });

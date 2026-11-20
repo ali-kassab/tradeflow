@@ -17,7 +17,8 @@
     "purchaseOrders": "Purchase orders",
     "reports": "Reports",
     "settings": "Settings",
-    "users": "Users"
+    "users": "Users",
+    "categories": "Categories"
   },
   "roles": {
     "OWNER": "Owner",
@@ -27,11 +28,23 @@
   "actions": {
     "signOut": "Sign out",
     "retry": "Try again",
-    "toggleSidebar": "Show or hide the menu"
+    "toggleSidebar": "Show or hide the menu",
+    "add": "Add",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "search": "Search",
+    "clear": "Clear",
+    "actions": "Actions"
   },
   "status": {
     "loading": "Loading…",
-    "comingSoon": "This page is being built."
+    "comingSoon": "This page is being built.",
+    "empty": "No results.",
+    "saved": "Saved.",
+    "deleted": "Deleted.",
+    "loadError": "Couldn't load the data."
   },
   "notFound": {
     "title": "Page not found",
@@ -55,5 +68,11 @@
     "body": "This page could not be displayed. Reload and try again.",
     "chunk": "The app was updated. Reload the page to continue.",
     "reload": "Reload page"
+  },
+  "pagination": {
+    "label": "Pagination",
+    "summary": "Page {{page}} of {{pageCount}} — {{total}} items",
+    "previous": "Previous",
+    "next": "Next"
   }
 }

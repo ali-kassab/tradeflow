@@ -40,7 +40,7 @@ void i18n.use(initReactI18next).init({
   lng: storedLanguage(),
   fallbackLng: 'ar',
   defaultNS: 'common',
-  ns: ['common', 'auth', 'errors', 'dashboard'],
+  ns: Object.keys(resources.ar),
   interpolation: { escapeValue: false },
   returnNull: false,
 });
