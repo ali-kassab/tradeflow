@@ -4,23 +4,23 @@ import {
   type OnModuleInit,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PrismaMariaDb } from '@prisma/adapter-mariadb';
+import { PrismaMssql } from '@prisma/adapter-mssql';
 import { PrismaClient } from '../generated/prisma/client.js';
 import type { AppConfig } from '../config/env.js';
 
-/** Converts the Prisma-style `mysql://` URL to the MariaDB driver format. */
-export function toDriverUrl(databaseUrl: string): string {
-  const url = new URL(databaseUrl.replace(/^mysql:/, 'mariadb:'));
-  // MySQL 8 defaults to caching_sha2_password; over a local non-TLS connection
-  // the driver must be allowed to fetch the server's RSA public key.
-  if (!url.searchParams.has('allowPublicKeyRetrieval')) {
-    url.searchParams.set('allowPublicKeyRetrieval', 'true');
-  }
-  return url.toString();
+/**
+ * The SQL Server driver adapter understands Prisma's own connection-string format
+ * (`sqlserver://host:port;database=…;user=…;password=…;encrypt=…`), so the CLI and
+ * the runtime share one DATABASE_URL.
+ */
+export function createPrismaClient(databaseUrl: string): PrismaClient {
+  return new PrismaClient({ adapter: new PrismaMssql(databaseUrl) });
 }
 
-export function createPrismaClient(databaseUrl: string): PrismaClient {
-  return new PrismaClient({ adapter: new PrismaMariaDb(toDriverUrl(databaseUrl)) });
+/** Reads `database=` from a Prisma SQL Server connection string (used by test safety checks). */
+export function databaseName(databaseUrl: string): string | null {
+  const match = /;\s*(?:database|initial catalog)\s*=\s*([^;]+)/i.exec(databaseUrl);
+  return match ? match[1].trim() : null;
 }
 
 @Injectable()
@@ -29,9 +29,7 @@ export class PrismaService
   implements OnModuleInit, OnModuleDestroy
 {
   constructor(config: ConfigService<AppConfig, true>) {
-    super({
-      adapter: new PrismaMariaDb(toDriverUrl(config.get('DATABASE_URL', { infer: true }))),
-    });
+    super({ adapter: new PrismaMssql(config.get('DATABASE_URL', { infer: true })) });
   }
 
   async onModuleInit(): Promise<void> {

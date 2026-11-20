@@ -22,11 +22,8 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
-import {
-  PaymentMethod,
-  PurchaseOrderStatus,
-  type Prisma,
-} from '../../generated/prisma/client.js';
+import { type Prisma } from '../../generated/prisma/client.js';
+import { PaymentMethod, PurchaseOrderStatus } from '../../common/enums.js';
 import { type AuthUser, CurrentUser, ManagerOrAbove } from '../../common/auth.js';
 import { ErrorCode, badRequest, conflict, notFound } from '../../common/errors.js';
 import { dec, money } from '../../common/money.js';
@@ -153,7 +150,7 @@ export class PaymentsService {
       if (dto.salesOrderId) {
         // Lock the order row so two concurrent payments cannot both pass the
         // "does not exceed outstanding" check.
-        await tx.$queryRaw`SELECT id FROM SalesOrder WHERE id = ${dto.salesOrderId} AND tenantId = ${actor.tenantId} FOR UPDATE`;
+        await tx.$queryRaw`SELECT id FROM SalesOrder WITH (UPDLOCK, ROWLOCK) WHERE id = ${dto.salesOrderId} AND tenantId = ${actor.tenantId}`;
         const order = await tx.salesOrder.findFirst({
           where: { id: dto.salesOrderId, tenantId: actor.tenantId },
           select: { id: true, customerId: true, status: true, total: true },
@@ -202,7 +199,7 @@ export class PaymentsService {
     return this.prisma.$transaction(async (tx) => {
       await assertOwned(tx, 'supplier', actor.tenantId, dto.supplierId, 'Supplier');
       if (dto.purchaseOrderId) {
-        await tx.$queryRaw`SELECT id FROM PurchaseOrder WHERE id = ${dto.purchaseOrderId} AND tenantId = ${actor.tenantId} FOR UPDATE`;
+        await tx.$queryRaw`SELECT id FROM PurchaseOrder WITH (UPDLOCK, ROWLOCK) WHERE id = ${dto.purchaseOrderId} AND tenantId = ${actor.tenantId}`;
         const order = await tx.purchaseOrder.findFirst({
           where: { id: dto.purchaseOrderId, tenantId: actor.tenantId },
           select: { id: true, supplierId: true, status: true, total: true },

@@ -10,7 +10,7 @@ import {
 import { ApiBearerAuth, ApiProperty, ApiPropertyOptional, ApiTags } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsIn, IsInt, IsOptional, IsString, Length, Min, NotEquals } from 'class-validator';
-import { StockMovementType } from '../../generated/prisma/client.js';
+import { StockMovementType } from '../../common/enums.js';
 import { type AuthUser, CurrentUser, ManagerOrAbove } from '../../common/auth.js';
 import { PageQueryDto, paginated, skipTake } from '../../common/pagination.js';
 import { assertOwned, logActivity } from '../../common/tx.js';

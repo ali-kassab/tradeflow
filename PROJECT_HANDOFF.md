@@ -53,19 +53,19 @@ Enforced in the API (`@Roles`, `ManagerOrAbove`, `OwnerOnly`, `canSeeCosts`). Th
 ## Architecture
 
 ```
-apps/api   NestJS 12 (ESM) · Prisma 7 (prisma-client generator, @prisma/adapter-mariadb) · MySQL 8 · Vitest
+apps/api   NestJS 12 (ESM) · Prisma 7 (prisma-client generator, @prisma/adapter-mssql) · Microsoft SQL Server · Vitest
 apps/web   React 19 · Vite 8 · Tailwind 4 · shadcn/ui (radix base, RTL) · TanStack Query · react-hook-form + zod · react-i18next · react-router 7 · recharts · sonner
 ```
 
 - **Modular monolith.** Modules in `apps/api/src/modules/*`: auth, users, tenant, catalog, inventory (`StockService` = the only writer of `stockQty`), parties (customers/suppliers), sales-orders, purchase-orders, payments (`LedgerService` = the only definition of balances/statements), reports.
-- `src/common`: `auth.ts` (global `AuthGuard`, which reloads the user each request so deactivation and role changes apply immediately), `errors.ts` (stable error `code`s), `http-exception.filter.ts` (`{statusCode, code, message, details?}`, no internals leaked), `money.ts`, `pagination.ts` (`{data, meta}`), `tx.ts` (`assertOwned`, `nextDocumentNumber`, `logActivity`).
+- `src/common`: `auth.ts` (global `AuthGuard`, which reloads the user each request so deactivation and role changes apply immediately), `errors.ts` (stable error `code`s), `http-exception.filter.ts` (`{statusCode, code, message, details?}`, no internals leaked), `money.ts`, `pagination.ts` (`{data, meta}`), `tx.ts` (`assertOwned`, `nextDocumentNumber`, `logActivity`/`parseMetadata`), `enums.ts` (domain enums as const objects; see Database).
 - `setup-app.ts` is shared by `main.ts` and the e2e tests: `/api` prefix, helmet, cookie-parser, CORS allowlist, strict `ValidationPipe` (whitelist + forbidNonWhitelisted).
 - Swagger at `/api/docs` (non-production).
 
 ## Multi-tenancy
 
 - Shared database; `tenantId` on every business row. `tenantId` comes from the JWT (and is verified against the DB), **never from input**.
-- Required relations use **composite FKs `(tenantId, xId) → (tenantId, id)`**, so MySQL rejects cross-tenant links.
+- Required relations use **composite FKs `(tenantId, xId) → (tenantId, id)`**, so SQL Server rejects cross-tenant links.
 - Optional relations (product.category, payment → order) use plain FKs plus a service-level `assertOwned` check.
 - Other tenants' records always answer **404**.
 
@@ -81,8 +81,19 @@ apps/web   React 19 · Vite 8 · Tailwind 4 · shadcn/ui (radix base, RTL) · Ta
 
 Tables: Tenant, User, RefreshToken, Category, Product, StockMovement, Customer, CustomerPrice, Supplier, SalesOrder, SalesOrderItem, PurchaseOrder, PurchaseOrderItem, CustomerPayment, SupplierPayment, DocumentSequence, ActivityLog.
 
-- CHECK constraints: stock ≥ 0, prices ≥ 0, item qty > 0, payment amount > 0, discount ≤ subtotal.
-- Migrations in `apps/api/prisma/migrations`. The seed (`prisma/seed.ts`) builds a fictional EGP demo business by calling the real services.
+**Engine: Microsoft SQL Server only** (user decision, 2026-11-20; MySQL fully removed). Prisma provider `sqlserver`; runtime driver `@prisma/adapter-mssql`, which accepts the same `sqlserver://host:port;database=…;user=…;password=…;encrypt=true;trustServerCertificate=true` string as the CLI.
+
+SQL Server adaptations (keep them):
+- Text columns are **NVARCHAR** (Unicode, required for Arabic); `@db.Text` → `NVarChar(Max)`. Default server collation is case-insensitive, so unique email/SKU/name stay case-insensitive.
+- **No native enums:** enum columns are `NVARCHAR(20)` with CHECK constraints listing the allowed values; TypeScript uses `src/common/enums.ts` (same names as before, e.g. `SalesOrderStatus.CONFIRMED`). `enums.spec.ts` fails if the migration's CHECK lists drift from `enums.ts`.
+- **No Json type:** `ActivityLog.metadata` is JSON text (`NVARCHAR(MAX)` + `ISJSON` CHECK), written by `logActivity`, parsed by `parseMetadata`.
+- Referential actions: SQL Server has no RESTRICT, so `onDelete: NoAction` (same guarantee); every relation has `onUpdate: NoAction` (ids never change; avoids multiple-cascade-path errors).
+- Raw SQL is T-SQL: row locks `WITH (UPDLOCK, ROWLOCK)`; document numbers via `UPDATE … WITH (UPDLOCK, HOLDLOCK)` then `INSERT` if no row; `TOP (n)`, `CAST(x AS date)`, booleans as `1`. No `createMany({ skipDuplicates })` (deduplicate in code).
+- Nested `items: { create }` must not pass `tenantId`: Prisma derives it from the parent's composite key.
+
+- CHECK constraints: stock ≥ 0, prices ≥ 0, item qty > 0, payment amount > 0, discount ≤ subtotal, enum values, metadata is JSON.
+- Databases (local): `tradeflow` (dev), `tradeflow_test` (e2e, wiped each run), `tradeflow_shadow` (`prisma migrate dev` only). SQL login `tradeflow` is `db_owner` of exactly these three; no server-level roles.
+- Migrations in `apps/api/prisma/migrations` (`migration_lock.toml` provider `mssql`). The seed (`prisma/seed.ts`) builds a fictional EGP demo business by calling the real services.
 - Demo users: `owner@ / manager@ / staff@demo.tradeflow.local`, password `Demo@12345`. Demo-only, safe to publish.
 
 ## API (all under `/api`)
@@ -120,20 +131,23 @@ Tables: Tenant, User, RefreshToken, Category, Product, StockMovement, Customer, 
 
 ## Testing
 
-- Unit: `npm test -w @tradeflow/api` (Vitest).
+- Unit: `npm test -w @tradeflow/api` and `npm test -w @tradeflow/web` (Vitest). Vitest compiles with oxc, configured with `decorator: { legacy: true, emitDecoratorMetadata: true }` because Nest DI and class-transformer need decorator metadata.
 - e2e: `npm run test:e2e -w @tradeflow/api`. Uses `TEST_DATABASE_URL`; the DB name must contain "test", and it is reset from migrations on each run. Suites cover auth, workflows/financial consistency (incl. concurrent overselling), tenant isolation (reads, writes and cross-references, plus DB-level FK checks), and RBAC.
+- Prisma blocks `migrate reset` when run by an AI agent unless `PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION` holds the user's exact consent text. The user consented (2026-11-20) with: "Yes, I consent to resetting tradeflow and tradeflow_test" — that covers only those two databases. A human running the tests needs nothing.
+- Live smoke test: `node apps/api/scripts/smoke.mjs [baseUrl]` (defaults to the web proxy `http://localhost:5173/api`) signs in as each demo role and checks main endpoints and role-dependent shapes. `node apps/api/scripts/with-test-db.mjs <cmd>` runs a command against `TEST_DATABASE_URL`.
 
 ## Setup (local, no Docker)
 
 1. Node ≥ 22 (dev machine: Node 26; use npm 11).
-2. MySQL 8 running locally; create user `tradeflow` with rights on `tradeflow%`.
-3. `cp apps/api/.env.example apps/api/.env` and fill it in.
-4. `npm install`, then `npm run db:migrate`, `npm run db:seed`, `npm run dev` (API :3000, web :5173 with a `/api` proxy).
+2. SQL Server (2019+; dev machine: SQL Server 2025 Developer, default instance `MSSQLSERVER`) with **TCP 1433 enabled** and **mixed-mode (SQL) authentication**. As a sysadmin (e.g. `sqlcmd -S localhost -E -C`), create login `tradeflow` and databases `tradeflow`, `tradeflow_test`, `tradeflow_shadow`, each with user `tradeflow` in `db_owner`.
+3. `cp apps/api/.env.example apps/api/.env` and fill in the password and a JWT secret (never commit `.env`).
+4. `npm install`, then `npm run db:deploy -w @tradeflow/api`, `npm run db:seed -w @tradeflow/api`, `npm run dev` (API :3000, web :5173 with a `/api` proxy).
+5. Windows PowerShell blocks `npx.ps1`/`npm.ps1` on this machine (execution policy); use `npx.cmd`/`npm.cmd` there. Do not change the policy.
 
 ## Git / GitHub policy
 
 - Repo `D:\Workspace\tradeflow`. Target: public GitHub repo `tradeflow` under the authenticated account (`ali-kassab`).
 - Commits use only the user's git identity, with **no AI/Claude author or co-author trailers**. No PRs. Never force-push.
 - Before every push: check for secrets, confirm `.env` is ignored, review staged files.
-- Branch policy (user decision): work on feature branches (currently `feat/foundation`) and push those; never push to `main` without explicit approval; never force-push.
+- Branch policy (user decision, 2026-11-20): commit and push directly to **`main`** (fast-forwarded from `feat/foundation`, which is kept as is). No PRs, never force-push, never rewrite history.
 - Original company repositories are never modified.

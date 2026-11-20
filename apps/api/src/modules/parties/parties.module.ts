@@ -214,14 +214,15 @@ export class CustomersService {
 
   async setPrices(actor: AuthUser, id: number, dto: SetCustomerPricesDto) {
     await assertOwned(this.prisma, 'customer', actor.tenantId, id, 'Customer');
-    const productIds = [...new Set(dto.prices.map((p) => p.productId))];
+    // One price per product; the first entry wins (SQL Server has no INSERT … IGNORE / skipDuplicates).
+    const prices = [...new Map(dto.prices.toReversed().map((p) => [p.productId, p])).values()];
+    const productIds = prices.map((p) => p.productId);
     const owned = await this.prisma.product.count({ where: { tenantId: actor.tenantId, id: { in: productIds } } });
     if (owned !== productIds.length) throw notFound('Product');
     await this.prisma.$transaction([
       this.prisma.customerPrice.deleteMany({ where: { tenantId: actor.tenantId, customerId: id } }),
       this.prisma.customerPrice.createMany({
-        data: dto.prices.map((p) => ({ tenantId: actor.tenantId, customerId: id, productId: p.productId, price: p.price })),
-        skipDuplicates: true,
+        data: prices.map((p) => ({ tenantId: actor.tenantId, customerId: id, productId: p.productId, price: p.price })),
       }),
     ]);
     return this.prices(actor, id);

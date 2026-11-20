@@ -27,12 +27,8 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import {
-  type Prisma,
-  Role,
-  SalesOrderStatus,
-  StockMovementType,
-} from '../../generated/prisma/client.js';
+import { type Prisma } from '../../generated/prisma/client.js';
+import { Role, SalesOrderStatus, StockMovementType } from '../../common/enums.js';
 import { type AuthUser, CurrentUser, canSeeCosts } from '../../common/auth.js';
 import { AppException, ErrorCode, badRequest, conflict, notFound } from '../../common/errors.js';
 import { computeOrderTotals, dec, money } from '../../common/money.js';
@@ -181,7 +177,7 @@ export class SalesOrdersService {
           notes: dto.notes,
           createdById: actor.id,
           ...priced.header,
-          items: { create: priced.items.map((i) => ({ ...i, tenantId: actor.tenantId })) },
+          items: { create: priced.items }, // tenantId comes from the parent (composite FK)
         },
       });
       return order.id;
@@ -204,7 +200,7 @@ export class SalesOrdersService {
           orderDate: dto.orderDate ? new Date(dto.orderDate) : undefined,
           notes: dto.notes,
           ...priced.header,
-          items: { create: priced.items.map((i) => ({ ...i, tenantId: actor.tenantId })) },
+          items: { create: priced.items }, // tenantId comes from the parent (composite FK)
         },
       });
     });
@@ -315,9 +311,9 @@ export class SalesOrdersService {
 
   // ---------- helpers ----------
 
-  /** SELECT … FOR UPDATE serialises state transitions on the same order. */
+  /** SELECT … WITH (UPDLOCK) serialises state transitions on the same order. */
   private async lockOrder(tx: Prisma.TransactionClient, tenantId: number, id: number) {
-    await tx.$queryRaw`SELECT id FROM SalesOrder WHERE id = ${id} AND tenantId = ${tenantId} FOR UPDATE`;
+    await tx.$queryRaw`SELECT id FROM SalesOrder WITH (UPDLOCK, ROWLOCK) WHERE id = ${id} AND tenantId = ${tenantId}`;
     const order = await tx.salesOrder.findFirst({
       where: { id, tenantId },
       select: { id: true, number: true, status: true, total: true },
@@ -384,7 +380,7 @@ export class SalesOrdersService {
     return new Map(rows.map((r) => [r.salesOrderId!, dec(r._sum.amount)]));
   }
 
-  private paymentSummary(status: SalesOrderStatus, total: Prisma.Decimal, paidRaw?: Prisma.Decimal) {
+  private paymentSummary(status: string, total: Prisma.Decimal, paidRaw?: Prisma.Decimal) {
     const paid = money(paidRaw ?? 0);
     const billed = status === SalesOrderStatus.CONFIRMED || status === SalesOrderStatus.DELIVERED;
     const outstanding = billed ? money(dec(total).minus(paid)) : dec(0);
@@ -411,7 +407,7 @@ export class SalesOrdersService {
   }
 }
 
-const invalidStatus = (status: SalesOrderStatus) =>
+const invalidStatus = (status: string) =>
   conflict(ErrorCode.INVALID_STATUS, `Action not allowed while order is ${status}`, { status });
 
 @ApiTags('sales-orders')

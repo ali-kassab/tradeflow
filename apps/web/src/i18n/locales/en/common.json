@@ -49,5 +49,11 @@
     "BANK_TRANSFER": "Bank transfer",
     "CHEQUE": "Cheque",
     "OTHER": "Other"
+  },
+  "routeError": {
+    "title": "Something went wrong",
+    "body": "This page could not be displayed. Reload and try again.",
+    "chunk": "The app was updated. Reload the page to continue.",
+    "reload": "Reload page"
   }
 }

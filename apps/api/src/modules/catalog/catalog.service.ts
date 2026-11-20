@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, StockMovementType } from '../../generated/prisma/client.js';
+import { Prisma } from '../../generated/prisma/client.js';
+import { StockMovementType } from '../../common/enums.js';
 import { type AuthUser, canSeeCosts } from '../../common/auth.js';
 import { ErrorCode, conflict, notFound } from '../../common/errors.js';
 import { paginated, skipTake } from '../../common/pagination.js';

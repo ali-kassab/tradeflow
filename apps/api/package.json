@@ -1,7 +1,7 @@
 {
   "name": "@tradeflow/api",
   "version": "0.1.0",
-  "description": "TradeFlow REST API (NestJS + Prisma + MySQL)",
+  "description": "TradeFlow REST API (NestJS + Prisma + SQL Server)",
   "private": true,
   "license": "MIT",
   "type": "module",
@@ -31,7 +31,7 @@
     "@nestjs/platform-express": "^12.6.0",
     "@nestjs/swagger": "^12.1.2",
     "@nestjs/throttler": "^6.8.0",
-    "@prisma/adapter-mariadb": "7.10.1",
+    "@prisma/adapter-mssql": "7.10.1",
     "@prisma/client": "7.10.1",
     "argon2": "^0.45.2",
     "class-transformer": "^0.5.1",

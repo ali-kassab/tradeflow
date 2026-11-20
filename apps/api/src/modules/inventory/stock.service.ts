@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import type { Prisma, StockMovementType } from '../../generated/prisma/client.js';
+import type { Prisma } from '../../generated/prisma/client.js';
+import type { StockMovementType } from '../../common/enums.js';
 import { ErrorCode, badRequest, notFound } from '../../common/errors.js';
 
 export interface StockChange {

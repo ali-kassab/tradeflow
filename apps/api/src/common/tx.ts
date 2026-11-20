@@ -1,4 +1,5 @@
-import type { DocumentType, Prisma, PrismaClient } from '../generated/prisma/client.js';
+import type { Prisma, PrismaClient } from '../generated/prisma/client.js';
+import type { DocumentType } from './enums.js';
 import { notFound } from './errors.js';
 
 /** Either the root client or an interactive-transaction client. */
@@ -37,8 +38,9 @@ const prefixes: Record<DocumentType, string> = {
 };
 
 /**
- * Gap-free per-tenant document numbers (SO-00001, PO-00001). The upsert takes a
- * row lock that is held until the surrounding transaction commits, so two
+ * Gap-free per-tenant document numbers (SO-00001, PO-00001). UPDLOCK + HOLDLOCK
+ * makes the update-or-insert atomic (a key-range lock also covers the first
+ * insert) and holds the lock until the surrounding transaction commits, so two
  * concurrent orders can never receive the same number.
  */
 export async function nextDocumentNumber(
@@ -47,9 +49,11 @@ export async function nextDocumentNumber(
   docType: DocumentType,
 ): Promise<string> {
   await tx.$executeRaw`
-    INSERT INTO DocumentSequence (tenantId, docType, nextValue)
-    VALUES (${tenantId}, ${docType}, 1)
-    ON DUPLICATE KEY UPDATE nextValue = nextValue + 1`;
+    UPDATE DocumentSequence WITH (UPDLOCK, HOLDLOCK)
+      SET nextValue = nextValue + 1
+      WHERE tenantId = ${tenantId} AND docType = ${docType};
+    IF @@ROWCOUNT = 0
+      INSERT INTO DocumentSequence (tenantId, docType, nextValue) VALUES (${tenantId}, ${docType}, 1);`;
   const row = await tx.documentSequence.findUniqueOrThrow({
     where: { tenantId_docType: { tenantId, docType } },
   });
@@ -64,8 +68,22 @@ export async function logActivity(
     action: string;
     entityType: string;
     entityId: number;
-    metadata?: Prisma.InputJsonValue;
+    metadata?: Record<string, string | number | boolean | null>;
   },
 ): Promise<void> {
-  await db.activityLog.create({ data: entry });
+  // Stored as JSON text (NVARCHAR + ISJSON check); parsed back by the activity report.
+  const { metadata, ...rest } = entry;
+  await db.activityLog.create({
+    data: { ...rest, metadata: metadata === undefined ? null : JSON.stringify(metadata) },
+  });
+}
+
+/** Inverse of logActivity's serialisation; tolerates legacy/invalid text. */
+export function parseMetadata(text: string | null): unknown {
+  if (text === null) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
 }

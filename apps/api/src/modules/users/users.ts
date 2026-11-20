@@ -22,7 +22,7 @@ import {
   MinLength,
 } from 'class-validator';
 import * as argon2 from 'argon2';
-import { Role } from '../../generated/prisma/client.js';
+import { Role } from '../../common/enums.js';
 import { type AuthUser, CurrentUser, OwnerOnly } from '../../common/auth.js';
 import { ErrorCode, badRequest, conflict, notFound } from '../../common/errors.js';
 import { PrismaService } from '../../prisma/prisma.service.js';

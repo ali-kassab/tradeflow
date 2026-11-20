@@ -1,9 +1,11 @@
 import { Controller, Get, Injectable, Module, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiPropertyOptional, ApiTags } from '@nestjs/swagger';
 import { IsDateString, IsOptional } from 'class-validator';
-import { Prisma, SalesOrderStatus } from '../../generated/prisma/client.js';
+import { Prisma } from '../../generated/prisma/client.js';
+import { SalesOrderStatus } from '../../common/enums.js';
 import { type AuthUser, CurrentUser, ManagerOrAbove, canSeeCosts } from '../../common/auth.js';
 import { dec, money } from '../../common/money.js';
+import { parseMetadata } from '../../common/tx.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { BILLED_SALES, LedgerService } from '../payments/ledger.service.js';
 import { PaymentsModule } from '../payments/payments.module.js';
@@ -114,20 +116,20 @@ export class ReportsService {
       this.salesSummary(t, from, to),
       this.dailySales(t, from, to),
       this.prisma.$queryRaw<{ id: number; name: string; orders: bigint; revenue: Prisma.Decimal }[]>`
-        SELECT c.id, c.name, COUNT(*) AS orders, SUM(o.total) AS revenue
+        SELECT TOP (20) c.id, c.name, COUNT(*) AS orders, SUM(o.total) AS revenue
         FROM SalesOrder o JOIN Customer c ON c.id = o.customerId AND c.tenantId = o.tenantId
         WHERE o.tenantId = ${t} AND o.status IN (${BILLED_SQL})
           AND o.confirmedAt >= ${from} AND o.confirmedAt < ${to}
-        GROUP BY c.id, c.name ORDER BY revenue DESC LIMIT 20`,
+        GROUP BY c.id, c.name ORDER BY revenue DESC`,
       this.prisma.$queryRaw<{ id: number; name: string; sku: string; quantity: Prisma.Decimal; revenue: Prisma.Decimal; cost: Prisma.Decimal }[]>`
-        SELECT p.id, p.name, p.sku, SUM(i.quantity) AS quantity, SUM(i.lineTotal) AS revenue,
+        SELECT TOP (20) p.id, p.name, p.sku, SUM(i.quantity) AS quantity, SUM(i.lineTotal) AS revenue,
                SUM(i.unitCost * i.quantity) AS cost
         FROM SalesOrderItem i
         JOIN SalesOrder o ON o.id = i.salesOrderId AND o.tenantId = i.tenantId
         JOIN Product p ON p.id = i.productId AND p.tenantId = i.tenantId
         WHERE i.tenantId = ${t} AND o.status IN (${BILLED_SQL})
           AND o.confirmedAt >= ${from} AND o.confirmedAt < ${to}
-        GROUP BY p.id, p.name, p.sku ORDER BY revenue DESC LIMIT 20`,
+        GROUP BY p.id, p.name, p.sku ORDER BY revenue DESC`,
     ]);
 
     return {
@@ -190,18 +192,18 @@ export class ReportsService {
       select: { id: true, name: true },
     });
     const names = new Map(users.map((u) => [u.id, u.name]));
-    return rows.map((r) => ({ ...r, userName: names.get(r.userId) ?? null }));
+    return rows.map((r) => ({ ...r, metadata: parseMetadata(r.metadata), userName: names.get(r.userId) ?? null }));
   }
 
   // ---------- shared queries ----------
 
   private async dailySales(tenantId: number, from: Date, to: Date) {
     const rows = await this.prisma.$queryRaw<{ day: Date | string; orders: bigint; revenue: Prisma.Decimal }[]>`
-      SELECT DATE(confirmedAt) AS day, COUNT(*) AS orders, SUM(total) AS revenue
+      SELECT CAST(confirmedAt AS date) AS day, COUNT(*) AS orders, SUM(total) AS revenue
       FROM SalesOrder
       WHERE tenantId = ${tenantId} AND status IN (${BILLED_SQL})
         AND confirmedAt >= ${from} AND confirmedAt < ${to}
-      GROUP BY DATE(confirmedAt) ORDER BY day`;
+      GROUP BY CAST(confirmedAt AS date) ORDER BY day`;
     const byDay = new Map(
       rows.map((r) => [
         (r.day instanceof Date ? r.day.toISOString() : String(r.day)).slice(0, 10),
@@ -248,7 +250,7 @@ export class ReportsService {
   private async inventoryTotals(tenantId: number) {
     const [row] = await this.prisma.$queryRaw<{ value: Prisma.Decimal | null; units: Prisma.Decimal | null }[]>`
       SELECT SUM(stockQty * costPrice) AS value, SUM(stockQty) AS units
-      FROM Product WHERE tenantId = ${tenantId} AND isActive = true`;
+      FROM Product WHERE tenantId = ${tenantId} AND isActive = 1`;
     return { value: str(row?.value), units: Number(row?.units ?? 0) };
   }
 }

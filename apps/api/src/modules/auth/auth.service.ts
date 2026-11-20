@@ -3,7 +3,7 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
-import { Role } from '../../generated/prisma/client.js';
+import { Role } from '../../common/enums.js';
 import type { AccessTokenPayload, AuthUser } from '../../common/auth.js';
 import { AppException, ErrorCode, conflict } from '../../common/errors.js';
 import type { AppConfig } from '../../config/env.js';

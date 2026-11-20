@@ -35,7 +35,7 @@ describe('Auth', () => {
 
   it('rejects duplicate emails and invalid input with stable error codes', async () => {
     const email = uniqueEmail('dup');
-    const body = { businessName: 'A', name: 'B', email, password: 'Password#123' };
+    const body = { businessName: 'Abc', name: 'Bob', email, password: 'Password#123' };
     await http().post('/api/auth/register').send({ ...body, businessName: 'Biz' }).expect(201);
     const dup = await http().post('/api/auth/register').send({ ...body, businessName: 'Biz 2' }).expect(409);
     expect(dup.body.code).toBe('EMAIL_TAKEN');
@@ -57,7 +57,7 @@ describe('Auth', () => {
     const email = uniqueEmail('rot');
     const reg = await http()
       .post('/api/auth/register')
-      .send({ businessName: 'Rotate Co', name: 'R', email, password: 'Password#123' })
+      .send({ businessName: 'Rotate Co', name: 'Rana', email, password: 'Password#123' })
       .expect(201);
     const first = cookieFrom(reg)!;
 
@@ -76,7 +76,7 @@ describe('Auth', () => {
     const email = uniqueEmail('out');
     const reg = await http()
       .post('/api/auth/register')
-      .send({ businessName: 'Out Co', name: 'O', email, password: 'Password#123' })
+      .send({ businessName: 'Out Co', name: 'Omar', email, password: 'Password#123' })
       .expect(201);
     const cookie = cookieFrom(reg)!;
     await http().post('/api/auth/logout').set('Cookie', cookie).expect(204);
@@ -87,7 +87,7 @@ describe('Auth', () => {
     const email = uniqueEmail('pw');
     const reg = await http()
       .post('/api/auth/register')
-      .send({ businessName: 'PW Co', name: 'P', email, password: 'Password#123' })
+      .send({ businessName: 'PW Co', name: 'Pam', email, password: 'Password#123' })
       .expect(201);
     const token = reg.body.accessToken;
     const wrong = await http()

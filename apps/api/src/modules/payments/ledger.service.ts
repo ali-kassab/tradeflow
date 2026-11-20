@@ -1,9 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import {
-  type Prisma,
-  PurchaseOrderStatus,
-  SalesOrderStatus,
-} from '../../generated/prisma/client.js';
+import { type Prisma } from '../../generated/prisma/client.js';
+import { PurchaseOrderStatus, SalesOrderStatus } from '../../common/enums.js';
 
 type Decimal = Prisma.Decimal;
 import { dec, money } from '../../common/money.js';

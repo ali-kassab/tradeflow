@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import { useSession } from '@/auth/context';
 import { Alert } from '@/components/Alert';
 import { Badge } from '@/components/ui/badge';
@@ -140,7 +140,7 @@ export default function DashboardPage() {
           <section className="bg-card rounded-lg border p-4">
             <h2 className="mb-4 font-semibold">{t('chart.title')}</h2>
             <ChartContainer config={chartConfig} className="aspect-auto h-64 w-full" dir="ltr">
-              <AreaChart
+              <BarChart
                 data={query.data.salesLast30Days.map((d) => ({ ...d, revenue: Number(d.revenue) }))}
                 margin={{ left: 8, right: 8 }}
               >
@@ -161,6 +161,7 @@ export default function DashboardPage() {
                   tickFormatter={(v: number) => formatNumber(v, lang)}
                 />
                 <ChartTooltip
+                  cursor={{ fill: 'var(--muted)' }}
                   content={
                     <ChartTooltipContent
                       labelFormatter={(v) => formatDate(String(v), lang)}
@@ -168,15 +169,8 @@ export default function DashboardPage() {
                     />
                   }
                 />
-                <Area
-                  dataKey="revenue"
-                  type="monotone"
-                  stroke="var(--color-revenue)"
-                  fill="var(--color-revenue)"
-                  fillOpacity={0.12}
-                  strokeWidth={2}
-                />
-              </AreaChart>
+                <Bar dataKey="revenue" fill="var(--color-revenue)" radius={[3, 3, 0, 0]} maxBarSize={18} />
+              </BarChart>
             </ChartContainer>
           </section>
 

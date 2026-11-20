@@ -27,11 +27,8 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import {
-  type Prisma,
-  PurchaseOrderStatus,
-  StockMovementType,
-} from '../../generated/prisma/client.js';
+import { type Prisma } from '../../generated/prisma/client.js';
+import { PurchaseOrderStatus, StockMovementType } from '../../common/enums.js';
 import { type AuthUser, CurrentUser, ManagerOrAbove } from '../../common/auth.js';
 import { ErrorCode, badRequest, conflict, notFound } from '../../common/errors.js';
 import { dec, money, sum } from '../../common/money.js';
@@ -156,7 +153,7 @@ export class PurchaseOrdersService {
           notes: dto.notes,
           createdById: actor.id,
           total: priced.total,
-          items: { create: priced.items.map((i) => ({ ...i, tenantId: actor.tenantId })) },
+          items: { create: priced.items }, // tenantId comes from the parent (composite FK)
         },
       });
       return order.id;
@@ -178,7 +175,7 @@ export class PurchaseOrdersService {
           expectedDate: dto.expectedDate ? new Date(dto.expectedDate) : null,
           notes: dto.notes,
           total: priced.total,
-          items: { create: priced.items.map((i) => ({ ...i, tenantId: actor.tenantId })) },
+          items: { create: priced.items }, // tenantId comes from the parent (composite FK)
         },
       });
     });
@@ -240,7 +237,7 @@ export class PurchaseOrdersService {
   private async transition(
     actor: AuthUser,
     id: number,
-    from: PurchaseOrderStatus[],
+    from: readonly string[],
     data: Prisma.PurchaseOrderUpdateInput,
     action: string,
   ) {
@@ -256,7 +253,7 @@ export class PurchaseOrdersService {
   }
 
   private async lock(tx: Prisma.TransactionClient, tenantId: number, id: number) {
-    await tx.$queryRaw`SELECT id FROM PurchaseOrder WHERE id = ${id} AND tenantId = ${tenantId} FOR UPDATE`;
+    await tx.$queryRaw`SELECT id FROM PurchaseOrder WITH (UPDLOCK, ROWLOCK) WHERE id = ${id} AND tenantId = ${tenantId}`;
     const order = await tx.purchaseOrder.findFirst({
       where: { id, tenantId },
       select: { id: true, number: true, status: true },
@@ -292,7 +289,7 @@ export class PurchaseOrdersService {
   }
 }
 
-const invalidStatus = (status: PurchaseOrderStatus) =>
+const invalidStatus = (status: string) =>
   conflict(ErrorCode.INVALID_STATUS, `Action not allowed while order is ${status}`, { status });
 
 @ApiTags('purchase-orders')

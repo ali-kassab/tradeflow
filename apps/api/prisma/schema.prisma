@@ -1,12 +1,16 @@
 // TradeFlow data model.
 //
 // Multi-tenancy: every business-owned row carries `tenantId`. Required relations
-// use composite foreign keys (tenantId, xId) -> (tenantId, id), so MySQL itself
+// use composite foreign keys (tenantId, xId) -> (tenantId, id), so SQL Server itself
 // rejects a row that points at another tenant's record. Optional relations use a
 // plain FK (Prisma cannot model an optional composite relation over a required
 // tenantId) and are tenant-checked in the service layer, with e2e tests.
 //
-// Money: DECIMAL(14,2). Quantities: whole units (INT).
+// Enums: SQL Server has no enum type, so they are NVARCHAR columns restricted by CHECK
+// constraints (see the migration) and typed in TypeScript by src/common/enums.ts.
+//
+// Money: DECIMAL(14,2). Quantities: whole units (INT). Text: NVARCHAR (Unicode, for Arabic).
+// SQL Server has no RESTRICT; NO ACTION gives the same "reject the delete" guarantee.
 
 generator client {
   provider     = "prisma-client"
@@ -15,52 +19,12 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
-}
-
-enum Role {
-  OWNER
-  MANAGER
-  STAFF
-}
-
-enum StockMovementType {
-  OPENING
-  SALE
-  SALE_CANCEL
-  PURCHASE_RECEIPT
-  ADJUSTMENT
-}
-
-enum SalesOrderStatus {
-  DRAFT
-  CONFIRMED
-  DELIVERED
-  CANCELLED
-}
-
-enum PurchaseOrderStatus {
-  DRAFT
-  ORDERED
-  RECEIVED
-  CANCELLED
-}
-
-enum PaymentMethod {
-  CASH
-  BANK_TRANSFER
-  CHEQUE
-  OTHER
-}
-
-enum DocumentType {
-  SALES_ORDER
-  PURCHASE_ORDER
+  provider = "sqlserver"
 }
 
 model Tenant {
   id             Int      @id @default(autoincrement())
-  name           String   @db.VarChar(120)
+  name           String   @db.NVarChar(120)
   currency       String   @default("EGP") @db.Char(3)
   defaultTaxRate Decimal  @default(0) @db.Decimal(5, 2)
   createdAt      DateTime @default(now())
@@ -84,16 +48,16 @@ model Tenant {
 model User {
   id           Int       @id @default(autoincrement())
   tenantId     Int
-  name         String    @db.VarChar(120)
-  email        String    @unique @db.VarChar(190)
-  passwordHash String    @db.VarChar(255)
-  role         Role      @default(STAFF)
+  name         String    @db.NVarChar(120)
+  email        String    @unique @db.NVarChar(190)
+  passwordHash String    @db.NVarChar(255)
+  role         String    @default("STAFF") @db.NVarChar(20) // Role (src/common/enums.ts; CHECK in migration)
   isActive     Boolean   @default(true)
   lastLoginAt  DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   refreshTokens RefreshToken[]
 
   @@unique([tenantId, id])
@@ -101,15 +65,15 @@ model User {
 }
 
 model RefreshToken {
-  id         Int       @id @default(autoincrement())
-  userId     Int
-  tokenHash  String    @unique @db.Char(64)
-  family     String    @db.Char(36)
-  expiresAt  DateTime
-  revokedAt  DateTime?
-  createdAt  DateTime  @default(now())
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  tokenHash String    @unique @db.Char(64)
+  family    String    @db.Char(36)
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([userId])
   @@index([family])
@@ -118,11 +82,11 @@ model RefreshToken {
 model Category {
   id        Int      @id @default(autoincrement())
   tenantId  Int
-  name      String   @db.VarChar(100)
+  name      String   @db.NVarChar(100)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   products Product[]
 
   @@unique([tenantId, id])
@@ -133,9 +97,9 @@ model Product {
   id           Int      @id @default(autoincrement())
   tenantId     Int
   categoryId   Int?
-  sku          String   @db.VarChar(60)
-  name         String   @db.VarChar(160)
-  unit         String   @default("piece") @db.VarChar(30)
+  sku          String   @db.NVarChar(60)
+  name         String   @db.NVarChar(160)
+  unit         String   @default("piece") @db.NVarChar(30)
   costPrice    Decimal  @default(0) @db.Decimal(14, 2)
   salePrice    Decimal  @db.Decimal(14, 2)
   stockQty     Int      @default(0)
@@ -144,12 +108,12 @@ model Product {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  tenant              Tenant              @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-  category            Category?           @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  stockMovements      StockMovement[]
-  customerPrices      CustomerPrice[]
-  salesOrderItems     SalesOrderItem[]
-  purchaseOrderItems  PurchaseOrderItem[]
+  tenant             Tenant              @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  category           Category?           @relation(fields: [categoryId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  stockMovements     StockMovement[]
+  customerPrices     CustomerPrice[]
+  salesOrderItems    SalesOrderItem[]
+  purchaseOrderItems PurchaseOrderItem[]
 
   @@unique([tenantId, id])
   @@unique([tenantId, sku])
@@ -158,20 +122,20 @@ model Product {
 }
 
 model StockMovement {
-  id           Int               @id @default(autoincrement())
+  id           Int      @id @default(autoincrement())
   tenantId     Int
   productId    Int
-  type         StockMovementType
+  type         String   @db.NVarChar(20) // StockMovementType (src/common/enums.ts; CHECK in migration)
   quantity     Int
   balanceAfter Int
-  refType      String?           @db.VarChar(30)
+  refType      String?  @db.NVarChar(30)
   refId        Int?
-  note         String?           @db.VarChar(255)
+  note         String?  @db.NVarChar(255)
   userId       Int
-  createdAt    DateTime          @default(now())
+  createdAt    DateTime @default(now())
 
-  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-  product Product @relation(fields: [tenantId, productId], references: [tenantId, id], onDelete: Restrict)
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  product Product @relation(fields: [tenantId, productId], references: [tenantId, id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([tenantId, productId, createdAt])
   @@index([tenantId, createdAt])
@@ -180,18 +144,18 @@ model StockMovement {
 model Customer {
   id          Int      @id @default(autoincrement())
   tenantId    Int
-  name        String   @db.VarChar(160)
-  phone       String?  @db.VarChar(40)
-  email       String?  @db.VarChar(190)
-  address     String?  @db.VarChar(255)
-  taxNumber   String?  @db.VarChar(60)
+  name        String   @db.NVarChar(160)
+  phone       String?  @db.NVarChar(40)
+  email       String?  @db.NVarChar(190)
+  address     String?  @db.NVarChar(255)
+  taxNumber   String?  @db.NVarChar(60)
   creditLimit Decimal? @db.Decimal(14, 2)
-  notes       String?  @db.Text
+  notes       String?  @db.NVarChar(Max)
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  tenant      Tenant            @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  tenant      Tenant            @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   prices      CustomerPrice[]
   salesOrders SalesOrder[]
   payments    CustomerPayment[]
@@ -209,9 +173,9 @@ model CustomerPrice {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-  customer Customer @relation(fields: [tenantId, customerId], references: [tenantId, id], onDelete: Cascade)
-  product  Product  @relation(fields: [tenantId, productId], references: [tenantId, id], onDelete: Cascade)
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  customer Customer @relation(fields: [tenantId, customerId], references: [tenantId, id], onDelete: Cascade, onUpdate: NoAction)
+  product  Product  @relation(fields: [tenantId, productId], references: [tenantId, id], onDelete: Cascade, onUpdate: NoAction)
 
   @@unique([tenantId, customerId, productId])
 }
@@ -219,17 +183,17 @@ model CustomerPrice {
 model Supplier {
   id        Int      @id @default(autoincrement())
   tenantId  Int
-  name      String   @db.VarChar(160)
-  phone     String?  @db.VarChar(40)
-  email     String?  @db.VarChar(190)
-  address   String?  @db.VarChar(255)
-  taxNumber String?  @db.VarChar(60)
-  notes     String?  @db.Text
+  name      String   @db.NVarChar(160)
+  phone     String?  @db.NVarChar(40)
+  email     String?  @db.NVarChar(190)
+  address   String?  @db.NVarChar(255)
+  taxNumber String?  @db.NVarChar(60)
+  notes     String?  @db.NVarChar(Max)
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  tenant         Tenant            @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  tenant         Tenant            @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   purchaseOrders PurchaseOrder[]
   payments       SupplierPayment[]
 
@@ -238,27 +202,27 @@ model Supplier {
 }
 
 model SalesOrder {
-  id          Int              @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   tenantId    Int
-  number      String           @db.VarChar(30)
+  number      String    @db.NVarChar(30)
   customerId  Int
-  status      SalesOrderStatus @default(DRAFT)
-  orderDate   DateTime         @default(now())
-  subtotal    Decimal          @default(0) @db.Decimal(14, 2)
-  discount    Decimal          @default(0) @db.Decimal(14, 2)
-  taxRate     Decimal          @default(0) @db.Decimal(5, 2)
-  taxAmount   Decimal          @default(0) @db.Decimal(14, 2)
-  total       Decimal          @default(0) @db.Decimal(14, 2)
-  notes       String?          @db.Text
+  status      String    @default("DRAFT") @db.NVarChar(20) // SalesOrderStatus (src/common/enums.ts; CHECK in migration)
+  orderDate   DateTime  @default(now())
+  subtotal    Decimal   @default(0) @db.Decimal(14, 2)
+  discount    Decimal   @default(0) @db.Decimal(14, 2)
+  taxRate     Decimal   @default(0) @db.Decimal(5, 2)
+  taxAmount   Decimal   @default(0) @db.Decimal(14, 2)
+  total       Decimal   @default(0) @db.Decimal(14, 2)
+  notes       String?   @db.NVarChar(Max)
   createdById Int
   confirmedAt DateTime?
   deliveredAt DateTime?
   cancelledAt DateTime?
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
-  tenant   Tenant            @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-  customer Customer          @relation(fields: [tenantId, customerId], references: [tenantId, id], onDelete: Restrict)
+  tenant   Tenant            @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  customer Customer          @relation(fields: [tenantId, customerId], references: [tenantId, id], onDelete: NoAction, onUpdate: NoAction)
   items    SalesOrderItem[]
   payments CustomerPayment[]
 
@@ -273,39 +237,39 @@ model SalesOrderItem {
   tenantId     Int
   salesOrderId Int
   productId    Int
-  productName  String  @db.VarChar(160)
-  sku          String  @db.VarChar(60)
+  productName  String  @db.NVarChar(160)
+  sku          String  @db.NVarChar(60)
   quantity     Int
   unitPrice    Decimal @db.Decimal(14, 2)
   /// Cost snapshot taken at confirmation, for gross-profit reporting. Never sent to STAFF.
   unitCost     Decimal @default(0) @db.Decimal(14, 2)
   lineTotal    Decimal @db.Decimal(14, 2)
 
-  salesOrder SalesOrder @relation(fields: [tenantId, salesOrderId], references: [tenantId, id], onDelete: Cascade)
-  product    Product    @relation(fields: [tenantId, productId], references: [tenantId, id], onDelete: Restrict)
+  salesOrder SalesOrder @relation(fields: [tenantId, salesOrderId], references: [tenantId, id], onDelete: Cascade, onUpdate: NoAction)
+  product    Product    @relation(fields: [tenantId, productId], references: [tenantId, id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([tenantId, productId])
 }
 
 model PurchaseOrder {
-  id           Int                 @id @default(autoincrement())
+  id           Int       @id @default(autoincrement())
   tenantId     Int
-  number       String              @db.VarChar(30)
+  number       String    @db.NVarChar(30)
   supplierId   Int
-  status       PurchaseOrderStatus @default(DRAFT)
-  orderDate    DateTime            @default(now())
+  status       String    @default("DRAFT") @db.NVarChar(20) // PurchaseOrderStatus (src/common/enums.ts; CHECK in migration)
+  orderDate    DateTime  @default(now())
   expectedDate DateTime?
-  total        Decimal             @default(0) @db.Decimal(14, 2)
-  notes        String?             @db.Text
+  total        Decimal   @default(0) @db.Decimal(14, 2)
+  notes        String?   @db.NVarChar(Max)
   createdById  Int
   orderedAt    DateTime?
   receivedAt   DateTime?
   cancelledAt  DateTime?
-  createdAt    DateTime            @default(now())
-  updatedAt    DateTime            @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  tenant   Tenant              @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-  supplier Supplier            @relation(fields: [tenantId, supplierId], references: [tenantId, id], onDelete: Restrict)
+  tenant   Tenant              @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  supplier Supplier            @relation(fields: [tenantId, supplierId], references: [tenantId, id], onDelete: NoAction, onUpdate: NoAction)
   items    PurchaseOrderItem[]
   payments SupplierPayment[]
 
@@ -319,38 +283,38 @@ model PurchaseOrderItem {
   tenantId        Int
   purchaseOrderId Int
   productId       Int
-  productName     String  @db.VarChar(160)
-  sku             String  @db.VarChar(60)
+  productName     String  @db.NVarChar(160)
+  sku             String  @db.NVarChar(60)
   quantity        Int
   unitCost        Decimal @db.Decimal(14, 2)
   lineTotal       Decimal @db.Decimal(14, 2)
 
-  purchaseOrder PurchaseOrder @relation(fields: [tenantId, purchaseOrderId], references: [tenantId, id], onDelete: Cascade)
-  product       Product       @relation(fields: [tenantId, productId], references: [tenantId, id], onDelete: Restrict)
+  purchaseOrder PurchaseOrder @relation(fields: [tenantId, purchaseOrderId], references: [tenantId, id], onDelete: Cascade, onUpdate: NoAction)
+  product       Product       @relation(fields: [tenantId, productId], references: [tenantId, id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([tenantId, productId])
 }
 
 /// Money received from a customer. Never deleted: corrections are made by voiding.
 model CustomerPayment {
-  id           Int           @id @default(autoincrement())
+  id           Int       @id @default(autoincrement())
   tenantId     Int
   customerId   Int
   salesOrderId Int?
-  amount       Decimal       @db.Decimal(14, 2)
-  method       PaymentMethod
+  amount       Decimal   @db.Decimal(14, 2)
+  method       String    @db.NVarChar(20) // PaymentMethod (src/common/enums.ts; CHECK in migration)
   paidAt       DateTime
-  reference    String?       @db.VarChar(100)
-  notes        String?       @db.VarChar(255)
+  reference    String?   @db.NVarChar(100)
+  notes        String?   @db.NVarChar(255)
   createdById  Int
   voidedAt     DateTime?
   voidedById   Int?
-  voidReason   String?       @db.VarChar(255)
-  createdAt    DateTime      @default(now())
+  voidReason   String?   @db.NVarChar(255)
+  createdAt    DateTime  @default(now())
 
-  tenant     Tenant      @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-  customer   Customer    @relation(fields: [tenantId, customerId], references: [tenantId, id], onDelete: Restrict)
-  salesOrder SalesOrder? @relation(fields: [salesOrderId], references: [id], onDelete: Restrict)
+  tenant     Tenant      @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  customer   Customer    @relation(fields: [tenantId, customerId], references: [tenantId, id], onDelete: NoAction, onUpdate: NoAction)
+  salesOrder SalesOrder? @relation(fields: [salesOrderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([tenantId, customerId, paidAt])
   @@index([tenantId, paidAt])
@@ -358,24 +322,24 @@ model CustomerPayment {
 
 /// Money paid to a supplier. Never deleted: corrections are made by voiding.
 model SupplierPayment {
-  id              Int           @id @default(autoincrement())
+  id              Int       @id @default(autoincrement())
   tenantId        Int
   supplierId      Int
   purchaseOrderId Int?
-  amount          Decimal       @db.Decimal(14, 2)
-  method          PaymentMethod
+  amount          Decimal   @db.Decimal(14, 2)
+  method          String    @db.NVarChar(20) // PaymentMethod (src/common/enums.ts; CHECK in migration)
   paidAt          DateTime
-  reference       String?       @db.VarChar(100)
-  notes           String?       @db.VarChar(255)
+  reference       String?   @db.NVarChar(100)
+  notes           String?   @db.NVarChar(255)
   createdById     Int
   voidedAt        DateTime?
   voidedById      Int?
-  voidReason      String?       @db.VarChar(255)
-  createdAt       DateTime      @default(now())
+  voidReason      String?   @db.NVarChar(255)
+  createdAt       DateTime  @default(now())
 
-  tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-  supplier      Supplier       @relation(fields: [tenantId, supplierId], references: [tenantId, id], onDelete: Restrict)
-  purchaseOrder PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id], onDelete: Restrict)
+  tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  supplier      Supplier       @relation(fields: [tenantId, supplierId], references: [tenantId, id], onDelete: NoAction, onUpdate: NoAction)
+  purchaseOrder PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([tenantId, supplierId, paidAt])
   @@index([tenantId, paidAt])
@@ -383,10 +347,10 @@ model SupplierPayment {
 
 model DocumentSequence {
   tenantId  Int
-  docType   DocumentType
-  nextValue Int          @default(1)
+  docType   String @db.NVarChar(20) // DocumentType (src/common/enums.ts; CHECK in migration)
+  nextValue Int    @default(1)
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([tenantId, docType])
 }
@@ -395,13 +359,13 @@ model ActivityLog {
   id         Int      @id @default(autoincrement())
   tenantId   Int
   userId     Int
-  action     String   @db.VarChar(60)
-  entityType String   @db.VarChar(40)
+  action     String   @db.NVarChar(60)
+  entityType String   @db.NVarChar(40)
   entityId   Int
-  metadata   Json?
+  metadata   String?  @db.NVarChar(Max) // JSON text (CHECK ISJSON in migration)
   createdAt  DateTime @default(now())
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([tenantId, createdAt])
 }

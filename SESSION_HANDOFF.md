@@ -1,70 +1,85 @@
 # Session handoff — TradeFlow
 
-_Last updated: 2026-11-20, end of session 2._
+_Last updated: 2026-11-20, session 2 (continued)._
 
 ## Project
 
-TradeFlow is a bilingual (Arabic RTL by default, English LTR) B2B wholesale management platform, built as a portfolio project. Read PROJECT_HANDOFF.md for the permanent architecture, business rules and policies.
+TradeFlow is a bilingual (Arabic RTL by default, English LTR) B2B wholesale management platform, built as a portfolio project. Read PROJECT_HANDOFF.md for the permanent architecture, business rules, SQL Server conventions and policies.
 
 ## Checkpoint
 
-**Phase 3 (web foundation) is done and verified offline.** The backend is still the session 1 state: complete, but never run against a real database.
+**MySQL → Microsoft SQL Server migration: done and verified against a real database.** The full backend now runs end to end for the first time: migrate, seed, e2e tests, the live API, and the web UI in a browser.
 
-## Completed this session
+## Completed in this session
 
-**Web foundation** (`apps/web`), following the i18n and design plan in PROJECT_HANDOFF.md:
+1. **Web foundation:** theme, i18n, auth flow, layout, dashboard. Commit `2b7708f`.
+2. **Git:** with the user's approval, `main` was fast-forwarded to `feat/foundation` and pushed. **All work now goes to `main`.** `feat/foundation` stays as it was.
+3. **MySQL removed and SQL Server adopted:**
 
-| Item | Files |
+| Change | Files |
 |---|---|
-| Removed the Geist and Inter fonts. Bundled IBM Plex Sans Arabic (400–700) through @fontsource. Applied the palette tokens (paper, ink, ledger green, carton amber, danger), added a `warning` color and a `tabular` utility. | `src/index.css`, `package.json`, `package-lock.json` |
-| i18n: react-i18next with namespaces `common`, `auth`, `errors` and `dashboard`. Arabic is the default and the choice is saved under the localStorage key `tf.lang`. `<html lang dir>` switches at runtime. Keys are typed. | `src/i18n/{index,resources}.ts`, `i18next.d.ts`, `locales/{ar,en}/*.json` |
-| API client: axios with `baseURL /api`. The access token is kept in memory only. A 401 triggers one shared ("single-flight") refresh, then a retry. Errors map to translated codes, plus a client-only `NETWORK` code. | `src/lib/api.ts` |
-| Number and date formatting with `Intl`: Arabic uses `ar-EG-u-nu-latn` (Western digits); money comes in as a decimal string. | `src/lib/format.ts` |
-| Auth: `AuthProvider` restores the session from the refresh cookie when the app loads, and provides login, register and logout. `useAuth` / `useSession`. UI role helpers. | `src/auth/*` |
-| Pages: login and register (react-hook-form + zod, limits mirror the API DTOs), a dashboard (KPIs that respect the role-based response shape, a 30-day recharts area chart, latest orders and payments), and a 404 page. | `src/pages/**` |
-| Router: `createBrowserRouter`, each page lazy-loaded, `RequireAuth` / `GuestOnly` guards. Layout: shadcn sidebar on the right in RTL and the left in LTR, plus the language switch and sign-out. | `src/router.tsx`, `src/layout/AppLayout.tsx`, `src/main.tsx` |
-| Shared components: `Logo`, `LanguageSwitch`, `FormField` (react-hook-form + shadcn Field), `Alert` | `src/components/*.tsx` |
-| Deleted the placeholder `src/App.tsx`. | |
+| Provider `sqlserver`. `@prisma/adapter-mariadb` replaced by `@prisma/adapter-mssql@7.10.1`, which uses the same connection string as the CLI. | `prisma/schema.prisma`, `src/prisma/prisma.service.ts`, `package.json`, root `package-lock.json`, `prisma.config.ts` |
+| NVARCHAR text, `NoAction` delete/update rules, enums become NVARCHAR + CHECK, Json becomes NVARCHAR(MAX) + ISJSON | `schema.prisma`, `src/common/enums.ts` (new), all enum imports moved there |
+| Init migration regenerated for SQL Server. It had never been applied to any database. Hand-written CHECKs: the original seven plus enum and JSON checks. Lock provider `mssql`. | `prisma/migrations/20261120000000_init/migration.sql`, `migration_lock.toml` |
+| T-SQL raw queries: `UPDLOCK` row locks, document-number upsert, `TOP`, `CAST AS date`, `isActive = 1` | `src/common/tx.ts`, `reports`, `sales-orders`, `purchase-orders`, `payments` modules |
+| JSON text activity metadata (`logActivity` / `parseMetadata`). Customer prices are de-duplicated in code instead of `skipDuplicates`. | `src/common/tx.ts`, `reports.module.ts`, `parties.module.ts` |
+| Test DB guard parses `database=` from the connection string | `test/global-setup.ts`, `databaseName()` in `prisma.service.ts` |
+| `.env.example` updated for SQL Server. Docs updated. | `apps/api/.env.example`, both handoff files |
 
-**Reuse:** built on the existing shadcn/ui components (button, input, field, sidebar, chart, badge, skeleton, spinner, sonner, tooltip) and on libraries already installed (axios, TanStack Query, react-hook-form, zod, react-i18next, recharts, lucide). **No new dependencies were added.**
+4. **Bugs found by the first real runs, all fixed:**
+   - Nested `items.create` passed `tenantId`, which Prisma rejects. Purchase-order and sales-order create and update were affected.
+   - Env validation rejected `PORT` and `REFRESH_TOKEN_TTL_DAYS`. Fixed with `@Type(() => Number)` on the un-annotated fields.
+   - Vitest's oxc transform didn't emit decorator metadata, which breaks Nest DI and class-transformer. Fixed in both `vitest.config*.ts`.
+   - Test bugs: auth tests used names shorter than the DTO minimum, and a tenancy assertion compared ids across different tables.
+5. **Web fixes found in the browser:**
+   - Added a route `errorElement` (`src/components/RouteError.tsx`). It reloads once on a stale-chunk error and otherwise shows a translated, recoverable message.
+   - Added the full set of Arabic plural forms for the order count (zero/one/two/few/many/other), with a test.
+   - Changed the daily-sales chart from an area to bars.
+6. **Local SQL Server setup** was done through Windows authentication (the user is sysadmin):
+   - Created login `tradeflow` with a generated password, which exists only in the gitignored `apps/api/.env` and was never printed.
+   - Created databases `tradeflow`, `tradeflow_test` and `tradeflow_shadow`, with `tradeflow` as `db_owner` of each.
+   - The existing `springMVC` and `PaymentSystemDb` databases were not touched.
+   - The MYSQL80 Windows service was stopped, with the user's approval through UAC.
 
-### Verification
+### Verification (actual results)
 
-- `npx vitest run` (web): **13/13 passed**. Covers ar/en key parity in every namespace, a translation for every API `ErrorCode` (read from `apps/api/src/common/errors.ts` as text), Western digits in Arabic money formatting, error-code mapping, the shared single-flight refresh, and a rejected refresh returning null.
-- `tsc -b` (web): OK. `oxlint`: 0 errors. The warnings are `only-export-components` in the generated shadcn files and in `router.tsx`, which is harmless.
-- `npm run build -w @tradeflow/web`: OK. Each page is its own chunk; the dashboard chunk (recharts) is about 103 kB gzip, the entry about 152 kB gzip.
-- The Vite dev server started and `/login` returned HTTP 200.
-- **NOT verified:** what the UI looks like in a browser (the browser pane refused to open localhost) and any flow against the real API (MySQL is down).
+| Check | Result |
+|---|---|
+| `prisma validate`, `migrate deploy` (dev and test DBs) | OK |
+| `prisma db seed` (dev) | OK: 3 users, 11 products, 5 customers, 12 sales orders, 2 purchase orders, 9 payments, 37 stock movements, 31 activity rows. Arabic stored as Unicode (first codepoint 1571 = أ). Minimum stock 0. |
+| API unit tests | **11/11** (money maths, plus enum CHECK ↔ `enums.ts` consistency) |
+| API e2e (SQL Server, `tradeflow_test`) | **27/27**: auth, workflows and financial consistency incl. concurrent overselling, tenant isolation incl. DB-level FK and CHECK, RBAC |
+| API `tsc --noEmit`, `nest build` | OK |
+| API `oxlint` | 0 errors, 3 warnings in code this session didn't touch (`parties.module.ts` spread of a class instance, a sort without a comparator in `workflows.e2e-spec.ts`) |
+| Live smoke `node apps/api/scripts/smoke.mjs` (built API + Vite proxy) | **26/26**: login, me, dashboard, products and all four reports for owner, manager and staff, including STAFF cost hiding and 403s; statements; activity metadata parsed |
+| Web unit tests, `tsc -b` | **14/14**, OK |
+| Browser (built-in pane) | Login → dashboard with real data. Arabic RTL with the sidebar on the right; English LTR with the sidebar on the left, choice saved; 375 px mobile has one column and no horizontal overflow. Screenshots were partly unreliable because the pane was hidden, so the layout was confirmed through DOM measurements. |
 
-## Blockers (unchanged from session 1)
+## Current state
 
-1. **MySQL is not running.** Windows service `MYSQL80` is stopped. Starting it needs an admin shell: `net start MYSQL80`.
-2. **The DB user doesn't exist yet.** In MySQL Workbench, create `tradeflow`@`localhost` and grant it ``ALL ON `tradeflow%`.*``. Then replace the three `CHANGE_ME` values in `apps/api/.env` (gitignored).
+- The backend MVP (every module in PROJECT_HANDOFF.md) runs on SQL Server and is covered by e2e tests.
+- **Frontend:** only login, register, the dashboard and the 404 page exist. Every other module has no UI yet. This is the main remaining work.
+- Processes left running: the built API (`node apps/api/dist/main.js`, started from a background task) and Vite in the Terminal tab "web dev server". Stop both when done.
 
-## Known issues
+## Exact next steps
 
-- Global npm 10.8.2 crashes on Node 26. Use `npx -y npm@11 <cmd>`.
-- `npm audit`: 3 high, all from `effect` inside the dev-only Prisma CLI. This is a documented, accepted risk.
-- The `.claude/launch.json` (local, untracked) defines a `web` dev-server config.
-- PROJECT_HANDOFF.md has no "Installed Skills" or "Reuse-First Development" policy sections, although the session instructions refer to them. They were not invented. The user should add them if they want them recorded permanently.
+1. Build the frontend feature pages, in this order:
+   - products and categories (list with search/filter/low stock, create/edit; cost fields hidden for STAFF);
+   - inventory (movements, adjustments);
+   - customers (CRUD, customer prices, the ledger-style statement as the signature UI);
+   - sales orders (draft editor, price resolution, confirm/deliver/cancel);
+   - payments (record, void);
+   - suppliers and purchase orders (order/receive/cancel);
+   - reports (sales, inventory, balances, activity);
+   - settings (tenant) and users (owner only).
 
-## Exact next steps (in order)
+   For each page: add a locale namespace in `src/i18n/resources.ts` and both locale folders, add a `NAV` entry in `AppLayout.tsx` filtered by role, and verify it in the browser against the live API.
+2. After each page: web tests and `tsc -b`, then the API e2e suite if API code changed. Commit and push to `main`.
 
-1. **User:** start MySQL, create the DB user and fill in `apps/api/.env` (see Blockers).
-2. `npm run db:migrate`, then `npm run db:seed`, then `npm run test:e2e -w @tradeflow/api`, and fix any failures (this will be the first real run).
-3. `npm run dev` and check the UI in a browser: login as `owner@demo.tradeflow.local` / `Demo@12345`, the dashboard, the ar/en switch, and an RTL/LTR layout check at mobile width.
-4. Next frontend feature pages, in this order: **products/categories** → inventory (movements, adjustments, low stock) → customers (prices, ledger statement) → sales orders → payments → suppliers and purchase orders → reports → settings and users (owner only). Add each page to `NAV` in `src/layout/AppLayout.tsx` only once it exists, filtered by role. Add its namespace to `src/i18n/resources.ts` and to both locale folders.
-5. Keep committing to `feat/foundation` and pushing. Ask before touching `main`.
+## Constraints to keep
 
-## Conventions for continuation
-
-- UI strings live in locale JSON only. API errors are translated by `code` in the `errors` namespace.
-- Use only logical Tailwind classes (`ms/me/ps/pe/start/end`). Mirror direction-bearing icons with `rtl:-scale-x-100`. Show references and numbers like SKUs and order numbers with `dir="ltr"`.
-- Show amounts with `formatMoney(value, tenant.currency, lang)` and the `tabular` class.
-- Server state goes through TanStack Query (`api` from `@/lib/api`). Never store tokens in localStorage.
-- The UI hides what a role can't do, but the API remains the authority (`isManagerOrAbove`, `isOwner`).
-
-## Git
-
-- Repo `D:\Workspace\tradeflow`. The working branch is `feat/foundation`, which tracks `origin/feat/foundation` at https://github.com/ali-kassab/tradeflow.
-- Commits use only the user's identity (`ali-kassab`), with **no AI co-author trailers**. No PRs, no force-push, and nothing pushed to `main` without approval.
+- SQL Server only; no Docker. Follow the "SQL Server adaptations" list in PROJECT_HANDOFF.md.
+- Never print or commit `apps/api/.env`. Only the user's git identity, with no AI trailers. Push to `main`, never force-push.
+- `prisma migrate reset` by an agent needs `PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION="Yes, I consent to resetting tradeflow and tradeflow_test"`, and only for those two databases.
+- Don't change the PowerShell execution policy; use `npx.cmd`.
+- Keep the Installed Skills and Reuse-First policy requirements from the user's instructions. PROJECT_HANDOFF.md doesn't contain those sections yet.

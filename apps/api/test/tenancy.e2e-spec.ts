@@ -54,15 +54,21 @@ describe('Tenant isolation', () => {
     await b.get(`/sales-orders/${A.order.id}`).expect(404);
     await b.get(`/purchase-orders/${A.po.id}`).expect(404);
 
-    const lists = await Promise.all([
-      b.get('/products'), b.get('/customers'), b.get('/sales-orders'), b.get('/payments/customer'),
-      b.get('/payments/supplier'), b.get('/purchase-orders'), b.get(`/inventory/movements?productId=${A.product.id}`),
-    ]);
-    for (const res of lists) {
-      const ids = res.body.data.map((r: { id: number }) => r.id);
-      expect(ids).not.toContain(A.product.id === bProduct.id ? -1 : A.product.id);
+    // Each list is checked against A's id for the *same* entity (ids are per table).
+    const checks: [string, number][] = [
+      ['/products', A.product.id],
+      ['/customers', A.customer.id],
+      ['/sales-orders', A.order.id],
+      ['/payments/customer', A.payment.id],
+      ['/payments/supplier', A.supplierPayment.id],
+      ['/purchase-orders', A.po.id],
+    ];
+    for (const [url, aId] of checks) {
+      const ids = (await b.get(url).expect(200)).body.data.map((r: { id: number }) => r.id);
+      expect(ids, url).not.toContain(aId);
     }
-    expect(lists[6].body.data).toHaveLength(0);
+    const movements = await b.get(`/inventory/movements?productId=${A.product.id}`).expect(200);
+    expect(movements.body.data).toHaveLength(0);
     const cats = (await b.get('/categories').expect(200)).body;
     expect(cats.map((c: { id: number }) => c.id)).not.toContain(A.category.id);
   });

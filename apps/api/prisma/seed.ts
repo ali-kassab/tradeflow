@@ -7,7 +7,7 @@
  */
 import 'dotenv/config';
 import * as argon2 from 'argon2';
-import { PaymentMethod, Role } from '../src/generated/prisma/client.js';
+import { PaymentMethod, Role } from '../src/common/enums.js';
 import type { AuthUser } from '../src/common/auth.js';
 import { StockService } from '../src/modules/inventory/stock.service.js';
 import { CatalogService } from '../src/modules/catalog/catalog.service.js';

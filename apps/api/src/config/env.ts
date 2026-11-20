@@ -1,4 +1,4 @@
-import { plainToInstance } from 'class-transformer';
+import { Type, plainToInstance } from 'class-transformer';
 import {
   IsIn,
   IsInt,
@@ -14,6 +14,7 @@ export class AppConfig {
   @IsIn(['development', 'production', 'test'])
   NODE_ENV: 'development' | 'production' | 'test' = 'development';
 
+  @Type(() => Number) // un-annotated field: metadata alone would say Object
   @IsInt()
   @Min(1)
   PORT = 3000;
@@ -29,6 +30,7 @@ export class AppConfig {
   @IsString()
   JWT_ACCESS_TTL = '15m';
 
+  @Type(() => Number) // un-annotated field: metadata alone would say Object
   @IsInt()
   @Min(1)
   @Max(90)

@@ -3,7 +3,7 @@ import { defineConfig } from 'prisma/config';
 
 // `prisma generate` does not need a database, so it must work on a fresh clone
 // without a .env file. Migration commands fail loudly if the URL is missing.
-const placeholder = 'mysql://unset:unset@localhost:3306/unset';
+const placeholder = 'sqlserver://localhost:1433;database=unset;user=unset;password=unset';
 
 export default defineConfig({
   schema: 'prisma/schema.prisma',

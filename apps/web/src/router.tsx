@@ -2,6 +2,7 @@ import { type ReactNode, Suspense, lazy } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, Outlet, createBrowserRouter, useLocation } from 'react-router';
 import { useAuth } from '@/auth/context';
+import { RouteError } from '@/components/RouteError';
 import { Spinner } from '@/components/ui/spinner';
 import { AppLayout } from '@/layout/AppLayout';
 
@@ -43,6 +44,7 @@ function GuestOnly() {
 export const router = createBrowserRouter([
   {
     element: <GuestOnly />,
+    errorElement: <RouteError />,
     children: [
       { path: '/login', element: <Page><LoginPage /></Page> },
       { path: '/register', element: <Page><RegisterPage /></Page> },
@@ -50,6 +52,7 @@ export const router = createBrowserRouter([
   },
   {
     element: <RequireAuth />,
+    errorElement: <RouteError />,
     children: [
       { index: true, element: <Page><DashboardPage /></Page> },
       { path: '*', element: <Page><NotFoundPage /></Page> },

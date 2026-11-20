@@ -9,7 +9,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import type { Request } from 'express';
-import { Role } from '../generated/prisma/client.js';
+import { Role } from './enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { AppException, ErrorCode } from './errors.js';
 
@@ -85,13 +85,13 @@ export class AuthGuard implements CanActivate {
       throw new AppException(HttpStatus.UNAUTHORIZED, ErrorCode.ACCOUNT_DISABLED, 'Account disabled');
     }
 
-    req.user = { id: user.id, tenantId: user.tenantId, role: user.role, name: user.name, email: user.email };
+    req.user = { id: user.id, tenantId: user.tenantId, role: user.role as Role, name: user.name, email: user.email };
 
     const roles = this.reflector.getAllAndOverride<Role[] | undefined>(ROLES, [
       ctx.getHandler(),
       ctx.getClass(),
     ]);
-    if (roles && !roles.includes(user.role)) {
+    if (roles && !roles.includes(user.role as Role)) {
       throw new AppException(HttpStatus.FORBIDDEN, ErrorCode.FORBIDDEN, 'Insufficient permissions');
     }
     return true;
