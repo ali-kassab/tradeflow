@@ -1,8 +1,9 @@
-import { BanknoteIcon, BoxesIcon, LayoutDashboardIcon, LogOutIcon, PackageIcon, ReceiptIcon, TagsIcon, UsersIcon } from 'lucide-react';
+import { BanknoteIcon, BoxesIcon, LayoutDashboardIcon, LogOutIcon, type LucideIcon, PackageIcon, ReceiptIcon, TagsIcon, TruckIcon, UsersIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavLink, Outlet, useMatch, useResolvedPath } from 'react-router';
 import { useAuth, useSession } from '@/auth/context';
+import { type Role, isManagerOrAbove } from '@/auth/types';
 import { LanguageSwitch } from '@/components/LanguageSwitch';
 import { Logo } from '@/components/Logo';
 import { Button } from '@/components/ui/button';
@@ -21,8 +22,16 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 
-// Only pages that exist are listed; feature pages are added here as they are built.
-const NAV = [
+// Only pages that exist are listed. `allow` hides entries the API would refuse for the role.
+interface NavEntry {
+  to: string;
+  end: boolean;
+  icon: LucideIcon;
+  label: 'nav.dashboard' | 'nav.products' | 'nav.categories' | 'nav.inventory' | 'nav.customers' | 'nav.salesOrders' | 'nav.payments' | 'nav.suppliers' | 'nav.purchaseOrders' | 'nav.reports' | 'nav.settings' | 'nav.users';
+  allow?: (role: Role) => boolean;
+}
+
+const NAV: NavEntry[] = [
   { to: '/', end: true, icon: LayoutDashboardIcon, label: 'nav.dashboard' },
   { to: '/products', end: false, icon: PackageIcon, label: 'nav.products' },
   { to: '/categories', end: false, icon: TagsIcon, label: 'nav.categories' },
@@ -30,7 +39,8 @@ const NAV = [
   { to: '/customers', end: false, icon: UsersIcon, label: 'nav.customers' },
   { to: '/sales-orders', end: false, icon: ReceiptIcon, label: 'nav.salesOrders' },
   { to: '/payments', end: false, icon: BanknoteIcon, label: 'nav.payments' },
-] as const;
+  { to: '/suppliers', end: false, icon: TruckIcon, label: 'nav.suppliers', allow: isManagerOrAbove },
+];
 
 function NavItem({ to, end, children }: { to: string; end?: boolean; children: ReactNode }) {
   const match = useMatch({ path: useResolvedPath(to).pathname, end: end ?? false });
@@ -63,7 +73,7 @@ export function AppLayout() {
             <SidebarGroupContent>
               <nav aria-label={t('nav.main')}>
                 <SidebarMenu>
-                  {NAV.map((item) => (
+                  {NAV.filter((item) => !item.allow || item.allow(user.role)).map((item) => (
                     <NavItem key={item.to} to={item.to} end={item.end}>
                       <item.icon aria-hidden="true" />
                       <span>{t(item.label)}</span>

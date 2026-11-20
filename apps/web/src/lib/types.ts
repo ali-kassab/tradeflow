@@ -164,3 +164,21 @@ export interface CustomerPaymentListItem extends CustomerPayment {
   customer: { id: number; name: string };
   salesOrder: { id: number; number: string } | null;
 }
+
+export interface Supplier {
+  id: number;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  taxNumber: string | null;
+  notes: string | null;
+  isActive: boolean;
+  /** Σ received purchase orders − Σ non-voided supplier payments: what you owe the supplier. */
+  balance: string;
+}
+
+export interface SupplierDetail extends Supplier {
+  totalBilled: string;
+  totalPaid: string;
+}

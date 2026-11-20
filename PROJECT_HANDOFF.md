@@ -49,7 +49,7 @@ Wholesalers manage products, stock, retailer customers, suppliers, sales and pur
 | Reports | ✅ | ✅ | ❌ |
 | Dashboard | full | full | sales/receivables only (no profit, stock value, payables) |
 
-Enforced in the API (`@Roles`, `ManagerOrAbove`, `OwnerOnly`, `canSeeCosts`). The UI only mirrors it.
+Enforced in the API (`@Roles`, `ManagerOrAbove`, `OwnerOnly`, `canSeeCosts`). The UI only mirrors it: `NAV` entries in `layout/AppLayout.tsx` take an `allow(role)` filter, and role-restricted routes are wrapped in `auth/RoleGate.tsx` (router `Manager` wrapper), which shows the translated `FORBIDDEN` message instead of a page full of 403s.
 
 ## Architecture
 
@@ -130,7 +130,7 @@ SQL Server adaptations (keep them):
   - ledger green `#0F6E5A` (primary)
   - carton amber `#C8891B` (low stock/warnings)
   - danger `#B4382F`
-- The signature UI element is a ledger-style statement (debit/credit/running balance, tabular numerals). Everything else stays quiet. It is the shared `src/components/LedgerStatement.tsx` (customers now, suppliers next); its labels live in `common.statement`.
+- The signature UI element is a ledger-style statement (debit/credit/running balance, tabular numerals). Everything else stays quiet. It is the shared `src/components/LedgerStatement.tsx` (customers and suppliers); its labels live in `common.statement`.
 
 ## Testing
 

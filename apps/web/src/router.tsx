@@ -1,7 +1,9 @@
 import { type ReactNode, Suspense, lazy } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, Outlet, createBrowserRouter, useLocation } from 'react-router';
+import { RoleGate } from '@/auth/RoleGate';
 import { useAuth } from '@/auth/context';
+import { isManagerOrAbove } from '@/auth/types';
 import { RouteError } from '@/components/RouteError';
 import { Spinner } from '@/components/ui/spinner';
 import { AppLayout } from '@/layout/AppLayout';
@@ -19,6 +21,8 @@ const SalesOrdersPage = lazy(() => import('@/pages/sales-orders/SalesOrdersPage'
 const SalesOrderDetailPage = lazy(() => import('@/pages/sales-orders/SalesOrderDetailPage'));
 const SalesOrderEditorPage = lazy(() => import('@/pages/sales-orders/SalesOrderEditorPage'));
 const PaymentsPage = lazy(() => import('@/pages/payments/PaymentsPage'));
+const SuppliersPage = lazy(() => import('@/pages/suppliers/SuppliersPage'));
+const SupplierDetailPage = lazy(() => import('@/pages/suppliers/SupplierDetailPage'));
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'));
 
 function FullPageSpinner() {
@@ -33,6 +37,15 @@ function FullPageSpinner() {
 
 function Page({ children }: { children: ReactNode }) {
   return <Suspense fallback={<FullPageSpinner />}>{children}</Suspense>;
+}
+
+/** Pages the API only serves to managers and owners. */
+function Manager({ children }: { children: ReactNode }) {
+  return (
+    <RoleGate allow={isManagerOrAbove}>
+      <Page>{children}</Page>
+    </RoleGate>
+  );
 }
 
 function RequireAuth() {
@@ -74,6 +87,8 @@ export const router = createBrowserRouter([
       { path: '/sales-orders/:id', element: <Page><SalesOrderDetailPage /></Page> },
       { path: '/sales-orders/:id/edit', element: <Page><SalesOrderEditorPage /></Page> },
       { path: '/payments', element: <Page><PaymentsPage /></Page> },
+      { path: '/suppliers', element: <Manager><SuppliersPage /></Manager> },
+      { path: '/suppliers/:id', element: <Manager><SupplierDetailPage /></Manager> },
       { path: '*', element: <Page><NotFoundPage /></Page> },
     ],
   },

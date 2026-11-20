@@ -1,6 +1,6 @@
 # Session handoff — TradeFlow
 
-_Last updated: 2026-11-21, session 4 (MVP completion run). Checkpoint: Phase 1 (customer payments) done._
+_Last updated: 2026-11-21, session 4 (MVP completion run). Checkpoint: Phase 2 (suppliers) done._
 
 ## Project
 
@@ -9,13 +9,13 @@ TradeFlow is a bilingual (Arabic RTL by default, English LTR) B2B wholesale mana
 ## Status
 
 - **Backend:** MVP API complete (all endpoints in PROJECT_HANDOFF.md). No backend changes this session so far.
-- **Frontend built and verified:** auth, dashboard, products, categories, inventory, customers, sales orders, **customer payments**.
-- **Frontend not built yet:** suppliers, purchase orders, supplier payments, reports, settings, users. README missing.
+- **Frontend built and verified:** auth, dashboard, products, categories, inventory, customers, sales orders, customer payments (`02ce643`), **suppliers**.
+- **Frontend not built yet:** purchase orders, supplier payments, reports, settings, users. README missing.
 
 ## Roadmap for this run (user-approved order)
 
 1. ~~Customer payments~~ (done)
-2. Suppliers (list, form, detail, statement via `LedgerStatement`; manager+)
+2. ~~Suppliers~~ (done)
 3. Purchase orders (list, draft editor, order / receive / cancel, detail)
 4. Supplier payments (reuse payments page/dialogs)
 5. Reports (sales, inventory value, balances, activity — backend `/reports/*`)
@@ -48,6 +48,22 @@ TradeFlow is a bilingual (Arabic RTL by default, English LTR) B2B wholesale mana
 
 Demo data after this phase: two **voided** test payments on customer 2 (RC-1001 1,000.00 and STAFF-TEST 50.00); balances unchanged.
 
+## Phase 2 — suppliers
+
+| Area | Files |
+|---|---|
+| List `/suppliers`: search, status filter, phone, email, "You owe" balance, add/edit/delete (`IN_USE` translated); a new supplier opens its detail | `apps/web/src/pages/suppliers/SuppliersPage.tsx` (derived from the customers list) |
+| Form dialog: zod mirror of `PartyDto`/`UpdateSupplierDto`; empty optional fields sent as `null` | `pages/suppliers/SupplierFormDialog.tsx` |
+| Detail `/suppliers/:id`: contact line, received − paid = balance (owed / paid in advance / settled), statement via the shared `LedgerStatement` | `pages/suppliers/SupplierDetailPage.tsx` |
+| Role gating: `RoleGate` (translated FORBIDDEN instead of a page of 403s), router `Manager` wrapper; `NAV` entries take `allow(role)`; suppliers hidden from STAFF | `auth/RoleGate.tsx`, `router.tsx`, `layout/AppLayout.tsx` |
+| Types `Supplier`, `SupplierDetail`; i18n `suppliers` namespace (ar/en) | `lib/types.ts`, `i18n/*` |
+
+Verification: web `tsc -b` OK; vitest 32/32 (locale parity covers the new namespace); oxlint no new warnings. Browser:
+- STAFF: no Suppliers nav entry; `/suppliers` shows the permission message.
+- MANAGER: list shows المصرية للأغذية owing 6,080.00 (= dashboard payables); its statement PO-00001 14,080.00 − TRX-55102 8,000.00 = 6,080.00. Create with an invalid email blocked, then created (opens detail); edit cleared the phone; delete of that test supplier succeeded.
+- Arabic and English at 375 px: no page-level horizontal scroll; tabs follow the direction.
+- Not exercised: the `IN_USE` delete refusal on a seeded supplier (the agent's safety guard blocked confirming a delete on seeded data). The same API/UI path was verified for customers in session 3.
+
 ## How to run (dev)
 
 - `.claude/launch.json` (local, untracked) has `api` (`node dist/main.js` in `apps/api`, port 3000) and `web` (`npx vite`, port 5173). Rebuild the API with `npm run build -w @tradeflow/api` after API changes.
@@ -64,7 +80,7 @@ Demo data after this phase: two **voided** test payments on customer 2 (RC-1001 
 
 ## Exact next step
 
-Phase 2 — suppliers: read `apps/api/src/modules/parties/parties.module.ts` (supplier DTOs, list shape, statement), then build `pages/suppliers/` (list, form dialog, detail with `LedgerStatement`) reusing the customers pages' patterns; nav entry for manager+ only; verify as manager and staff (staff must not see it; API returns 403).
+Phase 3 — purchase orders: read `apps/api/src/modules/purchase-orders/purchase-orders.module.ts` (DTOs, list/detail shape, order/receive/cancel rules), then build `pages/purchase-orders/` (list, draft editor with `ProductPicker` and unit costs, detail with Order / Receive / Cancel) reusing the sales-orders pages and `lib/order-math`; manager+ only (`Manager` route wrapper, nav `allow`). Then link supplier statement PO references and add "Orders" / "New order" on the supplier page.
 
 ## Constraints to keep
 
