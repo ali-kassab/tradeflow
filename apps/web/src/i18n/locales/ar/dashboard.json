@@ -1,0 +1,29 @@
+{
+  "title": "لوحة المتابعة",
+  "greeting": "مرحبًا، {{name}}",
+  "kpi": {
+    "salesToday": "مبيعات اليوم",
+    "salesThisMonth": "مبيعات الشهر",
+    "receivables": "مستحق من العملاء",
+    "customerCredit": "أرصدة دائنة للعملاء",
+    "payables": "مستحق للموردين",
+    "inventoryValue": "قيمة المخزون",
+    "grossProfitThisMonth": "مجمل ربح الشهر",
+    "lowStock": "أصناف تحت حد الطلب",
+    "orders_one": "{{count}} طلب",
+    "orders_other": "{{count}} طلبات"
+  },
+  "chart": {
+    "title": "المبيعات آخر 30 يومًا",
+    "revenue": "المبيعات"
+  },
+  "recentOrders": {
+    "title": "أحدث أوامر البيع",
+    "empty": "لا توجد أوامر بيع بعد."
+  },
+  "recentPayments": {
+    "title": "أحدث مدفوعات العملاء",
+    "empty": "لا توجد مدفوعات بعد."
+  },
+  "loadError": "تعذّر تحميل لوحة المتابعة."
+}

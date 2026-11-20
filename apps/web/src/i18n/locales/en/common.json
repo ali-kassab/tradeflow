@@ -1,0 +1,53 @@
+{
+  "appName": "TradeFlow",
+  "tagline": "Wholesale management",
+  "language": {
+    "label": "Language",
+    "switchTo": "العربية"
+  },
+  "nav": {
+    "main": "Main menu",
+    "dashboard": "Dashboard",
+    "products": "Products",
+    "inventory": "Inventory",
+    "customers": "Customers",
+    "salesOrders": "Sales orders",
+    "payments": "Payments",
+    "suppliers": "Suppliers",
+    "purchaseOrders": "Purchase orders",
+    "reports": "Reports",
+    "settings": "Settings",
+    "users": "Users"
+  },
+  "roles": {
+    "OWNER": "Owner",
+    "MANAGER": "Manager",
+    "STAFF": "Staff"
+  },
+  "actions": {
+    "signOut": "Sign out",
+    "retry": "Try again",
+    "toggleSidebar": "Show or hide the menu"
+  },
+  "status": {
+    "loading": "Loading…",
+    "comingSoon": "This page is being built."
+  },
+  "notFound": {
+    "title": "Page not found",
+    "body": "Check the link or go back to the dashboard.",
+    "back": "Back to dashboard"
+  },
+  "orderStatus": {
+    "DRAFT": "Draft",
+    "CONFIRMED": "Confirmed",
+    "DELIVERED": "Delivered",
+    "CANCELLED": "Cancelled"
+  },
+  "paymentMethod": {
+    "CASH": "Cash",
+    "BANK_TRANSFER": "Bank transfer",
+    "CHEQUE": "Cheque",
+    "OTHER": "Other"
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "appName": "TradeFlow",
+  "tagline": "إدارة تجارة الجملة",
+  "language": {
+    "label": "اللغة",
+    "switchTo": "English"
+  },
+  "nav": {
+    "main": "القائمة الرئيسية",
+    "dashboard": "لوحة المتابعة",
+    "products": "المنتجات",
+    "inventory": "المخزون",
+    "customers": "العملاء",
+    "salesOrders": "أوامر البيع",
+    "payments": "المدفوعات",
+    "suppliers": "الموردون",
+    "purchaseOrders": "أوامر الشراء",
+    "reports": "التقارير",
+    "settings": "الإعدادات",
+    "users": "المستخدمون"
+  },
+  "roles": {
+    "OWNER": "مالك",
+    "MANAGER": "مدير",
+    "STAFF": "موظف"
+  },
+  "actions": {
+    "signOut": "تسجيل الخروج",
+    "retry": "إعادة المحاولة",
+    "toggleSidebar": "إظهار القائمة أو إخفاؤها"
+  },
+  "status": {
+    "loading": "جارٍ التحميل…",
+    "comingSoon": "هذه الصفحة قيد الإنشاء."
+  },
+  "notFound": {
+    "title": "الصفحة غير موجودة",
+    "body": "تحقق من الرابط أو عُد إلى لوحة المتابعة.",
+    "back": "العودة إلى لوحة المتابعة"
+  },
+  "orderStatus": {
+    "DRAFT": "مسودة",
+    "CONFIRMED": "مؤكد",
+    "DELIVERED": "تم التسليم",
+    "CANCELLED": "ملغى"
+  },
+  "paymentMethod": {
+    "CASH": "نقدًا",
+    "BANK_TRANSFER": "تحويل بنكي",
+    "CHEQUE": "شيك",
+    "OTHER": "أخرى"
+  }
+}

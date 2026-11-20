@@ -1,0 +1,29 @@
+{
+  "title": "Dashboard",
+  "greeting": "Hello, {{name}}",
+  "kpi": {
+    "salesToday": "Sales today",
+    "salesThisMonth": "Sales this month",
+    "receivables": "Owed by customers",
+    "customerCredit": "Customer credit",
+    "payables": "Owed to suppliers",
+    "inventoryValue": "Inventory value",
+    "grossProfitThisMonth": "Gross profit this month",
+    "lowStock": "Items below reorder level",
+    "orders_one": "{{count}} order",
+    "orders_other": "{{count}} orders"
+  },
+  "chart": {
+    "title": "Sales, last 30 days",
+    "revenue": "Sales"
+  },
+  "recentOrders": {
+    "title": "Latest sales orders",
+    "empty": "No sales orders yet."
+  },
+  "recentPayments": {
+    "title": "Latest customer payments",
+    "empty": "No payments yet."
+  },
+  "loadError": "Couldn't load the dashboard."
+}
