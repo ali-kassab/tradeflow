@@ -1,67 +1,77 @@
 # Session handoff — TradeFlow
 
-_Last updated: 2026-11-20, end of session 2 (safe shutdown)._
+_Last updated: 2026-11-20, session 3 (customers checkpoint)._
 
 ## Project
 
-TradeFlow is a bilingual (Arabic RTL by default, English LTR) B2B wholesale management platform, built as a portfolio project. Read PROJECT_HANDOFF.md for the permanent architecture, business rules, SQL Server conventions and policies.
+TradeFlow is a bilingual (Arabic RTL by default, English LTR) B2B wholesale management platform, built as a portfolio project. Read PROJECT_HANDOFF.md for the permanent architecture, business rules, SQL Server conventions and policies (including Installed Skills and Reuse-First).
 
 ## Checkpoint
 
 **Backend MVP complete on Microsoft SQL Server and verified. Frontend:**
 
-- **Built and verified:** auth, dashboard, products, categories, inventory.
-- **Not built yet:** customers, sales orders, payments, suppliers, purchase orders, reports, settings, users.
+- **Built and verified:** auth, dashboard, products, categories, inventory, **customers** (list, detail, statement, special prices).
+- **Not built yet:** sales orders, payments, suppliers, purchase orders, reports, settings, users.
 
-No partially built feature is left: each page that exists is complete and was checked in the browser against the live API.
+No partially built feature is left.
 
-## Completed this session (commits on `main`)
+## Branch state (important)
 
-| Commit | Content |
+- Work is on **`feat/foundation`**, pushed to `origin/feat/foundation`. `main` (local `a2454af`, `origin/main` `2fda48b`) was **not touched** this session.
+- Reason: PROJECT_HANDOFF's session-2 decision said "commit to `main`", but the user's standing instructions say never to modify `main`. The feature branch is the safe reading; `main` can be fast-forwarded later. **The user still has to say which branch is authoritative.**
+
+## Completed this session
+
+Customers frontend (one commit on `feat/foundation`, on top of `a2454af`):
+
+| Area | Files |
 |---|---|
-| `2b7708f` | Web foundation: theme tokens, IBM Plex Sans Arabic, react-i18next with ar default and runtime `dir`, axios client with in-memory token and single-flight refresh, auth pages, sidebar layout, dashboard |
-| `e3c6927` | **MySQL replaced by SQL Server** (`@prisma/adapter-mssql`): NVARCHAR text, `NoAction` delete/update rules, enums as NVARCHAR + CHECK (`src/common/enums.ts`), JSON metadata as NVARCHAR + ISJSON, T-SQL raw queries, regenerated init migration. Fixes to pre-existing bugs found by the first real runs (nested `tenantId`, env numeric coercion, Vitest decorator metadata, two wrong e2e assertions). Web route error element, full Arabic plurals, bar chart. |
-| `2fda48b` | Products and categories pages, plus shared UI: `PageHeader`, `PaginationBar`, `ConfirmDialog`, `lib/notify.ts`, `lib/queries.ts`, `lib/types.ts`, `lib/use-debounced.ts` |
-| _(this checkpoint)_ | **Inventory page** (`/inventory`): movement history filtered by product (`?productId=`) and type, with pagination, and a manager-only adjustment dialog (add/remove, live balance preview, reason required, INSUFFICIENT_STOCK handled). Shared `ProductPicker` (server-side search, Command + Popover). A "stock history" link on every product row. |
+| List `/customers`: search, status filter, balance with over-limit badge, add/edit (all roles), delete (manager+, `IN_USE` handled), new customer opens its detail page | `apps/web/src/pages/customers/CustomersPage.tsx` |
+| Form dialog: zod schema mirroring `CreateCustomerDto`; empty optional fields sent as `null` so edits can clear them | `pages/customers/CustomerFormDialog.tsx` |
+| Detail `/customers/:id`: contact line, billed − paid = balance summary (owes / in credit / settled, credit-limit warning), tabs | `pages/customers/CustomerDetailPage.tsx` |
+| Special prices: read-only for STAFF; manager edit mode with `ProductPicker`, per-row validation, % difference vs standard price, `PUT` replaces the list | `pages/customers/CustomerPrices.tsx` |
+| Helpers + tests: `isOverLimit`, `priceDifference`; `formatPercent` | `pages/customers/credit.ts`, `credit.spec.ts`, `lib/format.ts`, `lib/format.spec.ts` |
+| **Shared ledger statement** (signature UI): debit/credit/running balance, blank zero cells, double-ruled closing balance; reusable for suppliers | `apps/web/src/components/LedgerStatement.tsx` |
+| **Global RTL fix:** Radix `Direction.Provider` at the root (`AppDirection`). Before this, every Radix primitive (Tabs, Select, menus) stamped `dir="ltr"` inside the Arabic UI; this also affected the inventory adjustment tabs | `components/AppDirection.tsx`, `main.tsx` |
+| Types, i18n (`customers` namespace; generic statement labels in `common.statement`), nav entry, routes | `lib/types.ts`, `i18n/resources.ts`, `i18n/locales/{ar,en}/{customers,common}.json`, `layout/AppLayout.tsx`, `router.tsx` |
+| Docs | PROJECT_HANDOFF.md: `AppDirection` + logical `divide-x` conventions, `LedgerStatement` location, branch-policy conflict, Installed Skills and Reuse-First sections |
 
-Environment work:
-- SQL Server login `tradeflow` created, with a generated password that exists only in the gitignored `apps/api/.env`.
-- Databases `tradeflow`, `tradeflow_test` and `tradeflow_shadow` created; the login is `db_owner` of each.
-- `main` fast-forwarded from `feat/foundation` with the user's approval.
-- The MYSQL80 service was stopped.
+Skills read and followed: `frontend-design` (boldness kept to the ledger; everything else quiet, existing tokens) and `vercel-react-best-practices` (derived state in render, functional `setState`, ternary conditionals, hoisted constants, parallel queries on the detail page).
 
 ## Verification (actual results)
 
 | Check | Result |
 |---|---|
-| API unit tests | 11/11 (at `e3c6927`; the API hasn't changed since) |
-| API e2e on SQL Server | **27/27** (at `e3c6927`) |
-| Live smoke `node apps/api/scripts/smoke.mjs` | **26/26** (at `e3c6927`) |
-| Seed on SQL Server | OK, Arabic stored as Unicode |
-| Web `tsc -b`, `vitest`, production build (this checkpoint) | OK, **16/16**, OK |
-| Web `oxlint` | 0 errors. The warnings are `only-export-components` in the generated shadcn files and `router.tsx`. |
-| Browser, against the live API | **Dashboard:** ar/en, RTL/LTR, mobile 375 px, STAFF view. **Products:** create/edit/validation/duplicate SKU/search/IN_USE delete. **Categories:** add/duplicate/delete. **Inventory:** history link, filters, adjustment including the negative guard and preview. The pane was hidden, so the forms were driven through DOM events and the layout was checked by measurement, not by eye. |
+| Web `tsc -b` | OK |
+| Web `vitest` | **20/20** (was 16; +credit helpers, +percent format) |
+| Web `oxlint` | 0 errors; no warnings in new or changed files (existing warnings: shadcn `only-export-components`, `router.tsx`, `use-mobile.ts`, `AdjustStockDialog.tsx`) |
+| Web production build | OK (`CustomersPage` 5.1 kB, `CustomerDetailPage` 13.6 kB) |
+| Live smoke `node apps/api/scripts/smoke.mjs http://localhost:3000/api` | all checks passed (API code unchanged) |
+| Browser vs live API (manager) | List balances match the dashboard receivable; statement for customer 3 replays to −500.00 = billed − paid; create (email validation), edit clearing phone + credit limit, delete refused with `IN_USE` and translated, delete of the test customer; price edit: invalid amount blocked, −10% shown, `PUT` 200 |
+| Browser (staff) | Add/edit shown, no delete, prices read-only with explanation |
+| ar/en, RTL/LTR, 375 px | Radix `dir` follows the language live; no page-level horizontal scroll at 375 px (ledger scrolls inside its frame) |
+
+The browser pane was mostly hidden, so most checks were DOM measurements; two screenshots (desktop RTL, mobile EN) were reviewed.
 
 ## Known issues / notes
 
-- **Branch conflict to resolve:** in this session the user chose to commit to `main` (recorded in PROJECT_HANDOFF.md). The shutdown instruction said to push to the feature branch and never to `main`. This checkpoint is therefore committed locally on `main` and pushed **only** to `origin/feat/foundation` as a fast-forward. `origin/main` stays at `2fda48b`. **The user must confirm which branch is authoritative going forward.**
-- The demo dev database contains test edits made during browser checks: product HONEY-500 was created and deleted, and an oil adjustment of −3 ("تلف أثناء النقل") was recorded. Re-seeding requires `prisma migrate reset` with the consent variable described in PROJECT_HANDOFF.md.
-- Inventory movements show the reference type but don't link to orders yet; add links once the order pages exist.
-- The browser pane was hidden all session, so a visual pass by eye is still worthwhile.
+- **Branch question** above is still open.
+- Demo data: the test customer was deleted and customer 3's test price was reset to an empty list via the API, so customers are back to the seeded five. Earlier edits from session 2 (HONEY-500 created/deleted; oil adjustment −3) remain.
+- Statement references (`SO-…`, payment `#id`) are plain text; link them once the sales-order and payment pages exist. Same for inventory movements.
+- The shadcn dialog close button's screen-reader label is the hard-coded English "Close" (pre-existing in `components/ui/dialog.tsx`); worth translating in a later pass.
 - Global npm 10 crashes on Node 26: use `npx -y npm@11`. In PowerShell use `npx.cmd`; don't change the execution policy.
-- `npm audit`: 3 high, from the dev-only Prisma CLI dependency `effect`. This is an accepted risk.
+- `npm audit`: 3 high from the dev-only Prisma CLI dependency `effect` (accepted).
 
 ## Exact next step
 
-1. Resolve the branch question above. If `main` is confirmed, run `git push origin main` (a fast-forward from `2fda48b`).
-2. Build the **customers** page: CRUD, customer-specific prices (`GET/PUT /customers/:id/prices`, using `ProductPicker`), and the ledger-style statement (`/customers/:id/statement`), which is the signature UI with debit, credit and running balance in tabular numerals.
-3. Then: sales orders (draft editor and confirm/deliver/cancel), payments (record and void), suppliers and purchase orders, reports, settings and users.
+1. Build the **sales orders** pages: list (status filter, per-tenant numbers), draft editor (customer picker, line items with `ProductPicker`, price resolution shown, manager-only price override, discount, VAT from tenant default), and the confirm/deliver/cancel actions with `INSUFFICIENT_STOCK`/`INVALID_STATUS` handling. A `CustomerPicker` modelled on `ProductPicker` will be needed.
+2. Then payments (record against a customer/order, void), suppliers (reuse `LedgerStatement`), purchase orders, reports, settings, users.
 
-For each page: add a locale namespace in `src/i18n/resources.ts` and both locale folders, add a `NAV` entry in `AppLayout.tsx` filtered by role, then verify against the live API. Start the API with `npm run build -w @tradeflow/api` and `node apps/api/dist/main.js`, and the web app with `npx vite` in `apps/web`.
+For each page: add a locale namespace in `src/i18n/resources.ts` and both locale folders, add a `NAV` entry in `AppLayout.tsx` (filtered by role where needed), then verify against the live API. Start the API with `npm run build -w @tradeflow/api` and `node apps/api/dist/main.js`; the web app via the `web` entry in `.claude/launch.json` (`npx vite` in `apps/web`).
 
 ## Constraints to keep
 
 - SQL Server only; no Docker. Follow the "SQL Server adaptations" list in PROJECT_HANDOFF.md.
-- Never print or commit `apps/api/.env`. Only the user's git identity, with no AI trailers. Never force-push or rewrite history.
+- Never print or commit `apps/api/.env`. Only the user's git identity, with no AI trailers. Never force-push or rewrite history. Don't modify `main` until the user says so.
 - `prisma migrate reset` by an agent needs `PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION="Yes, I consent to resetting tradeflow and tradeflow_test"`, and only for those two databases.
-- Keep the Installed Skills and Reuse-First policy requirements from the user's instructions. PROJECT_HANDOFF.md doesn't contain those sections yet.
+- Follow the Installed Skills and Reuse-First policies in PROJECT_HANDOFF.md.

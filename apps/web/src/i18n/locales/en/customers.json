@@ -1,0 +1,79 @@
+{
+  "title": "Customers",
+  "description": "Retailers you sell to, with what each one owes.",
+  "add": "Add customer",
+  "addTitle": "New customer",
+  "editTitle": "Edit customer",
+  "searchPlaceholder": "Search by name, phone or email",
+  "created": "Customer added.",
+  "empty": "No matching customers.",
+  "inactive": "Inactive",
+  "overLimit": "Over credit limit",
+  "back": "All customers",
+  "notFound": "This customer doesn't exist or was deleted.",
+  "filters": {
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "all": "All"
+  },
+  "columns": {
+    "name": "Customer",
+    "phone": "Phone",
+    "creditLimit": "Credit limit",
+    "balance": "Balance"
+  },
+  "fields": {
+    "name": "Customer name",
+    "phone": "Phone",
+    "email": "Email",
+    "address": "Address",
+    "taxNumber": "Tax number",
+    "creditLimit": "Credit limit",
+    "creditLimitHint": "Optional. You'll see a warning when the balance goes above it; orders are never blocked.",
+    "notes": "Notes",
+    "isActive": "Customer is active"
+  },
+  "validation": {
+    "required": "This field is required.",
+    "tooLong": "Too long.",
+    "email": "Enter a valid email address.",
+    "money": "Enter a valid amount (up to 2 decimals)."
+  },
+  "deleteTitle": "Delete customer?",
+  "deleteBody": "“{{name}}” will be deleted permanently. Customers with orders or payments can't be deleted — deactivate them instead.",
+  "summary": {
+    "billed": "Total billed",
+    "paid": "Total paid",
+    "balance": "Balance",
+    "owes": "Owes you",
+    "credit": "In credit",
+    "settled": "Settled",
+    "limit": "Credit limit {{amount}}"
+  },
+  "tabs": {
+    "statement": "Statement",
+    "prices": "Special prices",
+    "details": "Details"
+  },
+  "statement": {
+    "caption": "Account statement for {{name}}",
+    "empty": "No billed orders or payments yet. Confirmed sales orders and recorded payments will appear here.",
+    "hint": "Debit is what the customer owes you; credit is what they paid or what was cancelled. A negative balance is money you hold for them."
+  },
+  "prices": {
+    "description": "Prices used for this customer instead of the product's standard sale price.",
+    "product": "Product",
+    "standard": "Standard price",
+    "special": "Customer price",
+    "difference": "Difference",
+    "empty": "No special prices. This customer pays standard sale prices.",
+    "edit": "Edit prices",
+    "addProduct": "Add a product",
+    "alreadyListed": "This product is already in the list.",
+    "remove": "Remove",
+    "saved": "Prices saved.",
+    "invalid": "Fix the highlighted prices before saving.",
+    "readOnly": "Only managers and owners can change special prices."
+  }
+}

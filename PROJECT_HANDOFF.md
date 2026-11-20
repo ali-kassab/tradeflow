@@ -119,6 +119,8 @@ SQL Server adaptations (keep them):
 - `react-i18next` with resources in `src/i18n/locales/{ar,en}/*.json`. Default `ar`; the choice is persisted in `localStorage`.
 - `<html lang dir>` is switched at runtime. Use only logical Tailwind classes (`ms-/me-/ps-/pe-/start-/end-`); shadcn is configured with `rtl: true`.
 - API errors are translated by `code`, so there is no server-side localisation.
+- Radix primitives don't read `<html dir>`: `src/components/AppDirection.tsx` wraps the app in Radix `Direction.Provider` fed by `i18n.dir()`. Keep it at the root, or Tabs/Select/menus render LTR inside Arabic.
+- Tailwind 4 `divide-x`/`space-x` are already logical: never add `rtl:*-reverse`.
 - Numbers use **Western digits** in Arabic (`ar-EG-u-nu-latn` via `Intl`). Default currency is EGP.
 - Font: IBM Plex Sans Arabic (bundled via @fontsource, no CDN).
 - Design tokens:
@@ -127,7 +129,7 @@ SQL Server adaptations (keep them):
   - ledger green `#0F6E5A` (primary)
   - carton amber `#C8891B` (low stock/warnings)
   - danger `#B4382F`
-- The signature UI element is a ledger-style statement (debit/credit/running balance, tabular numerals). Everything else stays quiet.
+- The signature UI element is a ledger-style statement (debit/credit/running balance, tabular numerals). Everything else stays quiet. It is the shared `src/components/LedgerStatement.tsx` (customers now, suppliers next); its labels live in `common.statement`.
 
 ## Testing
 
@@ -149,5 +151,19 @@ SQL Server adaptations (keep them):
 - Repo `D:\Workspace\tradeflow`. Target: public GitHub repo `tradeflow` under the authenticated account (`ali-kassab`).
 - Commits use only the user's git identity, with **no AI/Claude author or co-author trailers**. No PRs. Never force-push.
 - Before every push: check for secrets, confirm `.env` is ignored, review staged files.
-- Branch policy (user decision, 2026-11-20): commit and push directly to **`main`** (fast-forwarded from `feat/foundation`, which is kept as is). No PRs, never force-push, never rewrite history.
+- Branch policy: the user decided on 2026-11-20 (session 2) to commit to `main`, but the user's standing session instructions (session 3 onward) say **never switch to or modify `main`** and push only to the feature branch. Until the user resolves this explicitly, all work is committed on and pushed to **`feat/foundation`** only; `main` is left untouched (it is fast-forwardable from `feat/foundation`). No PRs, never force-push, never rewrite history.
 - Original company repositories are never modified.
+
+## Installed Skills policy
+
+- Before a task, discover the installed Skills that apply, read their instructions, and follow them. Relevant here: web UI `frontend-design`, `vercel-react-best-practices`; browser testing `webapp-testing` or the built-in browser.
+- The `spring-*`, `flyway-migrations` and `multi-tenancy` Skills target Spring Boot/Java and don't apply to this NestJS/Prisma stack.
+- Never claim a Skill was used unless its instructions were actually read and followed; report which Skills were used and where.
+- Project architecture, security requirements and existing conventions always win over generic Skill advice.
+
+## Reuse-First Development policy
+
+- Use existing project components and installed libraries first (shadcn/ui primitives, `radix-ui`, `PageHeader`, `PaginationBar`, `ConfirmDialog`, `FormField`, `ProductPicker`, `LedgerStatement`, `lib/format`, `lib/notify`, TanStack Query, react-hook-form + zod).
+- For anything new, evaluate mature, compatible, free/open-source options before building custom code; check maintenance, licence, accessibility and bundle impact, and avoid unnecessary dependencies.
+- Customise reused components to the design tokens, Arabic RTL, English LTR and responsive layout.
+- Don't refactor or replace existing components merely to apply this policy.

@@ -43,3 +43,48 @@ export interface StockMovement {
   createdAt: string;
   product: { id: number; name: string; sku: string; unit: string };
 }
+
+export interface Customer {
+  id: number;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  taxNumber: string | null;
+  /** A warning threshold only; the API never blocks orders on it. */
+  creditLimit: string | null;
+  notes: string | null;
+  isActive: boolean;
+  /** Σ billed orders − Σ non-voided payments. Negative means customer credit. */
+  balance: string;
+}
+
+export interface CustomerDetail extends Customer {
+  totalBilled: string;
+  totalPaid: string;
+}
+
+export interface CustomerPrice {
+  id: number;
+  productId: number;
+  price: string;
+  product: { id: number; name: string; sku: string; salePrice: string };
+}
+
+export type StatementEntryType = 'ORDER_CONFIRMED' | 'ORDER_CANCELLED' | 'PURCHASE_RECEIVED' | 'PAYMENT' | 'PAYMENT_VOIDED';
+
+export interface StatementEntry {
+  date: string;
+  type: StatementEntryType;
+  reference: string;
+  refId: number;
+  debit: string;
+  credit: string;
+  /** Running balance after this entry. */
+  balance: string;
+}
+
+export interface Statement {
+  entries: StatementEntry[];
+  balance: string;
+}

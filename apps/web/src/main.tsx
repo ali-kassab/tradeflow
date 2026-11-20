@@ -3,6 +3,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router/dom';
 import { AuthProvider } from '@/auth/AuthProvider';
+import { AppDirection } from '@/components/AppDirection';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import './i18n';
@@ -26,12 +27,14 @@ const queryClient = new QueryClient({
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <RouterProvider router={router} />
-          <Toaster position="top-center" />
-        </TooltipProvider>
-      </AuthProvider>
+      <AppDirection>
+        <AuthProvider>
+          <TooltipProvider>
+            <RouterProvider router={router} />
+            <Toaster position="top-center" />
+          </TooltipProvider>
+        </AuthProvider>
+      </AppDirection>
     </QueryClientProvider>
   </StrictMode>,
 );

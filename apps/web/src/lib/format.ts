@@ -50,3 +50,8 @@ export function formatDate(value: string | Date, lang: string) {
 export function formatShortDay(value: string | Date, lang: string) {
   return dateFormat('day', lang, { month: 'short', day: 'numeric' }).format(new Date(value));
 }
+
+/** Signed percentage, e.g. "+5.5%" / "-10%"; takes a value in percent (10 → 10%). */
+export function formatPercent(value: number, lang: string) {
+  return numberFormat('pct', lang, { style: 'percent', maximumFractionDigits: 1, signDisplay: 'exceptZero' }).format(value / 100);
+}

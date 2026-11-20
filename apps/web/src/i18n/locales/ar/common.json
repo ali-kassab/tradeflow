@@ -86,5 +86,21 @@
     "SALE_CANCEL": "إلغاء بيع",
     "PURCHASE_RECEIPT": "استلام مشتريات",
     "ADJUSTMENT": "تسوية يدوية"
+  },
+  "statement": {
+    "date": "التاريخ",
+    "entry": "البيان",
+    "reference": "المرجع",
+    "debit": "مدين",
+    "credit": "دائن",
+    "balance": "الرصيد",
+    "closing": "الرصيد الختامي",
+    "type": {
+      "ORDER_CONFIRMED": "تأكيد أمر بيع",
+      "ORDER_CANCELLED": "إلغاء أمر بيع",
+      "PURCHASE_RECEIVED": "استلام مشتريات",
+      "PAYMENT": "دفعة",
+      "PAYMENT_VOIDED": "إلغاء دفعة"
+    }
   }
 }
