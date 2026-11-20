@@ -135,5 +135,5 @@ Tables: Tenant, User, RefreshToken, Category, Product, StockMovement, Customer, 
 - Repo `D:\Workspace\tradeflow`. Target: public GitHub repo `tradeflow` under the authenticated account (`ali-kassab`).
 - Commits use only the user's git identity, with **no AI/Claude author or co-author trailers**. No PRs. Never force-push.
 - Before every push: check for secrets, confirm `.env` is ignored, review staged files.
-- Branch policy is pending the user's decision (see SESSION_HANDOFF.md).
+- Branch policy (user decision): work on feature branches (currently `feat/foundation`) and push those; never push to `main` without explicit approval; never force-push.
 - Original company repositories are never modified.

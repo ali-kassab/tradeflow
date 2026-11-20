@@ -30,7 +30,7 @@ Nothing has been run against a real database yet. Nothing has been pushed to Git
    FLUSH PRIVILEGES;
    ```
    Then replace the 3× `CHANGE_ME` in `apps/api/.env` (gitignored, already created with a generated JWT secret).
-3. **Git publishing instruction conflict.** Earlier instructions: create public repo `tradeflow`, push directly to `main`. Latest (shutdown) instruction: push only to an "authorized feature branch", never `main`. No feature branch has been authorized and the GitHub repo does not exist yet → work is **committed locally only, not pushed**. Next session must get a decision from the user.
+3. ~~Git publishing conflict~~ — **resolved**: user chose a feature branch. Work is pushed to `feat/foundation` on the public repo `ali-kassab/tradeflow`. Local `main` holds the first commit but is **not pushed**; do not push `main` without the user's explicit approval.
 
 ## Known issues
 
@@ -48,7 +48,7 @@ Nothing has been run against a real database yet. Nothing has been pushed to Git
 3. `npm run test:e2e -w @tradeflow/api` — fix any failures (first real run; expect some).
 4. `npm run dev -w @tradeflow/api`, open `http://localhost:3000/api/docs`, smoke-test `/api/health`.
 5. Frontend milestone: remove Geist/Inter, set IBM Plex Sans Arabic + theme tokens (palette in PROJECT_HANDOFF.md), add react-i18next (ar default, `dir` switching, localStorage), axios client with refresh-on-401, auth pages, sidebar layout, then feature pages (products → customers → sales orders → payments → purchasing → reports).
-6. Resolve the GitHub branch decision, then publish.
+6. Keep committing to `feat/foundation` (or another feature branch) and push it; ask before touching `main`.
 
 ## Commands run (key ones)
 
@@ -61,5 +61,5 @@ Nothing has been run against a real database yet. Nothing has been pushed to Git
 
 ## Git
 
-- Repo initialised at `D:\Workspace\tradeflow` (branch `main`), git identity verified against the authenticated `gh` account before committing.
+- Repo `D:\Workspace\tradeflow`; working branch `feat/foundation` → https://github.com/ali-kassab/tradeflow (public). Git identity verified against the authenticated `gh` account before committing.
 - Policy: commits authored solely by the user's identity; **no AI co-author trailers**; no PRs.
