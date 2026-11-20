@@ -1,0 +1,407 @@
+// TradeFlow data model.
+//
+// Multi-tenancy: every business-owned row carries `tenantId`. Required relations
+// use composite foreign keys (tenantId, xId) -> (tenantId, id), so MySQL itself
+// rejects a row that points at another tenant's record. Optional relations use a
+// plain FK (Prisma cannot model an optional composite relation over a required
+// tenantId) and are tenant-checked in the service layer, with e2e tests.
+//
+// Money: DECIMAL(14,2). Quantities: whole units (INT).
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum Role {
+  OWNER
+  MANAGER
+  STAFF
+}
+
+enum StockMovementType {
+  OPENING
+  SALE
+  SALE_CANCEL
+  PURCHASE_RECEIPT
+  ADJUSTMENT
+}
+
+enum SalesOrderStatus {
+  DRAFT
+  CONFIRMED
+  DELIVERED
+  CANCELLED
+}
+
+enum PurchaseOrderStatus {
+  DRAFT
+  ORDERED
+  RECEIVED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  CHEQUE
+  OTHER
+}
+
+enum DocumentType {
+  SALES_ORDER
+  PURCHASE_ORDER
+}
+
+model Tenant {
+  id             Int      @id @default(autoincrement())
+  name           String   @db.VarChar(120)
+  currency       String   @default("EGP") @db.Char(3)
+  defaultTaxRate Decimal  @default(0) @db.Decimal(5, 2)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  users            User[]
+  categories       Category[]
+  products         Product[]
+  stockMovements   StockMovement[]
+  customers        Customer[]
+  customerPrices   CustomerPrice[]
+  suppliers        Supplier[]
+  salesOrders      SalesOrder[]
+  purchaseOrders   PurchaseOrder[]
+  customerPayments CustomerPayment[]
+  supplierPayments SupplierPayment[]
+  sequences        DocumentSequence[]
+  activities       ActivityLog[]
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  tenantId     Int
+  name         String    @db.VarChar(120)
+  email        String    @unique @db.VarChar(190)
+  passwordHash String    @db.VarChar(255)
+  role         Role      @default(STAFF)
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  refreshTokens RefreshToken[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId])
+}
+
+model RefreshToken {
+  id         Int       @id @default(autoincrement())
+  userId     Int
+  tokenHash  String    @unique @db.Char(64)
+  family     String    @db.Char(36)
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([family])
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  tenantId  Int
+  name      String   @db.VarChar(100)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  products Product[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, name])
+}
+
+model Product {
+  id           Int      @id @default(autoincrement())
+  tenantId     Int
+  categoryId   Int?
+  sku          String   @db.VarChar(60)
+  name         String   @db.VarChar(160)
+  unit         String   @default("piece") @db.VarChar(30)
+  costPrice    Decimal  @default(0) @db.Decimal(14, 2)
+  salePrice    Decimal  @db.Decimal(14, 2)
+  stockQty     Int      @default(0)
+  reorderLevel Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenant              Tenant              @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  category            Category?           @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  stockMovements      StockMovement[]
+  customerPrices      CustomerPrice[]
+  salesOrderItems     SalesOrderItem[]
+  purchaseOrderItems  PurchaseOrderItem[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, sku])
+  @@index([tenantId, name])
+  @@index([tenantId, isActive])
+}
+
+model StockMovement {
+  id           Int               @id @default(autoincrement())
+  tenantId     Int
+  productId    Int
+  type         StockMovementType
+  quantity     Int
+  balanceAfter Int
+  refType      String?           @db.VarChar(30)
+  refId        Int?
+  note         String?           @db.VarChar(255)
+  userId       Int
+  createdAt    DateTime          @default(now())
+
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  product Product @relation(fields: [tenantId, productId], references: [tenantId, id], onDelete: Restrict)
+
+  @@index([tenantId, productId, createdAt])
+  @@index([tenantId, createdAt])
+}
+
+model Customer {
+  id          Int      @id @default(autoincrement())
+  tenantId    Int
+  name        String   @db.VarChar(160)
+  phone       String?  @db.VarChar(40)
+  email       String?  @db.VarChar(190)
+  address     String?  @db.VarChar(255)
+  taxNumber   String?  @db.VarChar(60)
+  creditLimit Decimal? @db.Decimal(14, 2)
+  notes       String?  @db.Text
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant      Tenant            @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  prices      CustomerPrice[]
+  salesOrders SalesOrder[]
+  payments    CustomerPayment[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId, name])
+}
+
+model CustomerPrice {
+  id         Int      @id @default(autoincrement())
+  tenantId   Int
+  customerId Int
+  productId  Int
+  price      Decimal  @db.Decimal(14, 2)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  customer Customer @relation(fields: [tenantId, customerId], references: [tenantId, id], onDelete: Cascade)
+  product  Product  @relation(fields: [tenantId, productId], references: [tenantId, id], onDelete: Cascade)
+
+  @@unique([tenantId, customerId, productId])
+}
+
+model Supplier {
+  id        Int      @id @default(autoincrement())
+  tenantId  Int
+  name      String   @db.VarChar(160)
+  phone     String?  @db.VarChar(40)
+  email     String?  @db.VarChar(190)
+  address   String?  @db.VarChar(255)
+  taxNumber String?  @db.VarChar(60)
+  notes     String?  @db.Text
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant         Tenant            @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  purchaseOrders PurchaseOrder[]
+  payments       SupplierPayment[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId, name])
+}
+
+model SalesOrder {
+  id          Int              @id @default(autoincrement())
+  tenantId    Int
+  number      String           @db.VarChar(30)
+  customerId  Int
+  status      SalesOrderStatus @default(DRAFT)
+  orderDate   DateTime         @default(now())
+  subtotal    Decimal          @default(0) @db.Decimal(14, 2)
+  discount    Decimal          @default(0) @db.Decimal(14, 2)
+  taxRate     Decimal          @default(0) @db.Decimal(5, 2)
+  taxAmount   Decimal          @default(0) @db.Decimal(14, 2)
+  total       Decimal          @default(0) @db.Decimal(14, 2)
+  notes       String?          @db.Text
+  createdById Int
+  confirmedAt DateTime?
+  deliveredAt DateTime?
+  cancelledAt DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  tenant   Tenant            @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  customer Customer          @relation(fields: [tenantId, customerId], references: [tenantId, id], onDelete: Restrict)
+  items    SalesOrderItem[]
+  payments CustomerPayment[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, number])
+  @@index([tenantId, customerId, status])
+  @@index([tenantId, status, confirmedAt])
+}
+
+model SalesOrderItem {
+  id           Int     @id @default(autoincrement())
+  tenantId     Int
+  salesOrderId Int
+  productId    Int
+  productName  String  @db.VarChar(160)
+  sku          String  @db.VarChar(60)
+  quantity     Int
+  unitPrice    Decimal @db.Decimal(14, 2)
+  /// Cost snapshot taken at confirmation, for gross-profit reporting. Never sent to STAFF.
+  unitCost     Decimal @default(0) @db.Decimal(14, 2)
+  lineTotal    Decimal @db.Decimal(14, 2)
+
+  salesOrder SalesOrder @relation(fields: [tenantId, salesOrderId], references: [tenantId, id], onDelete: Cascade)
+  product    Product    @relation(fields: [tenantId, productId], references: [tenantId, id], onDelete: Restrict)
+
+  @@index([tenantId, productId])
+}
+
+model PurchaseOrder {
+  id           Int                 @id @default(autoincrement())
+  tenantId     Int
+  number       String              @db.VarChar(30)
+  supplierId   Int
+  status       PurchaseOrderStatus @default(DRAFT)
+  orderDate    DateTime            @default(now())
+  expectedDate DateTime?
+  total        Decimal             @default(0) @db.Decimal(14, 2)
+  notes        String?             @db.Text
+  createdById  Int
+  orderedAt    DateTime?
+  receivedAt   DateTime?
+  cancelledAt  DateTime?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  tenant   Tenant              @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  supplier Supplier            @relation(fields: [tenantId, supplierId], references: [tenantId, id], onDelete: Restrict)
+  items    PurchaseOrderItem[]
+  payments SupplierPayment[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, number])
+  @@index([tenantId, supplierId, status])
+}
+
+model PurchaseOrderItem {
+  id              Int     @id @default(autoincrement())
+  tenantId        Int
+  purchaseOrderId Int
+  productId       Int
+  productName     String  @db.VarChar(160)
+  sku             String  @db.VarChar(60)
+  quantity        Int
+  unitCost        Decimal @db.Decimal(14, 2)
+  lineTotal       Decimal @db.Decimal(14, 2)
+
+  purchaseOrder PurchaseOrder @relation(fields: [tenantId, purchaseOrderId], references: [tenantId, id], onDelete: Cascade)
+  product       Product       @relation(fields: [tenantId, productId], references: [tenantId, id], onDelete: Restrict)
+
+  @@index([tenantId, productId])
+}
+
+/// Money received from a customer. Never deleted: corrections are made by voiding.
+model CustomerPayment {
+  id           Int           @id @default(autoincrement())
+  tenantId     Int
+  customerId   Int
+  salesOrderId Int?
+  amount       Decimal       @db.Decimal(14, 2)
+  method       PaymentMethod
+  paidAt       DateTime
+  reference    String?       @db.VarChar(100)
+  notes        String?       @db.VarChar(255)
+  createdById  Int
+  voidedAt     DateTime?
+  voidedById   Int?
+  voidReason   String?       @db.VarChar(255)
+  createdAt    DateTime      @default(now())
+
+  tenant     Tenant      @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  customer   Customer    @relation(fields: [tenantId, customerId], references: [tenantId, id], onDelete: Restrict)
+  salesOrder SalesOrder? @relation(fields: [salesOrderId], references: [id], onDelete: Restrict)
+
+  @@index([tenantId, customerId, paidAt])
+  @@index([tenantId, paidAt])
+}
+
+/// Money paid to a supplier. Never deleted: corrections are made by voiding.
+model SupplierPayment {
+  id              Int           @id @default(autoincrement())
+  tenantId        Int
+  supplierId      Int
+  purchaseOrderId Int?
+  amount          Decimal       @db.Decimal(14, 2)
+  method          PaymentMethod
+  paidAt          DateTime
+  reference       String?       @db.VarChar(100)
+  notes           String?       @db.VarChar(255)
+  createdById     Int
+  voidedAt        DateTime?
+  voidedById      Int?
+  voidReason      String?       @db.VarChar(255)
+  createdAt       DateTime      @default(now())
+
+  tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  supplier      Supplier       @relation(fields: [tenantId, supplierId], references: [tenantId, id], onDelete: Restrict)
+  purchaseOrder PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id], onDelete: Restrict)
+
+  @@index([tenantId, supplierId, paidAt])
+  @@index([tenantId, paidAt])
+}
+
+model DocumentSequence {
+  tenantId  Int
+  docType   DocumentType
+  nextValue Int          @default(1)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+
+  @@id([tenantId, docType])
+}
+
+model ActivityLog {
+  id         Int      @id @default(autoincrement())
+  tenantId   Int
+  userId     Int
+  action     String   @db.VarChar(60)
+  entityType String   @db.VarChar(40)
+  entityId   Int
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+
+  @@index([tenantId, createdAt])
+}
