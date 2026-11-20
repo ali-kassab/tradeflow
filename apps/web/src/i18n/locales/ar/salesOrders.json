@@ -89,7 +89,8 @@
     "edit": "تعديل",
     "confirm": "تأكيد الأمر",
     "deliver": "تسجيل التسليم",
-    "cancel": "إلغاء الأمر"
+    "cancel": "إلغاء الأمر",
+    "recordPayment": "تسجيل دفعة"
   },
   "confirmDialog": {
     "title": "تأكيد {{number}}؟",

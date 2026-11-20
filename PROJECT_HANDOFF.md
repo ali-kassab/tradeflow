@@ -152,7 +152,8 @@ SQL Server adaptations (keep them):
 - Repo `D:\Workspace\tradeflow`. Target: public GitHub repo `tradeflow` under the authenticated account (`ali-kassab`).
 - Commits use only the user's git identity, with **no AI/Claude author or co-author trailers**. No PRs. Never force-push.
 - Before every push: check for secrets, confirm `.env` is ignored, review staged files.
-- Branch policy: the user decided on 2026-11-20 (session 2) to commit to `main`, but the user's standing session instructions (session 3 onward) say **never switch to or modify `main`** and push only to the feature branch. Until the user resolves this explicitly, all work is committed on and pushed to **`feat/foundation`** only; `main` is left untouched (it is fast-forwardable from `feat/foundation`). No PRs, never force-push, never rewrite history.
+- Branch policy (confirmed by the user 2026-11-21): all work is committed on and pushed to **`feat/foundation`** only. Don't switch to, merge into or modify `main` without the user's explicit approval (`main` is fast-forwardable from `feat/foundation`). No PRs, never force-push, never rewrite history.
+- Before every commit: verify `git config user.name/user.email` and `gh auth status` match the user's existing identity (`ali-kassab`); if anything is missing or inconsistent, stop and ask. Inspect the staged diff before committing and the author/committer after.
 - Original company repositories are never modified.
 
 ## Installed Skills policy
@@ -164,7 +165,7 @@ SQL Server adaptations (keep them):
 
 ## Reuse-First Development policy
 
-- Use existing project components and installed libraries first (shadcn/ui primitives, `radix-ui`, `PageHeader`, `PaginationBar`, `ConfirmDialog`, `FormField`, `ProductPicker`, `CustomerPicker`, `LedgerStatement`, `lib/order-math`, `lib/format`, `lib/notify`, TanStack Query, react-hook-form + zod).
+- Use existing project components and installed libraries first (shadcn/ui primitives, `radix-ui`, `PageHeader`, `PaginationBar`, `ConfirmDialog`, `FormField`, `ProductPicker`, `CustomerPicker`, `LedgerStatement`, `RecordPaymentDialog`, `VoidPaymentDialog`, `lib/order-math`, `lib/format`, `lib/notify`, TanStack Query, react-hook-form + zod).
 - For anything new, evaluate mature, compatible, free/open-source options before building custom code; check maintenance, licence, accessibility and bundle impact, and avoid unnecessary dependencies.
 - Customise reused components to the design tokens, Arabic RTL, English LTR and responsive layout.
 - Don't refactor or replace existing components merely to apply this policy.

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowRightIcon, BanIcon, CheckIcon, PencilIcon, TruckIcon } from 'lucide-react';
+import { ArrowRightIcon, BanIcon, BanknoteIcon, CheckIcon, PencilIcon, TruckIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router';
@@ -16,6 +16,7 @@ import { formatDate, formatMoney, formatNumber } from '@/lib/format';
 import { toastError } from '@/lib/notify';
 import type { SalesOrder } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { RecordPaymentDialog } from '@/pages/payments/RecordPaymentDialog';
 import { OrderStatusBadge, PaymentStatusText } from './badges';
 
 type Action = 'confirm' | 'deliver' | 'cancel';
@@ -41,6 +42,7 @@ export default function SalesOrderDetailPage() {
   const [pending, setPending] = useState<Action | null>(null);
   // The dialog keeps showing the last action while it animates closed.
   const [shown, setShown] = useState<Action>('confirm');
+  const [paying, setPaying] = useState(false);
   const ask = (a: Action) => {
     setShown(a);
     setPending(a);
@@ -122,6 +124,7 @@ export default function SalesOrderDetailPage() {
   const canConfirm = o.status === 'DRAFT';
   const canDeliver = o.status === 'CONFIRMED';
   const canCancel = o.status === 'DRAFT' || (o.status === 'CONFIRMED' && isManager);
+  const canPay = billed && Number(o.outstanding) > 0;
   const showCost = isManager && o.status !== 'DRAFT' && o.items.some((i) => i.unitCost !== undefined);
   const busy = act.isPending;
 
@@ -165,6 +168,12 @@ export default function SalesOrderDetailPage() {
           <OrderStatusBadge status={o.status} />
         </div>
         <div className="flex flex-wrap gap-2">
+          {canPay ? (
+            <Button variant="outline" onClick={() => setPaying(true)}>
+              <BanknoteIcon aria-hidden="true" />
+              {t('actions.recordPayment')}
+            </Button>
+          ) : null}
           {canEdit ? (
             <Button variant="outline" asChild>
               <Link to={`/sales-orders/${o.id}/edit`}>
@@ -334,6 +343,12 @@ export default function SalesOrderDetailPage() {
         </div>
       </div>
 
+      <RecordPaymentDialog
+        open={paying}
+        onOpenChange={setPaying}
+        customer={o.customer}
+        order={{ id: o.id, number: o.number, outstanding: o.outstanding }}
+      />
       <ConfirmDialog
         open={pending !== null}
         onOpenChange={(open) => !open && !busy && setPending(null)}

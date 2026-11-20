@@ -89,7 +89,8 @@
     "edit": "Edit",
     "confirm": "Confirm order",
     "deliver": "Mark as delivered",
-    "cancel": "Cancel order"
+    "cancel": "Cancel order",
+    "recordPayment": "Record payment"
   },
   "confirmDialog": {
     "title": "Confirm {{number}}?",

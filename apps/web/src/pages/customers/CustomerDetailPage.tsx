@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRightIcon, MailIcon, MapPinIcon, PencilIcon, PhoneIcon, PlusIcon, ReceiptIcon, ReceiptTextIcon } from 'lucide-react';
+import { ArrowRightIcon, BanknoteIcon, MailIcon, MapPinIcon, PencilIcon, PhoneIcon, PlusIcon, ReceiptIcon, ReceiptTextIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router';
@@ -15,12 +15,14 @@ import { api, errorCode } from '@/lib/api';
 import { formatMoney } from '@/lib/format';
 import type { CustomerDetail, Statement, StatementEntry } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { RecordPaymentDialog } from '@/pages/payments/RecordPaymentDialog';
 import { CustomerFormDialog } from './CustomerFormDialog';
 import { CustomerPrices } from './CustomerPrices';
 import { isOverLimit } from './credit';
 
-const orderHref = (e: StatementEntry) =>
-  e.type === 'ORDER_CONFIRMED' || e.type === 'ORDER_CANCELLED' ? `/sales-orders/${e.refId}` : undefined;
+// Order entries open the order; payment entries open this customer's payments list.
+const entryHref = (customerId: number) => (e: StatementEntry) =>
+  e.type === 'ORDER_CONFIRMED' || e.type === 'ORDER_CANCELLED' ? `/sales-orders/${e.refId}` : `/payments?customerId=${customerId}`;
 
 export default function CustomerDetailPage() {
   const { t, i18n } = useTranslation('customers');
@@ -30,6 +32,7 @@ export default function CustomerDetailPage() {
   const id = Number(useParams().id);
   const validId = Number.isInteger(id) && id > 0;
   const [formOpen, setFormOpen] = useState(false);
+  const [paying, setPaying] = useState(false);
 
   // Both requests start together; the statement doesn't wait for the header.
   const customer = useQuery({
@@ -115,10 +118,20 @@ export default function CustomerDetailPage() {
             {tc('actions.edit')}
           </Button>
           <Button variant="outline" asChild>
+            <Link to={`/payments?customerId=${c.id}`}>
+              <BanknoteIcon aria-hidden="true" />
+              {t('payments')}
+            </Link>
+          </Button>
+          <Button variant="outline" asChild>
             <Link to={`/sales-orders?customerId=${c.id}`}>
               <ReceiptIcon aria-hidden="true" />
               {t('orders')}
             </Link>
+          </Button>
+          <Button variant="outline" onClick={() => setPaying(true)}>
+            <PlusIcon aria-hidden="true" />
+            {t('recordPayment')}
           </Button>
           {c.isActive ? (
             <Button asChild>
@@ -176,7 +189,7 @@ export default function CustomerDetailPage() {
                 currency={tenant.currency}
                 caption={t('statement.caption', { name: c.name })}
                 emptyText={t('statement.empty')}
-                referenceHref={orderHref}
+                referenceHref={entryHref(c.id)}
               />
               {statement.data.entries.length > 0 ? <p className="text-muted-foreground text-xs">{t('statement.hint')}</p> : null}
             </>
@@ -194,6 +207,7 @@ export default function CustomerDetailPage() {
       </Tabs>
 
       <CustomerFormDialog open={formOpen} onOpenChange={setFormOpen} customer={c} />
+      <RecordPaymentDialog open={paying} onOpenChange={setPaying} customer={c} />
     </div>
   );
 }

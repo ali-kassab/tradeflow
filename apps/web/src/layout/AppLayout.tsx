@@ -1,4 +1,4 @@
-import { BoxesIcon, LayoutDashboardIcon, LogOutIcon, PackageIcon, ReceiptIcon, TagsIcon, UsersIcon } from 'lucide-react';
+import { BanknoteIcon, BoxesIcon, LayoutDashboardIcon, LogOutIcon, PackageIcon, ReceiptIcon, TagsIcon, UsersIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavLink, Outlet, useMatch, useResolvedPath } from 'react-router';
@@ -29,6 +29,7 @@ const NAV = [
   { to: '/inventory', end: false, icon: BoxesIcon, label: 'nav.inventory' },
   { to: '/customers', end: false, icon: UsersIcon, label: 'nav.customers' },
   { to: '/sales-orders', end: false, icon: ReceiptIcon, label: 'nav.salesOrders' },
+  { to: '/payments', end: false, icon: BanknoteIcon, label: 'nav.payments' },
 ] as const;
 
 function NavItem({ to, end, children }: { to: string; end?: boolean; children: ReactNode }) {

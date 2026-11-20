@@ -158,3 +158,9 @@ export interface SalesOrder extends OrderMoney, OrderPaymentSummary {
   items: SalesOrderItem[];
   payments: CustomerPayment[];
 }
+
+/** A row of GET /payments/customer. */
+export interface CustomerPaymentListItem extends CustomerPayment {
+  customer: { id: number; name: string };
+  salesOrder: { id: number; number: string } | null;
+}
