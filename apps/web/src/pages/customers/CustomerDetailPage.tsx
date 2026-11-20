@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRightIcon, MailIcon, MapPinIcon, PencilIcon, PhoneIcon, ReceiptTextIcon } from 'lucide-react';
+import { ArrowRightIcon, MailIcon, MapPinIcon, PencilIcon, PhoneIcon, PlusIcon, ReceiptIcon, ReceiptTextIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router';
@@ -13,11 +13,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { api, errorCode } from '@/lib/api';
 import { formatMoney } from '@/lib/format';
-import type { CustomerDetail, Statement } from '@/lib/types';
+import type { CustomerDetail, Statement, StatementEntry } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { CustomerFormDialog } from './CustomerFormDialog';
 import { CustomerPrices } from './CustomerPrices';
 import { isOverLimit } from './credit';
+
+const orderHref = (e: StatementEntry) =>
+  e.type === 'ORDER_CONFIRMED' || e.type === 'ORDER_CANCELLED' ? `/sales-orders/${e.refId}` : undefined;
 
 export default function CustomerDetailPage() {
   const { t, i18n } = useTranslation('customers');
@@ -106,10 +109,26 @@ export default function CustomerDetailPage() {
             </ul>
           ) : null}
         </div>
-        <Button variant="outline" onClick={() => setFormOpen(true)}>
-          <PencilIcon aria-hidden="true" />
-          {tc('actions.edit')}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => setFormOpen(true)}>
+            <PencilIcon aria-hidden="true" />
+            {tc('actions.edit')}
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to={`/sales-orders?customerId=${c.id}`}>
+              <ReceiptIcon aria-hidden="true" />
+              {t('orders')}
+            </Link>
+          </Button>
+          {c.isActive ? (
+            <Button asChild>
+              <Link to={`/sales-orders/new?customerId=${c.id}`}>
+                <PlusIcon aria-hidden="true" />
+                {t('newOrder')}
+              </Link>
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       {/* Account summary: billed − paid = balance, read left-to-right (or right-to-left) like a sum. */}
@@ -157,6 +176,7 @@ export default function CustomerDetailPage() {
                 currency={tenant.currency}
                 caption={t('statement.caption', { name: c.name })}
                 emptyText={t('statement.empty')}
+                referenceHref={orderHref}
               />
               {statement.data.entries.length > 0 ? <p className="text-muted-foreground text-xs">{t('statement.hint')}</p> : null}
             </>

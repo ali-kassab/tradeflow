@@ -78,7 +78,9 @@
   "picker": {
     "product": "Choose a product",
     "searchProduct": "Search products…",
-    "anyProduct": "All products"
+    "anyProduct": "All products",
+    "customer": "Choose a customer",
+    "searchCustomer": "Search customers…"
   },
   "movementType": {
     "OPENING": "Opening stock",

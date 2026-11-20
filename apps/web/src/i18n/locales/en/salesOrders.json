@@ -1,0 +1,112 @@
+{
+  "title": "Sales orders",
+  "description": "Orders to your customers, from draft to delivery.",
+  "add": "New order",
+  "searchPlaceholder": "Search by order number or customer",
+  "empty": "No matching orders.",
+  "back": "All sales orders",
+  "notFound": "This order doesn't exist.",
+  "filters": {
+    "status": "Status",
+    "all": "All statuses"
+  },
+  "columns": {
+    "number": "Order",
+    "customer": "Customer",
+    "date": "Date",
+    "status": "Status",
+    "items": "Items",
+    "total": "Total",
+    "payment": "Payment",
+    "outstanding": "Outstanding"
+  },
+  "paymentStatus": {
+    "NOT_BILLED": "Not billed",
+    "UNPAID": "Unpaid",
+    "PARTIAL": "Partly paid",
+    "PAID": "Paid"
+  },
+  "editor": {
+    "newTitle": "New sales order",
+    "editTitle": "Edit {{number}}",
+    "customer": "Customer",
+    "orderDate": "Order date",
+    "lines": "Items",
+    "addProduct": "Add a product",
+    "alreadyListed": "This product is already on the order. Change its quantity instead.",
+    "product": "Product",
+    "quantity": "Qty",
+    "unitPrice": "Unit price",
+    "lineTotal": "Line total",
+    "remove": "Remove",
+    "priceSource": {
+      "customer": "Customer price",
+      "standard": "Standard price",
+      "override": "Override"
+    },
+    "overrideHint": "Managers can type a different unit price for this order.",
+    "resetPrice": "Use the usual price",
+    "noLines": "Add at least one product.",
+    "discount": "Discount",
+    "discountHint": "A fixed amount off the subtotal.",
+    "taxRate": "VAT %",
+    "notes": "Notes",
+    "subtotal": "Subtotal",
+    "tax": "VAT ({{rate}}%)",
+    "total": "Total",
+    "estimate": "Prices are checked again when you save.",
+    "saveDraft": "Save draft",
+    "created": "Draft {{number}} saved.",
+    "saved": "Draft saved.",
+    "creditWarning": "With this order, {{name}}'s balance would be {{balance}}, above the credit limit of {{limit}}. You can still save and confirm it.",
+    "stockWarning": "Only {{available}} in stock.",
+    "validation": {
+      "customer": "Choose a customer.",
+      "quantity": "Whole number, 1 or more.",
+      "money": "Enter a valid amount (up to 2 decimals).",
+      "rate": "Enter a rate from 0 to 100 (up to 2 decimals).",
+      "discountTooLarge": "The discount can't exceed the subtotal.",
+      "fix": "Fix the highlighted fields."
+    }
+  },
+  "detail": {
+    "customer": "Customer",
+    "orderDate": "Order date",
+    "timeline": "History",
+    "created": "Created",
+    "confirmed": "Confirmed",
+    "delivered": "Delivered",
+    "cancelled": "Cancelled",
+    "paid": "Paid",
+    "outstanding": "Outstanding",
+    "payments": "Payments",
+    "noPayments": "No payments recorded against this order.",
+    "voided": "Voided",
+    "cost": "Unit cost",
+    "notes": "Notes"
+  },
+  "actions": {
+    "edit": "Edit",
+    "confirm": "Confirm order",
+    "deliver": "Mark as delivered",
+    "cancel": "Cancel order"
+  },
+  "confirmDialog": {
+    "title": "Confirm {{number}}?",
+    "body": "Stock is deducted now and the total of {{total}} is added to {{name}}'s balance. A confirmed order can only be cancelled by a manager.",
+    "done": "Order confirmed."
+  },
+  "deliverDialog": {
+    "title": "Mark {{number}} as delivered?",
+    "body": "Delivered orders can't be cancelled.",
+    "done": "Order marked as delivered."
+  },
+  "cancelDialog": {
+    "title": "Cancel {{number}}?",
+    "bodyDraft": "The draft will be cancelled. Nothing else changes.",
+    "bodyConfirmed": "The items go back into stock and the order leaves {{name}}'s balance. Payments already recorded stay and become customer credit.",
+    "done": "Order cancelled.",
+    "keep": "Keep order"
+  },
+  "insufficientStock": "Not enough stock for {{name}} ({{sku}}): {{available}} available, {{requested}} requested."
+}

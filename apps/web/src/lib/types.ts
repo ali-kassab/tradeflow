@@ -88,3 +88,73 @@ export interface Statement {
   entries: StatementEntry[];
   balance: string;
 }
+
+export type SalesOrderStatus = 'DRAFT' | 'CONFIRMED' | 'DELIVERED' | 'CANCELLED';
+export type PaymentStatus = 'NOT_BILLED' | 'UNPAID' | 'PARTIAL' | 'PAID';
+export type PaymentMethod = 'CASH' | 'BANK_TRANSFER' | 'CHEQUE' | 'OTHER';
+
+interface OrderPaymentSummary {
+  paidAmount: string;
+  /** Zero unless the order is billed (CONFIRMED/DELIVERED). */
+  outstanding: string;
+  paymentStatus: PaymentStatus;
+}
+
+interface OrderMoney {
+  subtotal: string;
+  discount: string;
+  taxRate: string;
+  taxAmount: string;
+  total: string;
+}
+
+export interface SalesOrderListItem extends OrderMoney, OrderPaymentSummary {
+  id: number;
+  number: string;
+  customerId: number;
+  customer: { id: number; name: string };
+  status: SalesOrderStatus;
+  orderDate: string;
+  itemCount: number;
+}
+
+export interface SalesOrderItem {
+  id: number;
+  productId: number;
+  productName: string;
+  sku: string;
+  quantity: number;
+  unitPrice: string;
+  lineTotal: string;
+  /** Cost snapshot at confirmation; absent for STAFF. */
+  unitCost?: string;
+}
+
+export interface CustomerPayment {
+  id: number;
+  customerId: number;
+  salesOrderId: number | null;
+  amount: string;
+  method: PaymentMethod;
+  paidAt: string;
+  reference: string | null;
+  notes: string | null;
+  voidedAt: string | null;
+  voidReason: string | null;
+}
+
+export interface SalesOrder extends OrderMoney, OrderPaymentSummary {
+  id: number;
+  number: string;
+  customerId: number;
+  customer: { id: number; name: string; phone: string | null; address: string | null; taxNumber: string | null; creditLimit: string | null };
+  status: SalesOrderStatus;
+  orderDate: string;
+  notes: string | null;
+  confirmedAt: string | null;
+  deliveredAt: string | null;
+  cancelledAt: string | null;
+  createdAt: string;
+  items: SalesOrderItem[];
+  payments: CustomerPayment[];
+}

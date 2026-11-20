@@ -17,13 +17,15 @@ interface Props {
   title: string;
   description: string;
   confirmLabel: string;
+  /** Label of the dismiss button; defaults to "Cancel". */
+  cancelLabel?: string;
   destructive?: boolean;
   pending?: boolean;
   onConfirm: () => void;
 }
 
 /** Confirmation for irreversible or destructive actions. */
-export function ConfirmDialog({ open, onOpenChange, title, description, confirmLabel, destructive, pending, onConfirm }: Props) {
+export function ConfirmDialog({ open, onOpenChange, title, description, confirmLabel, cancelLabel, destructive, pending, onConfirm }: Props) {
   const { t } = useTranslation();
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -33,7 +35,7 @@ export function ConfirmDialog({ open, onOpenChange, title, description, confirmL
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={pending}>{t('actions.cancel')}</AlertDialogCancel>
+          <AlertDialogCancel disabled={pending}>{cancelLabel ?? t('actions.cancel')}</AlertDialogCancel>
           <AlertDialogAction
             disabled={pending}
             className={destructive ? buttonVariants({ variant: 'destructive' }) : undefined}

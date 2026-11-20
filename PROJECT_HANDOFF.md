@@ -27,6 +27,7 @@ Wholesalers manage products, stock, retailer customers, suppliers, sales and pur
 - **Stock is deducted on CONFIRM** (atomic conditional update; never negative, plus a DB CHECK). Cancelling a CONFIRMED order restocks. DELIVERED orders cannot be cancelled.
 - Quantities are whole numbers. Money is `DECIMAL(14,2)`, computed with Prisma Decimal, rounded half-up.
 - Order totals: subtotal = Σ qty × unitPrice; tax = (subtotal − discount) × rate%; total = subtotal − discount + tax. The discount is a fixed amount ≤ subtotal.
+  - The web editor previews totals with `apps/web/src/lib/order-math.ts` (BigInt cents, half-up), an exact mirror of `computeOrderTotals` in `apps/api/src/common/money.ts`. Change both together; the server stays authoritative.
 - Price resolution: manager override → customer price → product sale price. STAFF cannot override prices.
 - **Customer balance** = Σ total of CONFIRMED + DELIVERED orders − Σ non-voided customer payments.
   - A cancelled order leaves the balance, but its payments stay, so they become **customer credit** (negative balance).
@@ -163,7 +164,7 @@ SQL Server adaptations (keep them):
 
 ## Reuse-First Development policy
 
-- Use existing project components and installed libraries first (shadcn/ui primitives, `radix-ui`, `PageHeader`, `PaginationBar`, `ConfirmDialog`, `FormField`, `ProductPicker`, `LedgerStatement`, `lib/format`, `lib/notify`, TanStack Query, react-hook-form + zod).
+- Use existing project components and installed libraries first (shadcn/ui primitives, `radix-ui`, `PageHeader`, `PaginationBar`, `ConfirmDialog`, `FormField`, `ProductPicker`, `CustomerPicker`, `LedgerStatement`, `lib/order-math`, `lib/format`, `lib/notify`, TanStack Query, react-hook-form + zod).
 - For anything new, evaluate mature, compatible, free/open-source options before building custom code; check maintenance, licence, accessibility and bundle impact, and avoid unnecessary dependencies.
 - Customise reused components to the design tokens, Arabic RTL, English LTR and responsive layout.
 - Don't refactor or replace existing components merely to apply this policy.

@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router';
 import { formatDate, formatMoney } from '@/lib/format';
-import type { Statement } from '@/lib/types';
+import type { Statement, StatementEntry } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 interface Props {
@@ -10,6 +11,8 @@ interface Props {
   caption: string;
   /** Shown instead of the table when there are no entries. */
   emptyText: string;
+  /** Optional link target for an entry's reference (e.g. the order it came from). */
+  referenceHref?: (entry: StatementEntry) => string | undefined;
 }
 
 /**
@@ -17,7 +20,7 @@ interface Props {
  * running balance in tabular numerals, closed by a double-ruled closing balance.
  * Used for customers now and suppliers later; the API (LedgerService) computes every figure.
  */
-export function LedgerStatement({ statement, currency, caption, emptyText }: Props) {
+export function LedgerStatement({ statement, currency, caption, emptyText, referenceHref }: Props) {
   const { t, i18n } = useTranslation();
   const lang = i18n.language;
   const money = (v: string) => formatMoney(v, currency, lang);
@@ -45,12 +48,19 @@ export function LedgerStatement({ statement, currency, caption, emptyText }: Pro
         <tbody>
           {statement.entries.map((e, i) => {
             const reversal = e.type === 'ORDER_CANCELLED' || e.type === 'PAYMENT_VOIDED';
+            const href = referenceHref?.(e);
             return (
               <tr key={`${e.type}-${e.refId}-${i}`} className="border-border/60 border-b border-dashed last:border-solid">
                 <td className="tabular text-muted-foreground px-4 py-2 whitespace-nowrap">{formatDate(e.date, lang)}</td>
                 <td className={cn('px-4 py-2', reversal && 'text-muted-foreground')}>{t(`statement.type.${e.type}`)}</td>
                 <td className="px-4 py-2 text-start whitespace-nowrap">
-                  <span className="tabular" dir="ltr">{e.reference}</span>
+                  {href ? (
+                    <Link to={href} className="tabular hover:text-primary underline-offset-4 hover:underline" dir="ltr">
+                      {e.reference}
+                    </Link>
+                  ) : (
+                    <span className="tabular" dir="ltr">{e.reference}</span>
+                  )}
                 </td>
                 <td className="tabular px-4 py-2 text-end whitespace-nowrap">{amount(e.debit)}</td>
                 <td className="tabular px-4 py-2 text-end whitespace-nowrap">{amount(e.credit)}</td>

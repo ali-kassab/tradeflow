@@ -75,5 +75,7 @@
     "saved": "Prices saved.",
     "invalid": "Fix the highlighted prices before saving.",
     "readOnly": "Only managers and owners can change special prices."
-  }
+  },
+  "orders": "Orders",
+  "newOrder": "New order"
 }

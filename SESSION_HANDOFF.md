@@ -1,6 +1,6 @@
 # Session handoff — TradeFlow
 
-_Last updated: 2026-11-20, session 3 (customers checkpoint)._
+_Last updated: 2026-11-20, end of session 3 (safe shutdown after the sales orders checkpoint)._
 
 ## Project
 
@@ -10,8 +10,8 @@ TradeFlow is a bilingual (Arabic RTL by default, English LTR) B2B wholesale mana
 
 **Backend MVP complete on Microsoft SQL Server and verified. Frontend:**
 
-- **Built and verified:** auth, dashboard, products, categories, inventory, **customers** (list, detail, statement, special prices).
-- **Not built yet:** sales orders, payments, suppliers, purchase orders, reports, settings, users.
+- **Built and verified:** auth, dashboard, products, categories, inventory, customers (list, detail, statement, special prices), **sales orders** (list, draft editor, detail with confirm/deliver/cancel).
+- **Not built yet:** payments, suppliers, purchase orders, reports, settings, users.
 
 No partially built feature is left.
 
@@ -22,7 +22,7 @@ No partially built feature is left.
 
 ## Completed this session
 
-Customers frontend (one commit on `feat/foundation`, on top of `a2454af`):
+### Checkpoint 1 — customers (`c7de966`, pushed)
 
 | Area | Files |
 |---|---|
@@ -36,6 +36,18 @@ Customers frontend (one commit on `feat/foundation`, on top of `a2454af`):
 | Types, i18n (`customers` namespace; generic statement labels in `common.statement`), nav entry, routes | `lib/types.ts`, `i18n/resources.ts`, `i18n/locales/{ar,en}/{customers,common}.json`, `layout/AppLayout.tsx`, `router.tsx` |
 | Docs | PROJECT_HANDOFF.md: `AppDirection` + logical `divide-x` conventions, `LedgerStatement` location, branch-policy conflict, Installed Skills and Reuse-First sections |
 
+### Checkpoint 2 — sales orders (commit after `c7de966`, pushed; see git log)
+
+| Area | Files |
+|---|---|
+| List `/sales-orders`: status filter, search, `?customerId=` filter chip, payment status with labelled outstanding amount | `apps/web/src/pages/sales-orders/SalesOrdersPage.tsx` |
+| Draft editor `/sales-orders/new[?customerId=]` and `/:id/edit`: `CustomerPicker`, `ProductPicker` lines, price source per line (customer / standard / override), manager-only override with reset, discount, VAT %, live totals, stock and credit-limit warnings (warnings only). A loader fetches the draft, its products and customer prices first, then mounts the editor with complete initial state (no sync effects). Non-drafts redirect to the detail page | `SalesOrderEditorPage.tsx` |
+| Detail `/sales-orders/:id`: lines (unit cost column for managers after confirm), totals, paid/outstanding, payments list, history; Confirm / Mark delivered / Cancel with role rules mirrored from the API; `INSUFFICIENT_STOCK` names the product and quantities; `INVALID_STATUS` refetches | `SalesOrderDetailPage.tsx`, `badges.tsx` |
+| Totals mirror of `computeOrderTotals` (BigInt cents, half-up) + 5 tests | `lib/order-math.ts`, `lib/order-math.spec.ts` |
+| Shared: `CustomerPicker` (like `ProductPicker`), `errorDetails()` in `lib/api.ts`, optional `cancelLabel` on `ConfirmDialog`, optional `referenceHref` on `LedgerStatement` | `components/*`, `lib/api.ts` |
+| Customer page: statement order references link to orders; "Orders" and "New order" buttons | `pages/customers/CustomerDetailPage.tsx` |
+| i18n `salesOrders` namespace; picker labels in `common`; nav entry; 4 routes | `i18n/*`, `layout/AppLayout.tsx`, `router.tsx` |
+
 Skills read and followed: `frontend-design` (boldness kept to the ledger; everything else quiet, existing tokens) and `vercel-react-best-practices` (derived state in render, functional `setState`, ternary conditionals, hoisted constants, parallel queries on the detail page).
 
 ## Verification (actual results)
@@ -43,29 +55,33 @@ Skills read and followed: `frontend-design` (boldness kept to the ledger; everyt
 | Check | Result |
 |---|---|
 | Web `tsc -b` | OK |
-| Web `vitest` | **20/20** (was 16; +credit helpers, +percent format) |
+| Web `vitest` | **26/26** (16 at session start; +credit helpers, +percent format, +order-math, +locale parity for new namespaces) |
 | Web `oxlint` | 0 errors; no warnings in new or changed files (existing warnings: shadcn `only-export-components`, `router.tsx`, `use-mobile.ts`, `AdjustStockDialog.tsx`) |
-| Web production build | OK (`CustomersPage` 5.1 kB, `CustomerDetailPage` 13.6 kB) |
+| Web production build | OK (sales-order chunks 4.7 / 10.8 / 19.1 kB) |
 | Live smoke `node apps/api/scripts/smoke.mjs http://localhost:3000/api` | all checks passed (API code unchanged) |
-| Browser vs live API (manager) | List balances match the dashboard receivable; statement for customer 3 replays to −500.00 = billed − paid; create (email validation), edit clearing phone + credit limit, delete refused with `IN_USE` and translated, delete of the test customer; price edit: invalid amount blocked, −10% shown, `PUT` 200 |
-| Browser (staff) | Add/edit shown, no delete, prices read-only with explanation |
-| ar/en, RTL/LTR, 375 px | Radix `dir` follows the language live; no page-level horizontal scroll at 375 px (ledger scrolls inside its frame) |
+| Browser, customers (manager) | List balances match the dashboard receivable; statement for customer 3 replays to −500.00 = billed − paid; create (email validation), edit clearing phone + credit limit, delete refused with `IN_USE` and translated, delete of the test customer; price edit: invalid amount blocked, −10% shown, `PUT` 200 |
+| Browser (staff) | Customers: add/edit shown, no delete, prices read-only. Sales orders: draft SO-00012 shows Edit/Cancel/Confirm; editor prices read-only, preview equals server total 1,162.80 |
+| Browser, sales orders (manager) | New order from the customer page (preset customer, 14% VAT, today); preview 775.20 = saved SO-00013 to the cent; override recognised on reopening; confirm: stock rice 118→115, oil 30→28, balance 2,309.20→3,084.40, statement links to SO-00013; zero-stock draft SO-00014: specific `INSUFFICIENT_STOCK` toast, stays Draft, then cancelled ("Keep order" / "Cancel order" dialog); cancel of confirmed SO-00013 restocked to 118/30 and returned the balance to 2,309.20 |
+| Mobile 375 px, Arabic | No page-level horizontal scroll on list, detail, editor; editor line table scrolls inside its frame |
+| Customers ar/en, 375 px | Radix `dir` follows the language live; no page-level horizontal scroll at 375 px (ledger scrolls inside its frame) |
 
-The browser pane was mostly hidden, so most checks were DOM measurements; two screenshots (desktop RTL, mobile EN) were reviewed.
+The browser pane was mostly hidden, so most checks were DOM measurements; three screenshots (customer detail desktop RTL, customer detail mobile EN, order editor mobile AR) were reviewed. A **SO-00013 / SO-00014** detail page in Arabic on desktop was not visually reviewed.
 
 ## Known issues / notes
 
 - **Branch question** above is still open.
-- Demo data: the test customer was deleted and customer 3's test price was reset to an empty list via the API, so customers are back to the seeded five. Earlier edits from session 2 (HONEY-500 created/deleted; oil adjustment −3) remain.
-- Statement references (`SO-…`, payment `#id`) are plain text; link them once the sales-order and payment pages exist. Same for inventory movements.
+- Demo data: the test customer was deleted and customer 3's test price reset, so customers are back to the seeded five. Two **cancelled** test orders now exist (SO-00013, SO-00014; orders are never deleted); stock and balances were verified back to their previous values. Earlier edits from session 2 (HONEY-500 created/deleted; oil adjustment −3) remain.
+- Statement order references now link to orders; payment references and inventory movements still don't link (add with the payments page).
+- No "record payment" button on orders yet; it belongs to the payments release.
+- The add-product picker's accessible name comes from an sr-only label in the editor; `ProductPicker` itself (pre-existing, also used in inventory) has no built-in name for a combobox trigger.
 - The shadcn dialog close button's screen-reader label is the hard-coded English "Close" (pre-existing in `components/ui/dialog.tsx`); worth translating in a later pass.
 - Global npm 10 crashes on Node 26: use `npx -y npm@11`. In PowerShell use `npx.cmd`; don't change the execution policy.
 - `npm audit`: 3 high from the dev-only Prisma CLI dependency `effect` (accepted).
 
 ## Exact next step
 
-1. Build the **sales orders** pages: list (status filter, per-tenant numbers), draft editor (customer picker, line items with `ProductPicker`, price resolution shown, manager-only price override, discount, VAT from tenant default), and the confirm/deliver/cancel actions with `INSUFFICIENT_STOCK`/`INVALID_STATUS` handling. A `CustomerPicker` modelled on `ProductPicker` will be needed.
-2. Then payments (record against a customer/order, void), suppliers (reuse `LedgerStatement`), purchase orders, reports, settings, users.
+1. Build **payments** (customer side first): list (`GET /payments/customer`), record dialog (customer, optional billed order with its outstanding amount, method, date, reference; `AMOUNT_EXCEEDS_OUTSTANDING` handled), void with reason (manager+, `ALREADY_VOIDED`), and a "Record payment" entry point on the order detail and customer pages. Read `apps/api/src/modules/payments/payments.module.ts` for the DTOs first.
+2. Then suppliers (reuse `LedgerStatement`), purchase orders (+ supplier payments), reports, settings, users.
 
 For each page: add a locale namespace in `src/i18n/resources.ts` and both locale folders, add a `NAV` entry in `AppLayout.tsx` (filtered by role where needed), then verify against the live API. Start the API with `npm run build -w @tradeflow/api` and `node apps/api/dist/main.js`; the web app via the `web` entry in `.claude/launch.json` (`npx vite` in `apps/web`).
 

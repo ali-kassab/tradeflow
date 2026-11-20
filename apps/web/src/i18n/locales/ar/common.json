@@ -78,7 +78,9 @@
   "picker": {
     "product": "اختر منتجًا",
     "searchProduct": "ابحث عن منتج…",
-    "anyProduct": "كل المنتجات"
+    "anyProduct": "كل المنتجات",
+    "customer": "اختر عميلًا",
+    "searchCustomer": "ابحث عن عميل…"
   },
   "movementType": {
     "OPENING": "رصيد افتتاحي",
