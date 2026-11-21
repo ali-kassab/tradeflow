@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { type FormEvent, useEffect, useState } from 'react';
+import { type FormEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { ProductPicker } from '@/components/ProductPicker';
@@ -29,6 +29,22 @@ export function AdjustStockDialog({
   onOpenChange: (open: boolean) => void;
   initialProduct: Product | null;
 }) {
+  const { t } = useTranslation('inventory');
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{t('form.title')}</DialogTitle>
+        </DialogHeader>
+        {/* Radix mounts the content only while open, so each opening starts a fresh form;
+            the key restarts it if the preset product arrives while open. */}
+        <AdjustStockForm key={initialProduct?.id ?? 'none'} initialProduct={initialProduct} onDone={() => onOpenChange(false)} />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function AdjustStockForm({ initialProduct, onDone }: { initialProduct: Product | null; onDone: () => void }) {
   const { t, i18n } = useTranslation('inventory');
   const { t: tc } = useTranslation();
   const { t: te } = useTranslation('errors');
@@ -40,15 +56,6 @@ export function AdjustStockDialog({
   const [note, setNote] = useState('');
   const [errors, setErrors] = useState<Errors>({});
 
-  useEffect(() => {
-    if (!open) return;
-    setProduct(initialProduct);
-    setDirection('decrease');
-    setQuantity('');
-    setNote('');
-    setErrors({});
-  }, [open, initialProduct]);
-
   const qty = /^\d{1,7}$/.test(quantity.trim()) ? Number(quantity.trim()) : NaN;
   const delta = Number.isFinite(qty) ? (direction === 'increase' ? qty : -qty) : 0;
   const after = product ? product.stockQty + delta : null;
@@ -58,7 +65,7 @@ export function AdjustStockDialog({
     onSuccess: () => {
       toast.success(t('saved'));
       for (const key of ['inventory', 'products', 'dashboard']) void qc.invalidateQueries({ queryKey: [key] });
-      onOpenChange(false);
+      onDone();
     },
     onError: (e) => {
       if (errorCode(e) === 'INSUFFICIENT_STOCK') setErrors({ quantity: te('INSUFFICIENT_STOCK') });
@@ -80,95 +87,90 @@ export function AdjustStockDialog({
   const n = (v: number) => formatNumber(v, i18n.language);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{t('form.title')}</DialogTitle>
-        </DialogHeader>
-        <form id="adjust-form" noValidate onSubmit={submit} className="space-y-4">
-          <Field data-invalid={errors.product ? true : undefined}>
-            <FieldLabel htmlFor="adjust-product">{t('form.product')}</FieldLabel>
-            <ProductPicker
-              id="adjust-product"
-              value={product}
-              onChange={(p) => {
-                setProduct(p);
-                setErrors((x) => ({ ...x, product: undefined }));
-              }}
-              invalid={Boolean(errors.product)}
-            />
-            {errors.product ? <FieldError>{errors.product}</FieldError> : null}
-          </Field>
+    <>
+      <form id="adjust-form" noValidate onSubmit={submit} className="space-y-4">
+        <Field data-invalid={errors.product ? true : undefined}>
+          <FieldLabel htmlFor="adjust-product">{t('form.product')}</FieldLabel>
+          <ProductPicker
+            id="adjust-product"
+            value={product}
+            onChange={(p) => {
+              setProduct(p);
+              setErrors((x) => ({ ...x, product: undefined }));
+            }}
+            invalid={Boolean(errors.product)}
+          />
+          {errors.product ? <FieldError>{errors.product}</FieldError> : null}
+        </Field>
 
-          <Field>
-            <FieldLabel>{t('form.direction')}</FieldLabel>
-            <Tabs value={direction} onValueChange={(v) => setDirection(v as Direction)}>
-              <TabsList className="w-full">
-                <TabsTrigger value="decrease" className="flex-1">
-                  {t('form.decrease')}
-                </TabsTrigger>
-                <TabsTrigger value="increase" className="flex-1">
-                  {t('form.increase')}
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </Field>
+        <Field>
+          <FieldLabel id="adjust-direction">{t('form.direction')}</FieldLabel>
+          <Tabs value={direction} onValueChange={(v) => setDirection(v as Direction)}>
+            <TabsList className="w-full" aria-labelledby="adjust-direction">
+              <TabsTrigger value="decrease" className="flex-1">
+                {t('form.decrease')}
+              </TabsTrigger>
+              <TabsTrigger value="increase" className="flex-1">
+                {t('form.increase')}
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </Field>
 
-          <Field data-invalid={errors.quantity ? true : undefined}>
-            <FieldLabel htmlFor="adjust-qty">{t('form.quantity')}</FieldLabel>
-            <Input
-              id="adjust-qty"
-              inputMode="numeric"
-              dir="ltr"
-              className="tabular"
-              value={quantity}
-              onChange={(e) => {
-                setQuantity(e.target.value);
-                setErrors((x) => ({ ...x, quantity: undefined }));
-              }}
-              aria-invalid={errors.quantity ? true : undefined}
-            />
-            {errors.quantity ? <FieldError>{errors.quantity}</FieldError> : null}
-          </Field>
+        <Field data-invalid={errors.quantity ? true : undefined}>
+          <FieldLabel htmlFor="adjust-qty">{t('form.quantity')}</FieldLabel>
+          <Input
+            id="adjust-qty"
+            inputMode="numeric"
+            dir="ltr"
+            className="tabular"
+            value={quantity}
+            onChange={(e) => {
+              setQuantity(e.target.value);
+              setErrors((x) => ({ ...x, quantity: undefined }));
+            }}
+            aria-invalid={errors.quantity ? true : undefined}
+          />
+          {errors.quantity ? <FieldError>{errors.quantity}</FieldError> : null}
+        </Field>
 
-          {product ? (
-            <dl className="bg-muted grid grid-cols-2 gap-2 rounded-md p-3 text-sm">
-              <dt className="text-muted-foreground">{t('form.current')}</dt>
-              <dd className="tabular text-end">{n(product.stockQty)}</dd>
-              <dt className="text-muted-foreground">{t('form.after')}</dt>
-              <dd className={cn('tabular text-end font-semibold', after !== null && after < 0 && 'text-destructive')}>
-                {after !== null ? n(after) : '—'}
-              </dd>
-            </dl>
-          ) : null}
+        {product ? (
+          <dl className="bg-muted grid grid-cols-2 gap-2 rounded-md p-3 text-sm">
+            <dt className="text-muted-foreground">{t('form.current')}</dt>
+            <dd className="tabular text-end">{n(product.stockQty)}</dd>
+            <dt className="text-muted-foreground">{t('form.after')}</dt>
+            <dd className={cn('tabular text-end font-semibold', after !== null && after < 0 && 'text-destructive')}>
+              {after !== null ? n(after) : '—'}
+            </dd>
+          </dl>
+        ) : null}
 
-          <Field data-invalid={errors.note ? true : undefined}>
-            <FieldLabel htmlFor="adjust-note">{t('form.note')}</FieldLabel>
-            <Textarea
-              id="adjust-note"
-              rows={2}
-              maxLength={255}
-              placeholder={t('form.notePlaceholder')}
-              value={note}
-              onChange={(e) => {
-                setNote(e.target.value);
-                setErrors((x) => ({ ...x, note: undefined }));
-              }}
-              aria-invalid={errors.note ? true : undefined}
-            />
-            {errors.note ? <FieldError>{errors.note}</FieldError> : null}
-          </Field>
-        </form>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={save.isPending}>
-            {tc('actions.cancel')}
-          </Button>
-          <Button type="submit" form="adjust-form" disabled={save.isPending}>
-            {save.isPending ? <Spinner /> : null}
-            {t('form.submit')}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        <Field data-invalid={errors.note ? true : undefined}>
+          <FieldLabel htmlFor="adjust-note">{t('form.note')}</FieldLabel>
+          <Textarea
+            id="adjust-note"
+            rows={2}
+            maxLength={255}
+            placeholder={t('form.notePlaceholder')}
+            value={note}
+            onChange={(e) => {
+              setNote(e.target.value);
+              setErrors((x) => ({ ...x, note: undefined }));
+            }}
+            aria-invalid={errors.note ? true : undefined}
+          />
+          {errors.note ? <FieldError>{errors.note}</FieldError> : null}
+        </Field>
+      </form>
+      <DialogFooter>
+        <Button variant="outline" onClick={onDone} disabled={save.isPending}>
+          {tc('actions.cancel')}
+        </Button>
+        <Button type="submit" form="adjust-form" disabled={save.isPending}>
+          {save.isPending ? <Spinner /> : null}
+          {t('form.submit')}
+        </Button>
+      </DialogFooter>
+    </>
   );
 }

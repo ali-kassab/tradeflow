@@ -137,6 +137,7 @@ SQL Server adaptations (keep them):
 - Unit: `npm test -w @tradeflow/api` and `npm test -w @tradeflow/web` (Vitest). Vitest compiles with oxc, configured with `decorator: { legacy: true, emitDecoratorMetadata: true }` because Nest DI and class-transformer need decorator metadata.
 - e2e: `npm run test:e2e -w @tradeflow/api`. Uses `TEST_DATABASE_URL`; the DB name must contain "test", and it is reset from migrations on each run. Suites cover auth, workflows/financial consistency (incl. concurrent overselling), tenant isolation (reads, writes and cross-references, plus DB-level FK checks), and RBAC.
 - Prisma blocks `migrate reset` when run by an AI agent unless `PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION` holds the user's exact consent text. The user consented (2026-11-20) with: "Yes, I consent to resetting tradeflow and tradeflow_test" — that covers only those two databases. A human running the tests needs nothing.
+- **Verification status (2026-11-21, session 8):** type checks, lint, builds, API unit 11/11 and web unit 51/51 pass, and every screen was checked in the browser. The e2e suite has **not** been run against the final code (the agent's permission guard blocks it; the user hasn't run it yet), so the MVP is feature-complete but not fully verified.
 - Live smoke test: `node apps/api/scripts/smoke.mjs [baseUrl]` (defaults to the web proxy `http://localhost:5173/api`) signs in as each demo role and checks main endpoints and role-dependent shapes. `node apps/api/scripts/with-test-db.mjs <cmd>` runs a command against `TEST_DATABASE_URL`.
 
 ## Setup (local, no Docker)
@@ -169,4 +170,5 @@ SQL Server adaptations (keep them):
 - For anything new, evaluate mature, compatible, free/open-source options before building custom code; check maintenance, licence, accessibility and bundle impact, and avoid unnecessary dependencies.
 - Customise reused components to the design tokens, Arabic RTL, English LTR and responsive layout.
 - Customer and supplier payments share one UI: `PaymentsView`, `RecordPaymentDialog` and `VoidPaymentDialog` take a `kind` (`customer` | `supplier`); per-kind endpoints, billed statuses and cache keys live in `pages/payments/payment-kinds.ts`.
+- Dialog forms live in a child component rendered inside `DialogContent` (Radix mounts it only while open), so each opening starts fresh without a reset effect; add a `key` when a preset prop can change while open (`RecordPaymentDialog`, `AdjustStockDialog`).
 - Don't refactor or replace existing components merely to apply this policy.

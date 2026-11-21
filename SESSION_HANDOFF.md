@@ -1,6 +1,6 @@
 # Session handoff — TradeFlow
 
-_Last updated: 2026-11-21, session 7. Checkpoint: the approved roadmap is complete — Phases 5 (reports, `fca0404`), 6 (settings and users, `b44aabb`) and 7 (finalisation, `439e9e8`) done and pushed. Only the user-run API e2e suite remains unverified._
+_Last updated: 2026-11-21, session 8. Checkpoint: the approved roadmap is complete and a second finalisation review (session 8) is committed on `feat/foundation`. The MVP is feature-complete but **not fully verified**: the API e2e suite has still not been run against the final code._
 
 ## Project
 
@@ -160,6 +160,20 @@ Demo data from Phase 6: one extra **deactivated** user "QA Tester" (`qa.tester@d
 - Re-ran non-DB checks (actual): API `tsc --noEmit` OK, vitest 11/11; web `tsc -b` OK, vitest 51/51.
 - No roadmap work remains; no new features started (none are approved).
 
+## Session 8 — Phase 7 finalisation review
+
+Started from `3a37415`; tree clean apart from the untracked local `.claude/`. No new features, no architecture or API behaviour changes.
+
+- **Review, backend:** every write route has the documented guard (class-level `@ManagerOrAbove` on suppliers and purchase orders, `@OwnerOnly` on users, per-route on catalog, inventory, customers delete/prices, payment voids and supplier payments, tenant PATCH, reports); matches the README role matrix. No changes needed.
+- **Review, frontend:** all icon-only buttons and search/table inputs have accessible names; no hard-coded UI strings found outside shadcn primitives.
+- **Fixes:**
+  - `pages/inventory/AdjustStockDialog.tsx`: the "Adjustment" (نوع التسوية) label wasn't tied to its control → `TabsList` now `aria-labelledby` the label. The form moved into an inner `AdjustStockForm` inside `DialogContent` (same pattern as `RecordPaymentDialog`, keyed on the preset product), removing the reset `useEffect` and its `set-state-in-effect` lint warning.
+  - `apps/api/test/workflows.e2e-spec.ts`: status codes sorted numerically (`require-array-sort-compare`). Same result for `[201, 400]`; typechecked, not executed (e2e not run).
+- **Docs:** README status badge now reads "MVP feature-complete · e2e pending", a Verification status warning, test-suite lines and "Run the API e2e suite" under Planned. PROJECT_HANDOFF: verification status under Testing; the dialog-form convention under Reuse-First.
+- **Checks (actual results):** web `tsc -b` OK, vitest 51/51, oxlint 33 warnings (was 34; all pre-existing shadcn/router/`use-mobile` ones), `vite build` OK (pre-existing >500 kB chunk notice); API `tsc --noEmit` OK, vitest 11/11, oxlint 2 warnings (was 3), `nest build` OK.
+- **Browser (owner, Arabic):** `/inventory` → Adjust stock: tablist labelled "نوع التسوية"; empty save shows product and reason errors; Cancel then reopen → empty quantity, no errors; `/inventory?productId=1` → picker preset to RICE-5KG (128 → 128). Nothing submitted; no console errors.
+- **Not run:** API e2e (destructive reset of `tradeflow_test`; not authorised this session).
+
 ## How to run (dev)
 
 - `.claude/launch.json` (local, untracked) has `api` (`node dist/main.js` in `apps/api`, port 3000) and `web` (`npx vite`, port 5173). Rebuild the API with `npm run build -w @tradeflow/api` after API changes.
@@ -167,7 +181,7 @@ Demo data from Phase 6: one extra **deactivated** user "QA Tester" (`qa.tester@d
 
 ## Known issues / notes
 
-- **Unverified:** the API e2e suite (blocked by the agent permission guard in sessions 4, 5, 6 and 7); the supplier `IN_USE` delete refusal on seeded data (see Phase 2).
+- **Unverified:** the API e2e suite (blocked by the agent permission guard in sessions 4–7; not authorised in session 8); the supplier `IN_USE` delete refusal on seeded data (see Phase 2).
 - Session 6 decisions: report tabs live in `?tab=`; balances are summed in exact BigInt cents (`splitBalances`); single-column grids holding scrollable tables use `grid-cols-[minmax(0,1fr)]`; `reloadSession()` on the auth context refreshes tenant/user after settings changes; temporary passwords come from `generatePassword` (crypto, unambiguous alphabet); a password change signs the user out because the API revokes every session. No new dependencies.
 - Session 6 commits: `fca0404` (reports), `b44aabb` (settings, users, password change), finalisation commit (a11y labels, README, this handoff).
 - The session-5 stash ("WIP phase 5 reports") was dropped after the Phase 5 commit was pushed; its content is all in that commit.
@@ -176,13 +190,14 @@ Demo data from Phase 6: one extra **deactivated** user "QA Tester" (`qa.tester@d
 - Demo data now includes two voided test payments on customer 2 (Phase 1), PO-00003 received and PO-00004 cancelled (Phase 3), one voided 500.00 supplier payment on PO-00003 (Phase 4). The test supplier created in Phase 2 was deleted.
 
 - Payable-order list fetches up to 100 orders per billed status per party (API page cap: customers CONFIRMED + DELIVERED, suppliers RECEIVED); older unpaid orders beyond that wouldn't be offered (payment can still go on account).
-- oxlint pre-existing warnings: shadcn `only-export-components`, `router.tsx`, `AdjustStockDialog.tsx` (`set-state-in-effect`); API: 2× `no-misused-spread` in `parties.module.ts`, 1 in an e2e spec.
+- oxlint remaining warnings (accepted): web — shadcn `only-export-components` (badge, button, tabs, sidebar), `router.tsx` lazy-page consts, shadcn `hooks/use-mobile.ts` (`set-state-in-effect`); API — 2× `no-misused-spread` in `parties.module.ts` (spreading validated DTOs into Prisma `data`; harmless).
+- `vite build` warns that the main chunk exceeds 500 kB (pre-existing; pages are already lazy-loaded).
 - Global npm 10 crashes on Node 26: use `npx -y npm@11`. In PowerShell use `npx.cmd`; don't change the execution policy.
 - `npm audit`: 3 high from the dev-only Prisma CLI dependency `effect` (accepted).
 
 ## Exact next step
 
-1. (User) Run the API e2e suite once: `npm run test:e2e -w @tradeflow/api` (resets only `tradeflow_test`); the agent's permission guard blocks it (sessions 4–7). Or add a Bash allow rule for `npm run test:e2e` in the Claude Code settings so the agent can run it. Fix anything it reports.
+1. (User) Run the API e2e suite once: `npm run test:e2e -w @tradeflow/api` (resets only `tradeflow_test`); the agent's permission guard blocked it in sessions 4–7 and it was not authorised in session 8. Until it passes, don't describe the MVP as fully verified. Or add a Bash allow rule for `npm run test:e2e` in the Claude Code settings so the agent can run it. Fix anything it reports.
 2. (User decision) Whether to fast-forward `main` to `feat/foundation` — never without explicit approval. Local `main` was already 1 commit ahead of `origin/main` before session 6 (left untouched).
 3. Optional, only if the user asks: README screenshots, a `LICENSE` file (package.json says MIT). The roadmap has no further feature work; don't invent any.
 

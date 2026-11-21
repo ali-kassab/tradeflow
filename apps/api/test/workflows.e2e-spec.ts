@@ -133,7 +133,7 @@ describe('Business workflows & financial consistency', () => {
       http.post(`/sales-orders/${a.id}/confirm`),
       http.post(`/sales-orders/${b.id}/confirm`),
     ]);
-    expect(results.map((r) => r.status).sort()).toEqual([201, 400]);
+    expect(results.map((r) => r.status).sort((x, y) => x - y)).toEqual([201, 400]);
     expect(await stockOf(http, product.id)).toBe(1);
     // Exactly one order was billed.
     expect(await balanceOf(http, customer.id)).toBe('400.00');

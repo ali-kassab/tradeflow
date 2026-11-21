@@ -10,7 +10,7 @@ in **Arabic (RTL)** or **English (LTR)**.
 
 <br />
 
-![Status](https://img.shields.io/badge/status-MVP%20complete-0F6E5A?style=flat-square)
+![Status](https://img.shields.io/badge/status-MVP%20feature--complete%20%C2%B7%20e2e%20pending-B45309?style=flat-square)
 ![Node](https://img.shields.io/badge/node-%E2%89%A5%2022-0891B2?style=flat-square&logo=nodedotjs&logoColor=white)
 ![Languages](https://img.shields.io/badge/i18n-Arabic%20%C2%B7%20English-06B6D4?style=flat-square)
 ![Architecture](https://img.shields.io/badge/architecture-modular%20monolith-312E81?style=flat-square)
@@ -493,6 +493,11 @@ All endpoints are served under `/api` and documented with Swagger at `/api/docs`
 > [!NOTE]
 > The MVP is **feature-complete**: every API endpoint has a screen in the web app, in Arabic and English.
 
+> [!WARNING]
+> **Verification status.** Type checks, lint, builds and unit tests (API 11, web 51) pass, and every screen was checked by hand in the browser.
+> The API **end-to-end suite has not been run against the final code yet**, so the MVP is not yet fully verified.
+> Run it with `npm run test:e2e -w @tradeflow/api` (it wipes and recreates `tradeflow_test` only).
+
 <table>
 <tr>
 <th>✅ Implemented</th>
@@ -504,13 +509,15 @@ All endpoints are served under `/api` and documented with Swagger at `/api/docs`
 - Complete MVP REST API
 - Multi-tenancy & RBAC
 - SQL Server schema, migrations, seed
-- API unit & e2e test suites
+- API unit tests and e2e suites (auth, RBAC, tenancy, workflows)
+- Web unit tests (order math, form helpers, locale key parity)
 - Web: auth, dashboard, products, categories, inventory, customers, sales orders, customer payments, suppliers, purchase orders, supplier payments, reports, settings, users
 - Arabic / English with RTL / LTR, responsive down to phone width
 
 </td>
 <td valign="top">
 
+- Run the API e2e suite against the final code
 - Screenshots in this README
 
 </td>
