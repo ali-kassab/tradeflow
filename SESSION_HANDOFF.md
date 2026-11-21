@@ -1,6 +1,6 @@
 # Session handoff — TradeFlow
 
-_Last updated: 2026-11-21, end of session 6 (safe shutdown). Checkpoint: the approved roadmap is complete — Phases 5 (reports, `fca0404`), 6 (settings and users, `b44aabb`) and 7 (finalisation, this commit) done and pushed. Only the user-run API e2e suite remains unverified._
+_Last updated: 2026-11-21, session 7. Checkpoint: the approved roadmap is complete — Phases 5 (reports, `fca0404`), 6 (settings and users, `b44aabb`) and 7 (finalisation, `439e9e8`) done and pushed. Only the user-run API e2e suite remains unverified._
 
 ## Project
 
@@ -153,6 +153,13 @@ Demo data from Phase 6: one extra **deactivated** user "QA Tester" (`qa.tester@d
 - API e2e: **not run** — the agent permission guard refused it again (setting `PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION`). Left to the user.
 - Final checks (actual): web `tsc -b` OK, vitest 51/51, oxlint no new warnings, `vite build` OK; API `tsc --noEmit` OK, vitest 11/11.
 
+## Session 7 — verification only (no code changes)
+
+- Started from `439e9e8`; working tree clean apart from the untracked local `.claude/`.
+- Tried the API e2e suite once with the recorded consent text: **blocked** by the agent's auto-mode permission classifier (fourth session in a row). Not worked around.
+- Re-ran non-DB checks (actual): API `tsc --noEmit` OK, vitest 11/11; web `tsc -b` OK, vitest 51/51.
+- No roadmap work remains; no new features started (none are approved).
+
 ## How to run (dev)
 
 - `.claude/launch.json` (local, untracked) has `api` (`node dist/main.js` in `apps/api`, port 3000) and `web` (`npx vite`, port 5173). Rebuild the API with `npm run build -w @tradeflow/api` after API changes.
@@ -160,7 +167,7 @@ Demo data from Phase 6: one extra **deactivated** user "QA Tester" (`qa.tester@d
 
 ## Known issues / notes
 
-- **Unverified:** the API e2e suite (blocked by the agent permission guard in sessions 4, 5 and 6); the supplier `IN_USE` delete refusal on seeded data (see Phase 2).
+- **Unverified:** the API e2e suite (blocked by the agent permission guard in sessions 4, 5, 6 and 7); the supplier `IN_USE` delete refusal on seeded data (see Phase 2).
 - Session 6 decisions: report tabs live in `?tab=`; balances are summed in exact BigInt cents (`splitBalances`); single-column grids holding scrollable tables use `grid-cols-[minmax(0,1fr)]`; `reloadSession()` on the auth context refreshes tenant/user after settings changes; temporary passwords come from `generatePassword` (crypto, unambiguous alphabet); a password change signs the user out because the API revokes every session. No new dependencies.
 - Session 6 commits: `fca0404` (reports), `b44aabb` (settings, users, password change), finalisation commit (a11y labels, README, this handoff).
 - The session-5 stash ("WIP phase 5 reports") was dropped after the Phase 5 commit was pushed; its content is all in that commit.
@@ -175,7 +182,7 @@ Demo data from Phase 6: one extra **deactivated** user "QA Tester" (`qa.tester@d
 
 ## Exact next step
 
-1. (User) Run the API e2e suite once: `npm run test:e2e -w @tradeflow/api` (resets only `tradeflow_test`); the agent's permission guard blocks it (sessions 4–6). Fix anything it reports.
+1. (User) Run the API e2e suite once: `npm run test:e2e -w @tradeflow/api` (resets only `tradeflow_test`); the agent's permission guard blocks it (sessions 4–7). Or add a Bash allow rule for `npm run test:e2e` in the Claude Code settings so the agent can run it. Fix anything it reports.
 2. (User decision) Whether to fast-forward `main` to `feat/foundation` — never without explicit approval. Local `main` was already 1 commit ahead of `origin/main` before session 6 (left untouched).
 3. Optional, only if the user asks: README screenshots, a `LICENSE` file (package.json says MIT). The roadmap has no further feature work; don't invent any.
 
