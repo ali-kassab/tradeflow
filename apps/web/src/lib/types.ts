@@ -182,3 +182,59 @@ export interface SupplierDetail extends Supplier {
   totalBilled: string;
   totalPaid: string;
 }
+
+export type PurchaseOrderStatus = 'DRAFT' | 'ORDERED' | 'RECEIVED' | 'CANCELLED';
+
+/** Purchase orders are quantity × unit cost only (no discount or VAT). Billed once RECEIVED. */
+export interface PurchaseOrderListItem extends OrderPaymentSummary {
+  id: number;
+  number: string;
+  supplierId: number;
+  supplier: { id: number; name: string };
+  status: PurchaseOrderStatus;
+  orderDate: string;
+  expectedDate: string | null;
+  total: string;
+  itemCount: number;
+}
+
+export interface PurchaseOrderItem {
+  id: number;
+  productId: number;
+  productName: string;
+  sku: string;
+  quantity: number;
+  unitCost: string;
+  lineTotal: string;
+}
+
+export interface SupplierPayment {
+  id: number;
+  supplierId: number;
+  purchaseOrderId: number | null;
+  amount: string;
+  method: PaymentMethod;
+  paidAt: string;
+  reference: string | null;
+  notes: string | null;
+  voidedAt: string | null;
+  voidReason: string | null;
+}
+
+export interface PurchaseOrder extends OrderPaymentSummary {
+  id: number;
+  number: string;
+  supplierId: number;
+  supplier: { id: number; name: string; phone: string | null };
+  status: PurchaseOrderStatus;
+  orderDate: string;
+  expectedDate: string | null;
+  total: string;
+  notes: string | null;
+  orderedAt: string | null;
+  receivedAt: string | null;
+  cancelledAt: string | null;
+  createdAt: string;
+  items: PurchaseOrderItem[];
+  payments: SupplierPayment[];
+}

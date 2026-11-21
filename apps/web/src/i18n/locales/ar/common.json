@@ -51,6 +51,12 @@
     "body": "تحقق من الرابط أو عُد إلى لوحة المتابعة.",
     "back": "العودة إلى لوحة المتابعة"
   },
+  "purchaseStatus": {
+    "DRAFT": "مسودة",
+    "ORDERED": "مطلوب من المورد",
+    "RECEIVED": "مستلم",
+    "CANCELLED": "ملغى"
+  },
   "orderStatus": {
     "DRAFT": "مسودة",
     "CONFIRMED": "مؤكد",
@@ -80,7 +86,9 @@
     "searchProduct": "ابحث عن منتج…",
     "anyProduct": "كل المنتجات",
     "customer": "اختر عميلًا",
-    "searchCustomer": "ابحث عن عميل…"
+    "searchCustomer": "ابحث عن عميل…",
+    "supplier": "اختر موردًا",
+    "searchSupplier": "ابحث عن مورد…"
   },
   "movementType": {
     "OPENING": "رصيد افتتاحي",

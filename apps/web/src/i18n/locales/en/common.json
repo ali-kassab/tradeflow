@@ -51,6 +51,12 @@
     "body": "Check the link or go back to the dashboard.",
     "back": "Back to dashboard"
   },
+  "purchaseStatus": {
+    "DRAFT": "Draft",
+    "ORDERED": "Ordered",
+    "RECEIVED": "Received",
+    "CANCELLED": "Cancelled"
+  },
   "orderStatus": {
     "DRAFT": "Draft",
     "CONFIRMED": "Confirmed",
@@ -80,7 +86,9 @@
     "searchProduct": "Search products…",
     "anyProduct": "All products",
     "customer": "Choose a customer",
-    "searchCustomer": "Search customers…"
+    "searchCustomer": "Search customers…",
+    "supplier": "Choose a supplier",
+    "searchSupplier": "Search suppliers…"
   },
   "movementType": {
     "OPENING": "Opening stock",

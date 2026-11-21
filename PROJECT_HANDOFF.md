@@ -165,7 +165,7 @@ SQL Server adaptations (keep them):
 
 ## Reuse-First Development policy
 
-- Use existing project components and installed libraries first (shadcn/ui primitives, `radix-ui`, `PageHeader`, `PaginationBar`, `ConfirmDialog`, `FormField`, `ProductPicker`, `CustomerPicker`, `LedgerStatement`, `RecordPaymentDialog`, `VoidPaymentDialog`, `lib/order-math`, `lib/format`, `lib/notify`, TanStack Query, react-hook-form + zod).
+- Use existing project components and installed libraries first (shadcn/ui primitives, `radix-ui`, `PageHeader`, `PaginationBar`, `ConfirmDialog`, `FormField`, `ProductPicker`, `CustomerPicker`, `SupplierPicker`, `LedgerStatement`, `RecordPaymentDialog`, `VoidPaymentDialog`, `lib/order-math`, `lib/format`, `lib/notify`, TanStack Query, react-hook-form + zod).
 - For anything new, evaluate mature, compatible, free/open-source options before building custom code; check maintenance, licence, accessibility and bundle impact, and avoid unnecessary dependencies.
 - Customise reused components to the design tokens, Arabic RTL, English LTR and responsive layout.
 - Don't refactor or replace existing components merely to apply this policy.

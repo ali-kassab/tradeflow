@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRightIcon, MailIcon, MapPinIcon, PencilIcon, PhoneIcon, ReceiptTextIcon } from 'lucide-react';
+import { ArrowRightIcon, ClipboardListIcon, MailIcon, MapPinIcon, PencilIcon, PhoneIcon, PlusIcon, ReceiptTextIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router';
@@ -12,9 +12,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { api, errorCode } from '@/lib/api';
 import { formatMoney } from '@/lib/format';
-import type { Statement, SupplierDetail } from '@/lib/types';
+import type { Statement, StatementEntry, SupplierDetail } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { SupplierFormDialog } from './SupplierFormDialog';
+
+// Received purchase orders open the order. Payment entries get a link once the supplier
+// payments page exists.
+const entryHref = (e: StatementEntry) => (e.type === 'PURCHASE_RECEIVED' ? `/purchase-orders/${e.refId}` : undefined);
 
 export default function SupplierDetailPage() {
   const { t, i18n } = useTranslation('suppliers');
@@ -107,6 +111,20 @@ export default function SupplierDetailPage() {
             <PencilIcon aria-hidden="true" />
             {tc('actions.edit')}
           </Button>
+          <Button variant="outline" asChild>
+            <Link to={`/purchase-orders?supplierId=${s.id}`}>
+              <ClipboardListIcon aria-hidden="true" />
+              {t('orders')}
+            </Link>
+          </Button>
+          {s.isActive ? (
+            <Button asChild>
+              <Link to={`/purchase-orders/new?supplierId=${s.id}`}>
+                <PlusIcon aria-hidden="true" />
+                {t('newOrder')}
+              </Link>
+            </Button>
+          ) : null}
         </div>
       </div>
 
@@ -146,6 +164,7 @@ export default function SupplierDetailPage() {
                 currency={tenant.currency}
                 caption={t('statement.caption', { name: s.name })}
                 emptyText={t('statement.empty')}
+                referenceHref={entryHref}
               />
               {statement.data.entries.length > 0 ? <p className="text-muted-foreground text-xs">{t('statement.hint')}</p> : null}
             </>

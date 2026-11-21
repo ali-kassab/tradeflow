@@ -23,6 +23,9 @@ const SalesOrderEditorPage = lazy(() => import('@/pages/sales-orders/SalesOrderE
 const PaymentsPage = lazy(() => import('@/pages/payments/PaymentsPage'));
 const SuppliersPage = lazy(() => import('@/pages/suppliers/SuppliersPage'));
 const SupplierDetailPage = lazy(() => import('@/pages/suppliers/SupplierDetailPage'));
+const PurchaseOrdersPage = lazy(() => import('@/pages/purchase-orders/PurchaseOrdersPage'));
+const PurchaseOrderDetailPage = lazy(() => import('@/pages/purchase-orders/PurchaseOrderDetailPage'));
+const PurchaseOrderEditorPage = lazy(() => import('@/pages/purchase-orders/PurchaseOrderEditorPage'));
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'));
 
 function FullPageSpinner() {
@@ -89,6 +92,10 @@ export const router = createBrowserRouter([
       { path: '/payments', element: <Page><PaymentsPage /></Page> },
       { path: '/suppliers', element: <Manager><SuppliersPage /></Manager> },
       { path: '/suppliers/:id', element: <Manager><SupplierDetailPage /></Manager> },
+      { path: '/purchase-orders', element: <Manager><PurchaseOrdersPage /></Manager> },
+      { path: '/purchase-orders/new', element: <Manager><PurchaseOrderEditorPage /></Manager> },
+      { path: '/purchase-orders/:id', element: <Manager><PurchaseOrderDetailPage /></Manager> },
+      { path: '/purchase-orders/:id/edit', element: <Manager><PurchaseOrderEditorPage /></Manager> },
       { path: '*', element: <Page><NotFoundPage /></Page> },
     ],
   },
