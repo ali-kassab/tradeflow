@@ -1,4 +1,4 @@
-import { BanknoteIcon, BoxesIcon, ClipboardListIcon, LayoutDashboardIcon, LogOutIcon, type LucideIcon, PackageIcon, ReceiptIcon, TagsIcon, TruckIcon, UsersIcon } from 'lucide-react';
+import { BanknoteIcon, BoxesIcon, ClipboardListIcon, HandCoinsIcon, LayoutDashboardIcon, LogOutIcon, type LucideIcon, PackageIcon, ReceiptIcon, TagsIcon, TruckIcon, UsersIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavLink, Outlet, useMatch, useResolvedPath } from 'react-router';
@@ -27,7 +27,7 @@ interface NavEntry {
   to: string;
   end: boolean;
   icon: LucideIcon;
-  label: 'nav.dashboard' | 'nav.products' | 'nav.categories' | 'nav.inventory' | 'nav.customers' | 'nav.salesOrders' | 'nav.payments' | 'nav.suppliers' | 'nav.purchaseOrders' | 'nav.reports' | 'nav.settings' | 'nav.users';
+  label: 'nav.dashboard' | 'nav.products' | 'nav.categories' | 'nav.inventory' | 'nav.customers' | 'nav.salesOrders' | 'nav.payments' | 'nav.suppliers' | 'nav.purchaseOrders' | 'nav.supplierPayments' | 'nav.reports' | 'nav.settings' | 'nav.users';
   allow?: (role: Role) => boolean;
 }
 
@@ -41,6 +41,7 @@ const NAV: NavEntry[] = [
   { to: '/payments', end: false, icon: BanknoteIcon, label: 'nav.payments' },
   { to: '/suppliers', end: false, icon: TruckIcon, label: 'nav.suppliers', allow: isManagerOrAbove },
   { to: '/purchase-orders', end: false, icon: ClipboardListIcon, label: 'nav.purchaseOrders', allow: isManagerOrAbove },
+  { to: '/supplier-payments', end: false, icon: HandCoinsIcon, label: 'nav.supplierPayments', allow: isManagerOrAbove },
 ];
 
 function NavItem({ to, end, children }: { to: string; end?: boolean; children: ReactNode }) {

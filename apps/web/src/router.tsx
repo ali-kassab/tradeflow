@@ -21,6 +21,7 @@ const SalesOrdersPage = lazy(() => import('@/pages/sales-orders/SalesOrdersPage'
 const SalesOrderDetailPage = lazy(() => import('@/pages/sales-orders/SalesOrderDetailPage'));
 const SalesOrderEditorPage = lazy(() => import('@/pages/sales-orders/SalesOrderEditorPage'));
 const PaymentsPage = lazy(() => import('@/pages/payments/PaymentsPage'));
+const SupplierPaymentsPage = lazy(() => import('@/pages/payments/SupplierPaymentsPage'));
 const SuppliersPage = lazy(() => import('@/pages/suppliers/SuppliersPage'));
 const SupplierDetailPage = lazy(() => import('@/pages/suppliers/SupplierDetailPage'));
 const PurchaseOrdersPage = lazy(() => import('@/pages/purchase-orders/PurchaseOrdersPage'));
@@ -96,6 +97,7 @@ export const router = createBrowserRouter([
       { path: '/purchase-orders/new', element: <Manager><PurchaseOrderEditorPage /></Manager> },
       { path: '/purchase-orders/:id', element: <Manager><PurchaseOrderDetailPage /></Manager> },
       { path: '/purchase-orders/:id/edit', element: <Manager><PurchaseOrderEditorPage /></Manager> },
+      { path: '/supplier-payments', element: <Manager><SupplierPaymentsPage /></Manager> },
       { path: '*', element: <Page><NotFoundPage /></Page> },
     ],
   },

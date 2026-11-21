@@ -238,3 +238,9 @@ export interface PurchaseOrder extends OrderPaymentSummary {
   items: PurchaseOrderItem[];
   payments: SupplierPayment[];
 }
+
+/** A row of GET /payments/supplier. */
+export interface SupplierPaymentListItem extends SupplierPayment {
+  supplier: { id: number; name: string };
+  purchaseOrder: { id: number; number: string } | null;
+}

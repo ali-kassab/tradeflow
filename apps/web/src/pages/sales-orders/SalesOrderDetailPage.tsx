@@ -346,7 +346,7 @@ export default function SalesOrderDetailPage() {
       <RecordPaymentDialog
         open={paying}
         onOpenChange={setPaying}
-        customer={o.customer}
+        party={o.customer}
         order={{ id: o.id, number: o.number, outstanding: o.outstanding }}
       />
       <ConfirmDialog

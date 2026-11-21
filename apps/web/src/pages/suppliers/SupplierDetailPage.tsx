@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRightIcon, ClipboardListIcon, MailIcon, MapPinIcon, PencilIcon, PhoneIcon, PlusIcon, ReceiptTextIcon } from 'lucide-react';
+import { ArrowRightIcon, BanknoteIcon, ClipboardListIcon, MailIcon, MapPinIcon, PencilIcon, PhoneIcon, PlusIcon, ReceiptTextIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router';
@@ -14,11 +14,12 @@ import { api, errorCode } from '@/lib/api';
 import { formatMoney } from '@/lib/format';
 import type { Statement, StatementEntry, SupplierDetail } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { RecordPaymentDialog } from '@/pages/payments/RecordPaymentDialog';
 import { SupplierFormDialog } from './SupplierFormDialog';
 
-// Received purchase orders open the order. Payment entries get a link once the supplier
-// payments page exists.
-const entryHref = (e: StatementEntry) => (e.type === 'PURCHASE_RECEIVED' ? `/purchase-orders/${e.refId}` : undefined);
+// Received purchase orders open the order; payment entries open this supplier's payments list.
+const entryHref = (supplierId: number) => (e: StatementEntry) =>
+  e.type === 'PURCHASE_RECEIVED' ? `/purchase-orders/${e.refId}` : `/supplier-payments?supplierId=${supplierId}`;
 
 export default function SupplierDetailPage() {
   const { t, i18n } = useTranslation('suppliers');
@@ -28,6 +29,7 @@ export default function SupplierDetailPage() {
   const id = Number(useParams().id);
   const validId = Number.isInteger(id) && id > 0;
   const [formOpen, setFormOpen] = useState(false);
+  const [paying, setPaying] = useState(false);
 
   // Both requests start together; the statement doesn't wait for the header.
   const supplier = useQuery({
@@ -117,6 +119,16 @@ export default function SupplierDetailPage() {
               {t('orders')}
             </Link>
           </Button>
+          <Button variant="outline" asChild>
+            <Link to={`/supplier-payments?supplierId=${s.id}`}>
+              <BanknoteIcon aria-hidden="true" />
+              {t('payments')}
+            </Link>
+          </Button>
+          <Button variant="outline" onClick={() => setPaying(true)}>
+            <PlusIcon aria-hidden="true" />
+            {t('recordPayment')}
+          </Button>
           {s.isActive ? (
             <Button asChild>
               <Link to={`/purchase-orders/new?supplierId=${s.id}`}>
@@ -164,7 +176,7 @@ export default function SupplierDetailPage() {
                 currency={tenant.currency}
                 caption={t('statement.caption', { name: s.name })}
                 emptyText={t('statement.empty')}
-                referenceHref={entryHref}
+                referenceHref={entryHref(s.id)}
               />
               {statement.data.entries.length > 0 ? <p className="text-muted-foreground text-xs">{t('statement.hint')}</p> : null}
             </>
@@ -179,6 +191,7 @@ export default function SupplierDetailPage() {
       </Tabs>
 
       <SupplierFormDialog open={formOpen} onOpenChange={setFormOpen} supplier={s} />
+      <RecordPaymentDialog open={paying} onOpenChange={setPaying} kind="supplier" party={s} />
     </div>
   );
 }

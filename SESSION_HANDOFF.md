@@ -1,6 +1,6 @@
 # Session handoff — TradeFlow
 
-_Last updated: 2026-11-21, session 5. Checkpoint: Phase 3 (purchase orders UI) done and pushed; next is Phase 4 (supplier payments)._
+_Last updated: 2026-11-21, session 5. Checkpoint: Phases 3 (purchase orders) and 4 (supplier payments) done and pushed; next is Phase 5 (reports)._
 
 ## Project
 
@@ -9,16 +9,16 @@ TradeFlow is a bilingual (Arabic RTL by default, English LTR) B2B wholesale mana
 ## Status
 
 - **Backend:** MVP API complete (all endpoints in PROJECT_HANDOFF.md). Purchase-order list and detail return `paidAmount`, `outstanding` and `paymentStatus` (`1ba62fa`).
-- **Frontend built and verified:** auth, dashboard, products, categories, inventory, customers, sales orders, customer payments (`02ce643`), suppliers (`50078ff`), **purchase orders** (session 5).
-- **Frontend not built yet:** supplier payments, reports, settings, users. README exists (`292d43d`); refresh it at finalisation.
+- **Frontend built and verified:** auth, dashboard, products, categories, inventory, customers, sales orders, customer payments (`02ce643`), suppliers (`50078ff`), purchase orders (`fa43352`), **supplier payments** (session 5).
+- **Frontend not built yet:** reports, settings, users. README exists (`292d43d`); refresh it at finalisation.
 
 ## Roadmap for this run (user-approved order)
 
 1. ~~Customer payments~~ (done)
 2. ~~Suppliers~~ (done)
 3. ~~Purchase orders~~ (done)
-4. Supplier payments (reuse payments page/dialogs) — **next**
-5. Reports (sales, inventory value, balances, activity — backend `/reports/*`)
+4. ~~Supplier payments~~ (done)
+5. Reports (sales, inventory value, balances, activity — backend `/reports/*`) — **next**
 6. Settings (tenant, owner) and users (owner)
 7. Finalisation: full review, e2e on `tradeflow_test`, lint/a11y, README, handoffs
 
@@ -86,6 +86,26 @@ Verification (actual results, 2026-11-21):
 
 Demo data changes from session 5: PO-00003 RECEIVED (supplier 2 now owes 1,512.50; RICE-5KG +10 stock, cost 151.25); PO-00004 CANCELLED.
 
+## Phase 4 — supplier payments (done, session 5)
+
+Built by generalising the customer-payments UI with a `kind` ('customer' | 'supplier') instead of copying it.
+
+| Area | Files |
+|---|---|
+| Per-kind config (endpoint, list/party/order paths, `partyParam`, order body field, billed statuses, caches to invalidate), `fetchPayableOrders(kind, partyId)`, `toPaymentRow` (normalises customer/supplier list rows) + 3 tests | `apps/web/src/pages/payments/payment-kinds.ts`, `payment-kinds.spec.ts` |
+| `PaymentsView({kind})`: shared list (search, `?customerId=` / `?supplierId=` chip, party and order links, void for manager+). `/payments` = customer (default export), `/supplier-payments` = supplier (manager+ route and nav entry) | `pages/payments/PaymentsPage.tsx`, `pages/payments/SupplierPaymentsPage.tsx` |
+| `RecordPaymentDialog` props are now `kind` (default `'customer'`), `party` (was `customer`), `order`; picks `CustomerPicker`/`SupplierPicker`, sends `customerId`+`salesOrderId` or `supplierId`+`purchaseOrderId`. `VoidPaymentDialog` takes `kind`; `VoidTarget.customerName` → `partyName` | `pages/payments/RecordPaymentDialog.tsx`, `VoidPaymentDialog.tsx`; call sites `pages/customers/CustomerDetailPage.tsx`, `pages/sales-orders/SalesOrderDetailPage.tsx` |
+| Entry points: "Record payment" on RECEIVED POs with outstanding > 0; supplier page "Payments" + "Record payment"; supplier statement payment rows → `/supplier-payments?supplierId=` | `pages/purchase-orders/PurchaseOrderDetailPage.tsx`, `pages/suppliers/SupplierDetailPage.tsx` |
+| i18n: party-specific payment strings moved under `payments.party.{customer,supplier}` (title, description, search, column, field, validation, balance, noOpenOrders, paidAt, voidBody); `nav.payments` now reads "Customer payments" / "مدفوعات العملاء"; new `nav.supplierPayments`, `suppliers.payments/recordPayment`, `purchaseOrders.actions.recordPayment`; type `SupplierPaymentListItem` | `i18n/locales/*`, `lib/types.ts`, `layout/AppLayout.tsx`, `router.tsx` |
+
+Verification (actual results, 2026-11-21): web `tsc -b` OK; vitest 36/36; oxlint on changed dirs 0 warnings; `vite build` OK.
+- Browser, STAFF: no Supplier payments nav entry, `/supplier-payments` → permission message; `/payments` titled "Customer payments", no Void column; empty submit → "Choose a customer." + amount error.
+- Browser, MANAGER: PO-00003 "Record payment" → supplier + order locked, amount preset 1,512.50; 1,512.51 blocked client-side; 500.00 recorded → PO partly paid, outstanding 1,012.50; supplier 2 statement 1,512.50 − 500.00 = 1,012.50, payment row links to `/supplier-payments?supplierId=2`; voided with a reason → PO back to unpaid 1,512.50. Customer 2 record dialog still shows "Customer", balance 2,900.40.
+- Arabic, 375 px: supplier record dialog fits (scrollWidth 375), shows "المستحق للمورد: 6,080.00" and payable PO-00001 for المصرية للأغذية (not submitted).
+- API (curl, demo users): overpay 1,512.51 on PO-00003 → 400 `AMOUNT_EXCEEDS_OUTSTANDING` (outstanding 1512.50); PO-00003 with supplier 1 → 400 `INVALID_REFERENCE`; STAFF `GET /payments/supplier` → 403; second void → 409 `ALREADY_VOIDED`.
+
+Demo data from Phase 4: one **voided** 500.00 supplier payment on PO-00003 (reason "UI verification entry"); balances unchanged.
+
 ## How to run (dev)
 
 - `.claude/launch.json` (local, untracked) has `api` (`node dist/main.js` in `apps/api`, port 3000) and `web` (`npx vite`, port 5173). Rebuild the API with `npm run build -w @tradeflow/api` after API changes.
@@ -94,9 +114,9 @@ Demo data changes from session 5: PO-00003 RECEIVED (supplier 2 now owes 1,512.5
 ## Known issues / notes
 
 - **Unverified:** the API e2e suite (blocked by the agent permission guard in sessions 4 and 5); the supplier `IN_USE` delete refusal on seeded data (see Phase 2).
-- Demo data now includes two voided test payments on customer 2 (Phase 1), PO-00003 received and PO-00004 cancelled (Phase 3). The test supplier created in Phase 2 was deleted.
+- Demo data now includes two voided test payments on customer 2 (Phase 1), PO-00003 received and PO-00004 cancelled (Phase 3), one voided 500.00 supplier payment on PO-00003 (Phase 4). The test supplier created in Phase 2 was deleted.
 
-- Payable-order list fetches up to 100 CONFIRMED + 100 DELIVERED orders per customer (API page cap); older unpaid orders beyond that wouldn't be offered (payment can still go on account).
+- Payable-order list fetches up to 100 orders per billed status per party (API page cap: customers CONFIRMED + DELIVERED, suppliers RECEIVED); older unpaid orders beyond that wouldn't be offered (payment can still go on account).
 - Shadcn dialog close button label is hard-coded English "Close" (pre-existing).
 - `ProductPicker` has no built-in accessible name (pre-existing).
 - oxlint pre-existing warnings: shadcn `only-export-components`, `router.tsx`, `AdjustStockDialog.tsx` (`set-state-in-effect`); API: 2× `no-misused-spread` in `parties.module.ts`, 1 in an e2e spec.
@@ -106,8 +126,12 @@ Demo data changes from session 5: PO-00003 RECEIVED (supplier 2 now owes 1,512.5
 ## Exact next step
 
 0. (User) Run the API e2e suite once: `npm run test:e2e -w @tradeflow/api` (resets only `tradeflow_test`); the agent's permission guard blocks it.
-1. Phase 4 — supplier payments, reusing `pages/payments/*` (`RecordPaymentDialog`, `VoidPaymentDialog`, `payment-form.ts`) by generalising or wrapping them for a supplier party; don't break customer payments. API (all manager+): `GET /payments/supplier?partyId&search&page` (rows include `supplier {id,name}`, `purchaseOrder {id,number}|null`), `POST /payments/supplier` (`supplierId`, optional `purchaseOrderId` — must be the supplier's RECEIVED PO, amount ≤ outstanding → `AMOUNT_EXCEEDS_OUTSTANDING`), `POST /payments/supplier/:id/void` (reason). Payable POs = `GET /purchase-orders?supplierId&status=RECEIVED` with `outstanding > 0`. Entry points: "Record payment" on received POs with outstanding > 0 (`PurchaseOrderDetailPage`), supplier page "Payments" + "Record payment", supplier statement payment rows → payments list filtered by supplier. Route and nav are manager+.
-2. Then Phase 5 (reports), Phase 6 (settings/users), Phase 7 (finalisation) per the roadmap.
+1. Phase 5 — reports page(s), manager+ (`Manager` route wrapper, nav `allow`), reusing recharts via `components/ui/chart.tsx` as the dashboard does, `LedgerStatement`-style tabular numerals, and `lib/format`. API (all `ManagerOrAbove`):
+   - `GET /reports/sales?from&to` (inclusive dates, default last 30 days) → `{from, to, summary {orders, subtotal, discount, tax, total, netSales, cost, grossProfit}, byDay [{date, orders, revenue}] (gap-filled), byCustomer [{id, name, orders, revenue}] (top 20), byProduct [{id, name, sku, quantity, revenue, cost, grossProfit}] (top 20)}`.
+   - `GET /reports/inventory` → `{rows [{id, sku, name, unit, stockQty, reorderLevel, costPrice, salePrice, value, isLowStock}], value, units}` (active products).
+   - `GET /reports/balances` → `{customers [{id, name, phone, creditLimit, balance}], suppliers [{id, name, phone, balance}]}` (non-zero only, largest first).
+   - `GET /reports/activity` → last 100 `ActivityLog` rows `{id, action, entityType, entityId, metadata, userId, userName, createdAt}`; `action` values like `salesOrder.confirmed`, `purchaseOrder.received` need translated labels.
+2. Then Phase 6 (settings: tenant name/currency/VAT, owner; users: list/create/edit/reset password, owner) and Phase 7 (finalisation) per the roadmap.
 
 ## Constraints to keep
 

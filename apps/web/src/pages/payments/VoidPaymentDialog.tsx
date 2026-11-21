@@ -11,20 +11,23 @@ import { Textarea } from '@/components/ui/textarea';
 import { api, errorCode } from '@/lib/api';
 import { formatMoney } from '@/lib/format';
 import { toastError } from '@/lib/notify';
+import { KINDS, type PartyKind } from './payment-kinds';
 
 export interface VoidTarget {
   id: number;
   amount: string;
-  customerName: string;
+  partyName: string;
 }
 
 interface Props {
   payment: VoidTarget | undefined;
+  /** Customer payments by default. */
+  kind?: PartyKind;
   onClose: () => void;
 }
 
-/** Voids a customer payment with a reason (manager+; the API enforces it). The record is kept. */
-export function VoidPaymentDialog({ payment, onClose }: Props) {
+/** Voids a customer or supplier payment with a reason (manager+; the API enforces it). The record is kept. */
+export function VoidPaymentDialog({ payment, kind = 'customer', onClose }: Props) {
   const { t, i18n } = useTranslation('payments');
   const { tenant } = useSession();
   const qc = useQueryClient();
@@ -40,11 +43,11 @@ export function VoidPaymentDialog({ payment, onClose }: Props) {
   }
 
   const refresh = () => {
-    for (const key of ['payments', 'customers', 'sales-orders', 'dashboard']) void qc.invalidateQueries({ queryKey: [key] });
+    for (const key of KINDS[kind].invalidate) void qc.invalidateQueries({ queryKey: [key] });
   };
 
   const voidIt = useMutation({
-    mutationFn: async (v: { id: number; reason: string }) => api.post(`/payments/customer/${v.id}/void`, { reason: v.reason }),
+    mutationFn: async (v: { id: number; reason: string }) => api.post(`${KINDS[kind].endpoint}/${v.id}/void`, { reason: v.reason }),
     onSuccess: () => {
       toast.success(t('void.done'));
       refresh();
@@ -74,7 +77,7 @@ export function VoidPaymentDialog({ payment, onClose }: Props) {
         <DialogHeader>
           <DialogTitle>{t('void.title')}</DialogTitle>
           <DialogDescription>
-            {shown ? t('void.body', { amount: formatMoney(shown.amount, tenant.currency, i18n.language), name: shown.customerName }) : null}
+            {shown ? t(`party.${kind}.voidBody`, { amount: formatMoney(shown.amount, tenant.currency, i18n.language), name: shown.partyName }) : null}
           </DialogDescription>
         </DialogHeader>
         <form

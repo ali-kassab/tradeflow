@@ -11,6 +11,8 @@
   "back": "All suppliers",
   "orders": "Purchase orders",
   "newOrder": "New purchase order",
+  "payments": "Payments",
+  "recordPayment": "Record payment",
   "notFound": "This supplier doesn't exist or was deleted.",
   "filters": {
     "status": "Status",

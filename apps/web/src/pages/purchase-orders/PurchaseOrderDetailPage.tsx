@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowRightIcon, BanIcon, PackageCheckIcon, PencilIcon, SendIcon } from 'lucide-react';
+import { ArrowRightIcon, BanIcon, BanknoteIcon, PackageCheckIcon, PencilIcon, SendIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router';
@@ -15,6 +15,7 @@ import { formatDate, formatMoney, formatNumber } from '@/lib/format';
 import { toastError } from '@/lib/notify';
 import type { PurchaseOrder } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { RecordPaymentDialog } from '@/pages/payments/RecordPaymentDialog';
 import { PaymentStatusText } from '@/pages/sales-orders/badges';
 import { PurchaseStatusBadge } from './badges';
 
@@ -33,6 +34,7 @@ export default function PurchaseOrderDetailPage() {
   const [pending, setPending] = useState<Action | null>(null);
   // The dialog keeps showing the last action while it animates closed.
   const [shown, setShown] = useState<Action>('order');
+  const [paying, setPaying] = useState(false);
   const ask = (a: Action) => {
     setShown(a);
     setPending(a);
@@ -101,6 +103,7 @@ export default function PurchaseOrderDetailPage() {
   const billed = o.status === 'RECEIVED';
   // Mirrors the API: edit and "ordered" from DRAFT; receive/cancel from DRAFT or ORDERED.
   const open = o.status === 'DRAFT' || o.status === 'ORDERED';
+  const canPay = billed && Number(o.outstanding) > 0;
   const busy = act.isPending;
 
   const timeline = [
@@ -142,6 +145,12 @@ export default function PurchaseOrderDetailPage() {
           <PurchaseStatusBadge status={o.status} />
         </div>
         <div className="flex flex-wrap gap-2">
+          {canPay ? (
+            <Button variant="outline" onClick={() => setPaying(true)}>
+              <BanknoteIcon aria-hidden="true" />
+              {t('actions.recordPayment')}
+            </Button>
+          ) : null}
           {o.status === 'DRAFT' ? (
             <Button variant="outline" asChild>
               <Link to={`/purchase-orders/${o.id}/edit`}>
@@ -305,6 +314,13 @@ export default function PurchaseOrderDetailPage() {
         </div>
       </div>
 
+      <RecordPaymentDialog
+        open={paying}
+        onOpenChange={setPaying}
+        kind="supplier"
+        party={o.supplier}
+        order={{ id: o.id, number: o.number, outstanding: o.outstanding }}
+      />
       <ConfirmDialog
         open={pending !== null}
         onOpenChange={(isOpen) => !isOpen && !busy && setPending(null)}

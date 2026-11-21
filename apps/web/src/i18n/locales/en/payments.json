@@ -1,13 +1,35 @@
 {
-  "title": "Payments",
-  "description": "Money received from customers. Payments are never deleted; a mistake is voided with a reason.",
   "record": "Record payment",
-  "searchPlaceholder": "Search by customer or reference",
   "empty": "No payments recorded yet.",
   "emptySearch": "No matching payments.",
+  "party": {
+    "customer": {
+      "title": "Customer payments",
+      "description": "Money received from customers. Payments are never deleted; a mistake is voided with a reason.",
+      "searchPlaceholder": "Search by customer or reference",
+      "column": "Customer",
+      "field": "Customer",
+      "validation": "Choose a customer.",
+      "balance": "Current balance: {{amount}}",
+      "noOpenOrders": "This customer has no unpaid orders; the payment goes on account.",
+      "paidAt": "Date received",
+      "voidBody": "The payment of {{amount}} from {{name}} stays on record but no longer counts toward the balance. This can't be undone."
+    },
+    "supplier": {
+      "title": "Supplier payments",
+      "description": "Money paid to suppliers. Payments are never deleted; a mistake is voided with a reason.",
+      "searchPlaceholder": "Search by supplier or reference",
+      "column": "Supplier",
+      "field": "Supplier",
+      "validation": "Choose a supplier.",
+      "balance": "You owe: {{amount}}",
+      "noOpenOrders": "No received orders from this supplier are waiting for payment; the payment goes on account.",
+      "paidAt": "Date paid",
+      "voidBody": "The payment of {{amount}} to {{name}} stays on record but no longer counts toward what you owe. This can't be undone."
+    }
+  },
   "columns": {
     "date": "Date",
-    "customer": "Customer",
     "order": "Applied to",
     "method": "Method",
     "reference": "Reference",
@@ -18,16 +40,12 @@
   "voidedReason": "Voided: {{reason}}",
   "form": {
     "title": "Record a payment",
-    "customer": "Customer",
     "order": "Apply to order",
     "orderHint": "Optional. Leave it on account to reduce the overall balance.",
-    "noOpenOrders": "This customer has no unpaid orders; the payment goes on account.",
     "outstanding": "Outstanding on {{number}}: {{amount}}",
     "payInFull": "Pay in full",
-    "balance": "Current balance: {{amount}}",
     "amount": "Amount",
     "method": "Method",
-    "paidAt": "Date received",
     "reference": "Reference",
     "referenceHint": "Optional, e.g. a receipt, transfer or cheque number.",
     "notes": "Notes",
@@ -35,7 +53,6 @@
     "recorded": "Payment of {{amount}} recorded."
   },
   "validation": {
-    "customer": "Choose a customer.",
     "amount": "Enter an amount above zero (up to 2 decimals).",
     "exceeds": "This is more than the {{amount}} outstanding on the order.",
     "date": "Choose a date that isn't in the future.",
@@ -45,7 +62,6 @@
   "void": {
     "action": "Void",
     "title": "Void this payment?",
-    "body": "The payment of {{amount}} from {{name}} stays on record but no longer counts toward the balance. This can't be undone.",
     "reason": "Reason",
     "submit": "Void payment",
     "keep": "Keep payment",

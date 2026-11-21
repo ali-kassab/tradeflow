@@ -168,4 +168,5 @@ SQL Server adaptations (keep them):
 - Use existing project components and installed libraries first (shadcn/ui primitives, `radix-ui`, `PageHeader`, `PaginationBar`, `ConfirmDialog`, `FormField`, `ProductPicker`, `CustomerPicker`, `SupplierPicker`, `LedgerStatement`, `RecordPaymentDialog`, `VoidPaymentDialog`, `lib/order-math`, `lib/format`, `lib/notify`, TanStack Query, react-hook-form + zod).
 - For anything new, evaluate mature, compatible, free/open-source options before building custom code; check maintenance, licence, accessibility and bundle impact, and avoid unnecessary dependencies.
 - Customise reused components to the design tokens, Arabic RTL, English LTR and responsive layout.
+- Customer and supplier payments share one UI: `PaymentsView`, `RecordPaymentDialog` and `VoidPaymentDialog` take a `kind` (`customer` | `supplier`); per-kind endpoints, billed statuses and cache keys live in `pages/payments/payment-kinds.ts`.
 - Don't refactor or replace existing components merely to apply this policy.

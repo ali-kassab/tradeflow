@@ -7,8 +7,9 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { useSession } from '@/auth/context';
-import { CustomerPicker, type PickedCustomer } from '@/components/CustomerPicker';
+import { CustomerPicker } from '@/components/CustomerPicker';
 import { FormField } from '@/components/FormField';
+import { SupplierPicker } from '@/components/SupplierPicker';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
@@ -19,22 +20,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { api, errorCode, errorDetails } from '@/lib/api';
 import { formatMoney } from '@/lib/format';
 import { toastError } from '@/lib/notify';
-import type { CustomerPayment, Paginated, SalesOrderListItem } from '@/lib/types';
+import type { CustomerPayment } from '@/lib/types';
 import { PAYMENT_METHODS, checkAmount, localToday, paidAtForApi } from './payment-form';
+import { KINDS, type PartyKind, type PayableOrder, type PickedParty, fetchPayableOrders } from './payment-kinds';
+
+export type { PayableOrder } from './payment-kinds';
 
 const ON_ACCOUNT = 'none';
 
-/** An order the payment can be applied to: billed, with money still outstanding. */
-export interface PayableOrder {
-  id: number;
-  number: string;
-  outstanding: string;
-}
-
-// Mirrors RecordCustomerPaymentDto in apps/api (payments.module.ts).
-const schema = (t: TFunction<'payments'>) =>
+// Mirrors RecordCustomerPaymentDto / RecordSupplierPaymentDto in apps/api (payments.module.ts).
+const schema = (t: TFunction<'payments'>, kind: PartyKind) =>
   z.object({
-    customer: z.custom<PickedCustomer | null>().refine((c) => Boolean(c), t('validation.customer')),
+    party: z.custom<PickedParty | null>().refine((c) => Boolean(c), t(`party.${kind}.validation`)),
     orderId: z.string(),
     amount: z.string().trim().refine((v) => checkAmount(v) === 'ok', t('validation.amount')),
     method: z.enum(PAYMENT_METHODS),
@@ -44,8 +41,8 @@ const schema = (t: TFunction<'payments'>) =>
   });
 type Values = z.infer<ReturnType<typeof schema>>;
 
-const defaults = (customer?: PickedCustomer, order?: PayableOrder): Values => ({
-  customer: customer ?? null,
+const defaults = (party?: PickedParty, order?: PayableOrder): Values => ({
+  party: party ?? null,
   orderId: order ? String(order.id) : ON_ACCOUNT,
   amount: order ? String(Number(order.outstanding)) : '',
   method: 'CASH',
@@ -54,34 +51,21 @@ const defaults = (customer?: PickedCustomer, order?: PayableOrder): Values => ({
   notes: '',
 });
 
-/** Billed orders of one customer that still have money outstanding, oldest first. */
-async function fetchPayableOrders(customerId: number): Promise<PayableOrder[]> {
-  const pages = await Promise.all(
-    (['CONFIRMED', 'DELIVERED'] as const).map(
-      async (status) =>
-        (await api.get<Paginated<SalesOrderListItem>>('/sales-orders', { params: { customerId, status, pageSize: 100 } })).data.data,
-    ),
-  );
-  return pages
-    .flat()
-    .filter((o) => Number(o.outstanding) > 0)
-    .toSorted((a, b) => a.orderDate.localeCompare(b.orderDate) || a.id - b.id)
-    .map((o) => ({ id: o.id, number: o.number, outstanding: o.outstanding }));
-}
-
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Preset and locked (opened from a customer or an order page). */
-  customer?: PickedCustomer;
-  /** Preset and locked (opened from an order page); requires `customer`. */
+  /** Customer payments (default; every role) or supplier payments (manager+, enforced by the API). */
+  kind?: PartyKind;
+  /** Preset and locked (opened from a party or an order page). */
+  party?: PickedParty;
+  /** Preset and locked (opened from an order page); requires `party`. */
   order?: PayableOrder;
 }
 
 const MUTATION_KEY = ['record-payment'];
 
-/** Records a customer payment, optionally applied to one billed order. Every role may do this. */
-export function RecordPaymentDialog({ open, onOpenChange, customer, order }: Props) {
+/** Records a customer or supplier payment, optionally applied to one billed order. */
+export function RecordPaymentDialog({ open, onOpenChange, kind = 'customer', party, order }: Props) {
   const { t } = useTranslation('payments');
   const saving = useIsMutating({ mutationKey: MUTATION_KEY }) > 0;
   return (
@@ -91,29 +75,30 @@ export function RecordPaymentDialog({ open, onOpenChange, customer, order }: Pro
           <DialogTitle>{t('form.title')}</DialogTitle>
         </DialogHeader>
         {/* Radix mounts the content only while open, so each opening starts a fresh form. */}
-        <PaymentForm customer={customer} order={order} onDone={() => onOpenChange(false)} />
+        <PaymentForm kind={kind} party={party} order={order} onDone={() => onOpenChange(false)} />
       </DialogContent>
     </Dialog>
   );
 }
 
-function PaymentForm({ customer, order, onDone }: Pick<Props, 'customer' | 'order'> & { onDone: () => void }) {
+function PaymentForm({ kind, party, order, onDone }: Pick<Props, 'party' | 'order'> & { kind: PartyKind; onDone: () => void }) {
   const { t, i18n } = useTranslation('payments');
   const { t: tc } = useTranslation();
   const { tenant } = useSession();
   const lang = i18n.language;
   const money = (v: string) => formatMoney(v, tenant.currency, lang);
   const qc = useQueryClient();
+  const k = KINDS[kind];
 
-  const resolver = useMemo(() => zodResolver(schema(t)), [t]);
-  const form = useForm<Values>({ resolver, defaultValues: defaults(customer, order) });
+  const resolver = useMemo(() => zodResolver(schema(t, kind)), [t, kind]);
+  const form = useForm<Values>({ resolver, defaultValues: defaults(party, order) });
 
-  const picked = useWatch({ control: form.control, name: 'customer' });
+  const picked = useWatch({ control: form.control, name: 'party' });
   const orderId = useWatch({ control: form.control, name: 'orderId' });
 
   const payable = useQuery({
-    queryKey: ['sales-orders', 'payable', picked?.id],
-    queryFn: () => fetchPayableOrders(picked!.id),
+    queryKey: [k.orderPath.slice(1), 'payable', picked?.id],
+    queryFn: () => fetchPayableOrders(kind, picked!.id),
     enabled: !order && picked !== null,
   });
   const orders = order ? [order] : (payable.data ?? []);
@@ -123,20 +108,21 @@ function PaymentForm({ customer, order, onDone }: Pick<Props, 'customer' | 'orde
     mutationKey: MUTATION_KEY,
     mutationFn: async (v: Values) => {
       const body = {
-        customerId: v.customer!.id,
-        ...(v.orderId !== ON_ACCOUNT ? { salesOrderId: Number(v.orderId) } : {}),
+        [`${kind}Id`]: v.party!.id,
+        ...(v.orderId !== ON_ACCOUNT ? { [k.orderField]: Number(v.orderId) } : {}),
         amount: Number(v.amount),
         method: v.method,
         paidAt: paidAtForApi(v.paidAt),
         reference: v.reference || undefined,
         notes: v.notes || undefined,
       };
-      return (await api.post<CustomerPayment>('/payments/customer', body)).data;
+      // Both endpoints answer with the stored payment; only `amount` is read here.
+      return (await api.post<Pick<CustomerPayment, 'amount'>>(k.endpoint, body)).data;
     },
     onSuccess: (p) => {
       toast.success(t('form.recorded', { amount: money(p.amount) }));
       // A payment changes balances, order payment status, statements and the dashboard.
-      for (const key of ['payments', 'customers', 'sales-orders', 'dashboard']) void qc.invalidateQueries({ queryKey: [key] });
+      for (const key of k.invalidate) void qc.invalidateQueries({ queryKey: [key] });
       onDone();
     },
     onError: (e) => {
@@ -160,28 +146,28 @@ function PaymentForm({ customer, order, onDone }: Pick<Props, 'customer' | 'orde
   });
 
   const { errors } = form.formState;
-  const customerLocked = Boolean(customer);
   const showOrders = order !== undefined || picked !== null;
+  const Picker = kind === 'customer' ? CustomerPicker : SupplierPicker;
 
   return (
     <>
       <form id="payment-form" noValidate onSubmit={onSubmit} className="grid gap-4 sm:grid-cols-2">
-        <Field className="sm:col-span-2" data-invalid={errors.customer ? true : undefined}>
-          <FieldLabel htmlFor="pay-customer">{t('form.customer')}</FieldLabel>
-          {customerLocked ? (
-            <p id="pay-customer" className="font-medium">
-              {customer!.name}
+        <Field className="sm:col-span-2" data-invalid={errors.party ? true : undefined}>
+          <FieldLabel htmlFor="pay-party">{t(`party.${kind}.field`)}</FieldLabel>
+          {party ? (
+            <p id="pay-party" className="font-medium">
+              {party.name}
             </p>
           ) : (
             <Controller
               control={form.control}
-              name="customer"
+              name="party"
               render={({ field }) => (
-                <CustomerPicker
-                  id="pay-customer"
+                <Picker
+                  id="pay-party"
                   value={field.value}
-                  invalid={Boolean(errors.customer)}
-                  onChange={(c) => {
+                  invalid={Boolean(errors.party)}
+                  onChange={(c: PickedParty) => {
                     field.onChange(c);
                     form.setValue('orderId', ON_ACCOUNT);
                   }}
@@ -190,9 +176,9 @@ function PaymentForm({ customer, order, onDone }: Pick<Props, 'customer' | 'orde
             />
           )}
           {picked?.balance !== undefined ? (
-            <FieldDescription className="tabular text-xs">{t('form.balance', { amount: money(picked.balance) })}</FieldDescription>
+            <FieldDescription className="tabular text-xs">{t(`party.${kind}.balance`, { amount: money(picked.balance) })}</FieldDescription>
           ) : null}
-          {errors.customer ? <FieldError>{String(errors.customer.message ?? '')}</FieldError> : null}
+          {errors.party ? <FieldError>{String(errors.party.message ?? '')}</FieldError> : null}
         </Field>
 
         {showOrders ? (
@@ -205,7 +191,7 @@ function PaymentForm({ customer, order, onDone }: Pick<Props, 'customer' | 'orde
             ) : payable.isPending ? (
               <Spinner />
             ) : orders.length === 0 ? (
-              <FieldDescription>{t('form.noOpenOrders')}</FieldDescription>
+              <FieldDescription>{t(`party.${kind}.noOpenOrders`)}</FieldDescription>
             ) : (
               <Controller
                 control={form.control}
@@ -272,7 +258,7 @@ function PaymentForm({ customer, order, onDone }: Pick<Props, 'customer' | 'orde
           />
         </Field>
         <Field data-invalid={errors.paidAt ? true : undefined}>
-          <FieldLabel htmlFor="pay-date">{t('form.paidAt')}</FieldLabel>
+          <FieldLabel htmlFor="pay-date">{t(`party.${kind}.paidAt`)}</FieldLabel>
           <Input id="pay-date" type="date" max={localToday()} className="tabular" aria-invalid={errors.paidAt ? true : undefined} {...form.register('paidAt')} />
           {errors.paidAt ? <FieldError>{String(errors.paidAt.message ?? '')}</FieldError> : null}
         </Field>

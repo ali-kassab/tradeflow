@@ -207,7 +207,7 @@ export default function CustomerDetailPage() {
       </Tabs>
 
       <CustomerFormDialog open={formOpen} onOpenChange={setFormOpen} customer={c} />
-      <RecordPaymentDialog open={paying} onOpenChange={setPaying} customer={c} />
+      <RecordPaymentDialog open={paying} onOpenChange={setPaying} party={c} />
     </div>
   );
 }
