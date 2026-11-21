@@ -37,6 +37,21 @@ export function formatMoney(value: string | number, currency: string, lang: stri
   }).format(Number(value));
 }
 
+/**
+ * The same text as `formatMoney`, split so the figure and the currency can be set at
+ * different sizes. Joining `parts` gives exactly the `formatMoney` string.
+ */
+export function formatMoneyParts(value: string | number, currency: string, lang: string) {
+  return numberFormat(`money|${currency}`, lang, {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+    .formatToParts(Number(value))
+    .map((p) => ({ text: p.value, currency: p.type === 'currency' }));
+}
+
 export function formatNumber(value: number, lang: string) {
   return numberFormat('int', lang, { maximumFractionDigits: 0 }).format(value);
 }

@@ -97,7 +97,7 @@ export default function CustomerDetailPage() {
       {backLink}
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="flex flex-wrap items-center gap-2 text-2xl font-semibold">
+          <h1 className="flex flex-wrap items-center gap-2 text-[1.625rem] leading-tight font-semibold tracking-tight">
             {c.name}
             {!c.isActive ? <Badge variant="outline">{t('inactive')}</Badge> : null}
           </h1>
@@ -145,7 +145,7 @@ export default function CustomerDetailPage() {
       </div>
 
       {/* Account summary: billed − paid = balance, read left-to-right (or right-to-left) like a sum. */}
-      <dl className="bg-card mb-6 grid divide-y rounded-lg border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+      <dl className="panel mb-6 grid divide-y sm:grid-cols-3 sm:divide-x sm:divide-y-0">
         <div className="px-5 py-4">
           <dt className="text-muted-foreground text-sm">{t('summary.billed')}</dt>
           <dd className="tabular mt-1 text-xl font-semibold">{money(c.totalBilled)}</dd>

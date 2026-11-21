@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import { useSession } from '@/auth/context';
+import { TableEmpty } from '@/components/EmptyState';
 import { Alert } from '@/components/Alert';
 import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
@@ -75,7 +76,7 @@ export function SalesReport() {
         <>
           <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[22rem_minmax(0,1fr)]">
             {/* The period's result, read as a sum: net sales − cost = gross profit. */}
-            <section aria-labelledby="rep-summary" className="bg-card h-fit rounded-lg border p-4">
+            <section aria-labelledby="rep-summary" className="panel h-fit p-4">
               <h2 id="rep-summary" className="mb-3 font-semibold">
                 {t('sales.summaryTitle')}
               </h2>
@@ -116,7 +117,7 @@ export function SalesReport() {
               </dl>
             </section>
 
-            <section aria-labelledby="rep-chart" className="bg-card min-w-0 rounded-lg border p-4">
+            <section aria-labelledby="rep-chart" className="panel min-w-0 p-4">
               <h2 id="rep-chart" className="mb-4 font-semibold">
                 {t('sales.chartTitle', { from: formatDate(d.from, lang), to: formatDate(d.to, lang) })}
               </h2>
@@ -179,7 +180,7 @@ export function SalesReport() {
               <h2 id="rep-customers" className="mb-2 font-semibold">
                 {t('sales.topCustomers')}
               </h2>
-              <div className="bg-card overflow-x-auto rounded-lg border">
+              <div className="panel overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -190,11 +191,7 @@ export function SalesReport() {
                   </TableHeader>
                   <TableBody>
                     {d.byCustomer.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={3} className="text-muted-foreground py-8 text-center">
-                          {t('sales.empty')}
-                        </TableCell>
-                      </TableRow>
+                      <TableEmpty colSpan={3}>{t('sales.empty')}</TableEmpty>
                     ) : null}
                     {d.byCustomer.map((c) => (
                       <TableRow key={c.id}>
@@ -216,7 +213,7 @@ export function SalesReport() {
               <h2 id="rep-products" className="mb-2 font-semibold">
                 {t('sales.topProducts')}
               </h2>
-              <div className="bg-card overflow-x-auto rounded-lg border">
+              <div className="panel overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -229,11 +226,7 @@ export function SalesReport() {
                   </TableHeader>
                   <TableBody>
                     {d.byProduct.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-muted-foreground py-8 text-center">
-                          {t('sales.empty')}
-                        </TableCell>
-                      </TableRow>
+                      <TableEmpty colSpan={5}>{t('sales.empty')}</TableEmpty>
                     ) : null}
                     {d.byProduct.map((p) => (
                       <TableRow key={p.id}>

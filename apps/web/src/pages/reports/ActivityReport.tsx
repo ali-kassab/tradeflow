@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { useSession } from '@/auth/context';
+import { TableEmpty } from '@/components/EmptyState';
 import { Alert } from '@/components/Alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -56,7 +57,7 @@ export function ActivityReport() {
 
   return (
     <div className="space-y-2">
-      <div className="bg-card overflow-x-auto rounded-lg border">
+      <div className="panel overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -69,11 +70,7 @@ export function ActivityReport() {
           </TableHeader>
           <TableBody>
             {rows.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-muted-foreground py-8 text-center">
-                  {t('activity.empty')}
-                </TableCell>
-              </TableRow>
+              <TableEmpty colSpan={5}>{t('activity.empty')}</TableEmpty>
             ) : null}
             {rows.map((e) => {
               const href = activityHref(e);

@@ -6,6 +6,7 @@ import { Link, useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { useSession } from '@/auth/context';
 import { isManagerOrAbove } from '@/auth/types';
+import { TableEmpty } from '@/components/EmptyState';
 import { Alert } from '@/components/Alert';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { PageHeader } from '@/components/PageHeader';
@@ -119,7 +120,7 @@ export default function CustomersPage() {
 
       {customers.isError ? <Alert>{tc('status.loadError')}</Alert> : null}
 
-      <div className="bg-card overflow-x-auto rounded-lg border">
+      <div className="panel overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -141,11 +142,7 @@ export default function CustomersPage() {
                 ))
               : null}
             {customers.data?.data.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={COLUMNS} className="text-muted-foreground py-10 text-center">
-                  {t('empty')}
-                </TableCell>
-              </TableRow>
+              <TableEmpty colSpan={COLUMNS}>{t('empty')}</TableEmpty>
             ) : null}
             {customers.data?.data.map((c) => {
               const over = isOverLimit(c);

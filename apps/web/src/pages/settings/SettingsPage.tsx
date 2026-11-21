@@ -32,7 +32,7 @@ function BusinessSection() {
   });
 
   return (
-    <section aria-labelledby="set-business" className="bg-card rounded-lg border p-4 sm:p-6">
+    <section aria-labelledby="set-business" className="panel p-4 sm:p-6">
       <h2 id="set-business" className="font-semibold">
         {t('business.title')}
       </h2>
@@ -128,7 +128,7 @@ function PasswordSection() {
   });
 
   return (
-    <section aria-labelledby="set-password" className="bg-card rounded-lg border p-4 sm:p-6">
+    <section aria-labelledby="set-password" className="panel p-4 sm:p-6">
       <h2 id="set-password" className="font-semibold">
         {t('password.title')}
       </h2>

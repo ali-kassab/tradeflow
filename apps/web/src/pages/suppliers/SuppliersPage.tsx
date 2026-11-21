@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { useSession } from '@/auth/context';
+import { TableEmpty } from '@/components/EmptyState';
 import { Alert } from '@/components/Alert';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { PageHeader } from '@/components/PageHeader';
@@ -116,7 +117,7 @@ export default function SuppliersPage() {
 
       {suppliers.isError ? <Alert>{tc('status.loadError')}</Alert> : null}
 
-      <div className="bg-card overflow-x-auto rounded-lg border">
+      <div className="panel overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -138,11 +139,7 @@ export default function SuppliersPage() {
                 ))
               : null}
             {suppliers.data?.data.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={COLUMNS} className="text-muted-foreground py-10 text-center">
-                  {t('empty')}
-                </TableCell>
-              </TableRow>
+              <TableEmpty colSpan={COLUMNS}>{t('empty')}</TableEmpty>
             ) : null}
             {suppliers.data?.data.map((c) => {
               const balance = Number(c.balance);

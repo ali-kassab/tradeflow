@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { useSession } from '@/auth/context';
 import { isManagerOrAbove } from '@/auth/types';
 import { Alert } from '@/components/Alert';
+import { EmptyState } from '@/components/EmptyState';
 import { CustomerPicker, type PickedCustomer } from '@/components/CustomerPicker';
 import { ProductPicker } from '@/components/ProductPicker';
 import { Button } from '@/components/ui/button';
@@ -301,7 +302,7 @@ function OrderEditor({ initial, order, backLink }: { initial: Initial; order?: S
   return (
     <div>
       {backLink}
-      <h1 className="mb-6 text-2xl font-semibold">{order ? t('editor.editTitle', { number: order.number }) : t('editor.newTitle')}</h1>
+      <h1 className="mb-6 text-[1.625rem] leading-tight font-semibold tracking-tight">{order ? t('editor.editTitle', { number: order.number }) : t('editor.newTitle')}</h1>
 
       <div className="mb-6 grid gap-4 sm:grid-cols-[minmax(0,1fr)_12rem]">
         <Field data-invalid={show(errors.customer) ? true : undefined}>
@@ -335,11 +336,9 @@ function OrderEditor({ initial, order, backLink }: { initial: Initial; order?: S
           </div>
         </div>
         {lines.length === 0 ? (
-          <p className={cn('rounded-lg border border-dashed p-8 text-center text-sm', show(errors.lines) ? 'border-destructive text-destructive' : 'text-muted-foreground')}>
-            {t('editor.noLines')}
-          </p>
+          <EmptyState tone={show(errors.lines) ? 'error' : 'muted'}>{t('editor.noLines')}</EmptyState>
         ) : (
-          <div className="bg-card overflow-x-auto rounded-lg border">
+          <div className="panel overflow-x-auto">
             <Table className="min-w-[36rem]">
               <TableHeader>
                 <TableRow>
@@ -433,7 +432,7 @@ function OrderEditor({ initial, order, backLink }: { initial: Initial; order?: S
           <Textarea id="so-notes" rows={4} value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={2000} />
         </Field>
 
-        <div className="bg-card rounded-lg border p-4">
+        <div className="panel p-4">
           <dl className="space-y-3 text-sm">
             <div className="flex items-center justify-between gap-3">
               <dt className="text-muted-foreground">{t('editor.subtotal')}</dt>

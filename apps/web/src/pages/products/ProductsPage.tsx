@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useSession } from '@/auth/context';
 import { isManagerOrAbove } from '@/auth/types';
+import { TableEmpty } from '@/components/EmptyState';
 import { Alert } from '@/components/Alert';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { PageHeader } from '@/components/PageHeader';
@@ -149,7 +150,7 @@ export default function ProductsPage() {
 
       {products.isError ? <Alert>{tc('status.loadError')}</Alert> : null}
 
-      <div className="bg-card overflow-x-auto rounded-lg border">
+      <div className="panel overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -174,11 +175,7 @@ export default function ProductsPage() {
                 ))
               : null}
             {products.data?.data.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={columns} className="text-muted-foreground py-10 text-center">
-                  {t('empty')}
-                </TableCell>
-              </TableRow>
+              <TableEmpty colSpan={columns}>{t('empty')}</TableEmpty>
             ) : null}
             {products.data?.data.map((p) => (
               <TableRow key={p.id} className={p.isActive ? undefined : 'text-muted-foreground'}>

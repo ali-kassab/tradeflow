@@ -5,6 +5,15 @@
     "label": "Language",
     "switchTo": "العربية"
   },
+  "theme": {
+    "label": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "account": {
+    "menu": "Account menu"
+  },
   "nav": {
     "main": "Main menu",
     "dashboard": "Dashboard",
@@ -19,7 +28,13 @@
     "reports": "Reports",
     "settings": "Settings",
     "users": "Users",
-    "categories": "Categories"
+    "categories": "Categories",
+    "groups": {
+      "sales": "Sales",
+      "stock": "Catalog & stock",
+      "purchasing": "Purchasing",
+      "business": "Business"
+    }
   },
   "roles": {
     "OWNER": "Owner",

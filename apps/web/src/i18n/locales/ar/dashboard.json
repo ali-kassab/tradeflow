@@ -15,7 +15,8 @@
     "orders_two": "طلبان",
     "orders_few": "{{count}} طلبات",
     "orders_many": "{{count}} طلبًا",
-    "orders_other": "{{count}} طلب"
+    "orders_other": "{{count}} طلب",
+    "grossProfit": "مجمل الربح"
   },
   "chart": {
     "title": "المبيعات آخر 30 يومًا",
@@ -29,5 +30,11 @@
     "title": "أحدث مدفوعات العملاء",
     "empty": "لا توجد مدفوعات بعد."
   },
-  "loadError": "تعذّر تحميل لوحة المتابعة."
+  "loadError": "تعذّر تحميل لوحة المتابعة.",
+  "sections": {
+    "today": "اليوم",
+    "position": "المركز المالي",
+    "stock": "المخزون"
+  },
+  "viewAll": "عرض الكل"
 }

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { useSession } from '@/auth/context';
+import { TableEmpty } from '@/components/EmptyState';
 import { Alert } from '@/components/Alert';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -35,7 +36,7 @@ export function InventoryReport() {
 
   return (
     <div className="space-y-4">
-      <dl className="bg-card grid gap-4 rounded-lg border p-4 sm:grid-cols-3">
+      <dl className="panel grid gap-4 p-4 sm:grid-cols-3">
         <div>
           <dt className="text-muted-foreground text-sm">{t('inventory.value')}</dt>
           <dd className="tabular text-xl font-semibold">{money(d.value)}</dd>
@@ -57,7 +58,7 @@ export function InventoryReport() {
         <Label htmlFor="rep-low">{t('inventory.lowOnly')}</Label>
       </div>
 
-      <div className="bg-card overflow-x-auto rounded-lg border">
+      <div className="panel overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -70,11 +71,7 @@ export function InventoryReport() {
           </TableHeader>
           <TableBody>
             {rows.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-muted-foreground py-8 text-center">
-                  {lowOnly ? t('inventory.noLowStock') : t('inventory.empty')}
-                </TableCell>
-              </TableRow>
+              <TableEmpty colSpan={5}>{lowOnly ? t('inventory.noLowStock') : t('inventory.empty')}</TableEmpty>
             ) : null}
             {rows.map((p) => (
               <TableRow key={p.id}>

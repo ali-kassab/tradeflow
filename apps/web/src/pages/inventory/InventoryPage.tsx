@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router';
 import { useSession } from '@/auth/context';
 import { isManagerOrAbove } from '@/auth/types';
+import { TableEmpty } from '@/components/EmptyState';
 import { Alert } from '@/components/Alert';
 import { PageHeader } from '@/components/PageHeader';
 import { PaginationBar } from '@/components/PaginationBar';
@@ -104,7 +105,7 @@ export default function InventoryPage() {
 
       {movements.isError ? <Alert>{tc('status.loadError')}</Alert> : null}
 
-      <div className="bg-card overflow-x-auto rounded-lg border">
+      <div className="panel overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -127,11 +128,7 @@ export default function InventoryPage() {
                 ))
               : null}
             {movements.data?.data.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-muted-foreground py-10 text-center">
-                  {t('empty')}
-                </TableCell>
-              </TableRow>
+              <TableEmpty colSpan={6}>{t('empty')}</TableEmpty>
             ) : null}
             {movements.data?.data.map((m) => (
               <TableRow key={m.id}>

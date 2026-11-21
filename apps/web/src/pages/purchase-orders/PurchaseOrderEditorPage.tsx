@@ -6,6 +6,7 @@ import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-r
 import { toast } from 'sonner';
 import { useSession } from '@/auth/context';
 import { Alert } from '@/components/Alert';
+import { EmptyState } from '@/components/EmptyState';
 import { ProductPicker } from '@/components/ProductPicker';
 import { type PickedSupplier, SupplierPicker } from '@/components/SupplierPicker';
 import { Button } from '@/components/ui/button';
@@ -20,7 +21,6 @@ import { formatMoney, formatNumber } from '@/lib/format';
 import { toastError } from '@/lib/notify';
 import { computeTotals, toCents } from '@/lib/order-math';
 import type { Product, PurchaseOrder, SupplierDetail } from '@/lib/types';
-import { cn } from '@/lib/utils';
 
 const WHOLE = /^\d{1,7}$/;
 const MAX_LINES = 200;
@@ -229,7 +229,7 @@ function OrderEditor({ initial, order, backLink }: { initial: Initial; order?: P
   return (
     <div>
       {backLink}
-      <h1 className="mb-6 text-2xl font-semibold">{order ? t('editor.editTitle', { number: order.number }) : t('editor.newTitle')}</h1>
+      <h1 className="mb-6 text-[1.625rem] leading-tight font-semibold tracking-tight">{order ? t('editor.editTitle', { number: order.number }) : t('editor.newTitle')}</h1>
 
       <div className="mb-6 grid gap-4 sm:grid-cols-[minmax(0,1fr)_12rem]">
         <Field data-invalid={show(errors.supplier) ? true : undefined}>
@@ -256,16 +256,9 @@ function OrderEditor({ initial, order, backLink }: { initial: Initial; order?: P
           </div>
         </div>
         {lines.length === 0 ? (
-          <p
-            className={cn(
-              'rounded-lg border border-dashed p-8 text-center text-sm',
-              show(errors.lines) ? 'border-destructive text-destructive' : 'text-muted-foreground',
-            )}
-          >
-            {t('editor.noLines')}
-          </p>
+          <EmptyState tone={show(errors.lines) ? 'error' : 'muted'}>{t('editor.noLines')}</EmptyState>
         ) : (
-          <div className="bg-card overflow-x-auto rounded-lg border">
+          <div className="panel overflow-x-auto">
             <Table className="min-w-[36rem]">
               <TableHeader>
                 <TableRow>
@@ -339,7 +332,7 @@ function OrderEditor({ initial, order, backLink }: { initial: Initial; order?: P
           <Textarea id="po-notes" rows={4} value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={2000} />
         </Field>
 
-        <div className="bg-card h-fit rounded-lg border p-4">
+        <div className="panel h-fit p-4">
           <dl className="text-sm">
             <div className="border-foreground/70 flex items-center justify-between gap-3 border-b-[3px] border-double pb-3">
               <dt className="font-semibold">{t('editor.total')}</dt>

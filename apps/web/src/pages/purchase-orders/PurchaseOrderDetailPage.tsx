@@ -139,7 +139,7 @@ export default function PurchaseOrderDetailPage() {
       {backLink}
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="tabular text-2xl font-semibold" dir="ltr">
+          <h1 className="tabular text-[1.625rem] leading-tight font-semibold tracking-tight" dir="ltr">
             {o.number}
           </h1>
           <PurchaseStatusBadge status={o.status} />
@@ -180,7 +180,7 @@ export default function PurchaseOrderDetailPage() {
         </div>
       </div>
 
-      <dl className="bg-card mb-6 grid gap-x-8 gap-y-4 rounded-lg border p-5 sm:grid-cols-3">
+      <dl className="panel mb-6 grid gap-x-8 gap-y-4 p-5 sm:grid-cols-3">
         <div>
           <dt className="text-muted-foreground text-sm">{t('detail.supplier')}</dt>
           <dd className="mt-1 font-medium">
@@ -219,7 +219,7 @@ export default function PurchaseOrderDetailPage() {
         </div>
       </dl>
 
-      <div className="bg-card mb-6 overflow-x-auto rounded-lg border">
+      <div className="panel mb-6 overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -288,7 +288,7 @@ export default function PurchaseOrderDetailPage() {
           ) : null}
         </div>
 
-        <div className="bg-card h-fit rounded-lg border p-4">
+        <div className="panel h-fit p-4">
           <dl className="space-y-2.5 text-sm">
             <div className="border-foreground/70 flex justify-between gap-3 border-b-[3px] border-double pb-2.5">
               <dt className="font-semibold">{t('editor.total')}</dt>

@@ -5,6 +5,15 @@
     "label": "اللغة",
     "switchTo": "English"
   },
+  "theme": {
+    "label": "المظهر",
+    "light": "فاتح",
+    "dark": "داكن",
+    "system": "حسب الجهاز"
+  },
+  "account": {
+    "menu": "قائمة الحساب"
+  },
   "nav": {
     "main": "القائمة الرئيسية",
     "dashboard": "لوحة المتابعة",
@@ -19,7 +28,13 @@
     "reports": "التقارير",
     "settings": "الإعدادات",
     "users": "المستخدمون",
-    "categories": "التصنيفات"
+    "categories": "التصنيفات",
+    "groups": {
+      "sales": "المبيعات",
+      "stock": "الأصناف والمخزون",
+      "purchasing": "المشتريات",
+      "business": "الإدارة"
+    }
   },
   "roles": {
     "OWNER": "مالك",

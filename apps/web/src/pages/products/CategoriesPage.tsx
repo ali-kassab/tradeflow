@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useSession } from '@/auth/context';
 import { isManagerOrAbove } from '@/auth/types';
+import { TableEmpty } from '@/components/EmptyState';
 import { Alert } from '@/components/Alert';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { PageHeader } from '@/components/PageHeader';
@@ -93,7 +94,7 @@ export default function CategoriesPage() {
         }
       />
       {categories.isError ? <Alert>{tc('status.loadError')}</Alert> : null}
-      <div className="bg-card rounded-lg border">
+      <div className="panel">
         <Table>
           <TableHeader>
             <TableRow>
@@ -111,11 +112,7 @@ export default function CategoriesPage() {
               </TableRow>
             ) : null}
             {categories.data?.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={3} className="text-muted-foreground py-10 text-center">
-                  {t('categories.empty')}
-                </TableCell>
-              </TableRow>
+              <TableEmpty colSpan={3}>{t('categories.empty')}</TableEmpty>
             ) : null}
             {categories.data?.map((c) => (
               <TableRow key={c.id}>

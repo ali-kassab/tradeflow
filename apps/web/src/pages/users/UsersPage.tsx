@@ -46,7 +46,7 @@ export default function UsersPage() {
       {users.isError ? <Alert>{tc('status.loadError')}</Alert> : null}
       {users.isPending ? <Skeleton className="h-48" /> : null}
       {users.data ? (
-        <div className="bg-card overflow-x-auto rounded-lg border">
+        <div className="panel overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>

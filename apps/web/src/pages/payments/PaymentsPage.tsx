@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router';
 import { useSession } from '@/auth/context';
 import { isManagerOrAbove } from '@/auth/types';
+import { TableEmpty } from '@/components/EmptyState';
 import { Alert } from '@/components/Alert';
 import { PageHeader } from '@/components/PageHeader';
 import { PaginationBar } from '@/components/PaginationBar';
@@ -117,7 +118,7 @@ export function PaymentsView({ kind }: { kind: PartyKind }) {
 
       {payments.isError ? <Alert>{tc('status.loadError')}</Alert> : null}
 
-      <div className="bg-card overflow-x-auto rounded-lg border">
+      <div className="panel overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -145,11 +146,7 @@ export function PaymentsView({ kind }: { kind: PartyKind }) {
                 ))
               : null}
             {payments.data?.data.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={columns} className="text-muted-foreground py-10 text-center">
-                  {filtered ? t('emptySearch') : t('empty')}
-                </TableCell>
-              </TableRow>
+              <TableEmpty colSpan={columns}>{filtered ? t('emptySearch') : t('empty')}</TableEmpty>
             ) : null}
             {payments.data?.data.map((p) => {
               const voided = p.voidedAt !== null;

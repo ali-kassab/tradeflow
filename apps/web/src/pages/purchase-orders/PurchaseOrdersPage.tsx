@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router';
 import { useSession } from '@/auth/context';
+import { TableEmpty } from '@/components/EmptyState';
 import { Alert } from '@/components/Alert';
 import { PageHeader } from '@/components/PageHeader';
 import { PaginationBar } from '@/components/PaginationBar';
@@ -127,7 +128,7 @@ export default function PurchaseOrdersPage() {
 
       {orders.isError ? <Alert>{tc('status.loadError')}</Alert> : null}
 
-      <div className="bg-card overflow-x-auto rounded-lg border">
+      <div className="panel overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -151,11 +152,7 @@ export default function PurchaseOrdersPage() {
                 ))
               : null}
             {orders.data?.data.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={COLUMNS} className="text-muted-foreground py-10 text-center">
-                  {t('empty')}
-                </TableCell>
-              </TableRow>
+              <TableEmpty colSpan={COLUMNS}>{t('empty')}</TableEmpty>
             ) : null}
             {orders.data?.data.map((o) => (
               <TableRow key={o.id} className={o.status === 'CANCELLED' ? 'text-muted-foreground' : undefined}>

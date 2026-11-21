@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { useSession } from '@/auth/context';
+import { TableEmpty } from '@/components/EmptyState';
 import { Alert } from '@/components/Alert';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -46,7 +47,7 @@ export function BalancesReport() {
 
   return (
     <div className="space-y-4">
-      <dl className="bg-card grid gap-4 rounded-lg border p-4 sm:grid-cols-2 lg:grid-cols-4">
+      <dl className="panel grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <dt className="text-muted-foreground text-sm">{t('balances.customers.owed')}</dt>
           <dd className="tabular text-xl font-semibold">{money(c.owed)}</dd>
@@ -70,7 +71,7 @@ export function BalancesReport() {
           <h2 id="rep-bal-customers" className="mb-2 font-semibold">
             {t('balances.customers.title')}
           </h2>
-          <div className="bg-card overflow-x-auto rounded-lg border">
+          <div className="panel overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -82,11 +83,7 @@ export function BalancesReport() {
               </TableHeader>
               <TableBody>
                 {customers.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-muted-foreground py-8 text-center">
-                      {t('balances.customers.empty')}
-                    </TableCell>
-                  </TableRow>
+                  <TableEmpty colSpan={4}>{t('balances.customers.empty')}</TableEmpty>
                 ) : null}
                 {customers.map((r) => (
                   <TableRow key={r.id}>
@@ -116,7 +113,7 @@ export function BalancesReport() {
           <h2 id="rep-bal-suppliers" className="mb-2 font-semibold">
             {t('balances.suppliers.title')}
           </h2>
-          <div className="bg-card overflow-x-auto rounded-lg border">
+          <div className="panel overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -127,11 +124,7 @@ export function BalancesReport() {
               </TableHeader>
               <TableBody>
                 {suppliers.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={3} className="text-muted-foreground py-8 text-center">
-                      {t('balances.suppliers.empty')}
-                    </TableCell>
-                  </TableRow>
+                  <TableEmpty colSpan={3}>{t('balances.suppliers.empty')}</TableEmpty>
                 ) : null}
                 {suppliers.map((r) => (
                   <TableRow key={r.id}>

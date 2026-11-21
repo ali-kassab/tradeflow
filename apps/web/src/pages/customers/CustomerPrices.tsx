@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Alert } from '@/components/Alert';
+import { EmptyState } from '@/components/EmptyState';
 import { ProductPicker } from '@/components/ProductPicker';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -113,9 +114,9 @@ export function CustomerPrices({ customerId, currency, canEdit }: Props) {
       ) : null}
 
       {rows.length === 0 ? (
-        <p className="text-muted-foreground rounded-lg border border-dashed p-8 text-center text-sm">{t('prices.empty')}</p>
+        <EmptyState>{t('prices.empty')}</EmptyState>
       ) : (
-        <div className="bg-card overflow-x-auto rounded-lg border">
+        <div className="panel overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>

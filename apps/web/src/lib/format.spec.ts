@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatMoney, formatNumber, formatPercent } from './format';
+import { formatMoney, formatMoneyParts, formatNumber, formatPercent } from './format';
 
 describe('format', () => {
   it('uses Western digits in Arabic', () => {
@@ -10,6 +10,14 @@ describe('format', () => {
 
   it('formats English money with two decimals', () => {
     expect(formatMoney('99', 'EGP', 'en')).toMatch(/99\.00/);
+  });
+
+  it('splits money into parts that join back to formatMoney', () => {
+    for (const lang of ['ar', 'en']) {
+      const parts = formatMoneyParts('27595.98', 'EGP', lang);
+      expect(parts.map((p) => p.text).join('')).toBe(formatMoney('27595.98', 'EGP', lang));
+      expect(parts.filter((p) => p.currency)).toHaveLength(1);
+    }
   });
 
   it('formats integers without decimals', () => {
