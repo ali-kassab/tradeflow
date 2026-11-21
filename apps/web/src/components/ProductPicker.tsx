@@ -51,6 +51,9 @@ export function ProductPicker({ value, onChange, id, placeholder, allowClear, cl
           type="button"
           variant="outline"
           role="combobox"
+          // A combobox doesn't take its name from its text: with an id, a <label htmlFor> names it;
+          // without one (filters, "add product" buttons), the placeholder does.
+          aria-label={id ? undefined : (placeholder ?? t('picker.product'))}
           aria-expanded={open}
           aria-invalid={invalid ? true : undefined}
           className={cn('w-full justify-between font-normal', !value && 'text-muted-foreground', className)}

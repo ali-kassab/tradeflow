@@ -27,6 +27,7 @@
     "STAFF": "Staff"
   },
   "actions": {
+    "close": "Close",
     "signOut": "Sign out",
     "retry": "Try again",
     "toggleSidebar": "Show or hide the menu",

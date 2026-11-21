@@ -10,7 +10,7 @@ in **Arabic (RTL)** or **English (LTR)**.
 
 <br />
 
-![Status](https://img.shields.io/badge/status-in%20development-4F46E5?style=flat-square)
+![Status](https://img.shields.io/badge/status-MVP%20complete-0F6E5A?style=flat-square)
 ![Node](https://img.shields.io/badge/node-%E2%89%A5%2022-0891B2?style=flat-square&logo=nodedotjs&logoColor=white)
 ![Languages](https://img.shields.io/badge/i18n-Arabic%20%C2%B7%20English-06B6D4?style=flat-square)
 ![Architecture](https://img.shields.io/badge/architecture-modular%20monolith-312E81?style=flat-square)
@@ -82,14 +82,14 @@ Credit limit warnings, customer-specific prices and a full account statement.
 #### 💳 Customer Payments
 Record payments against a specific order or on account, with outstanding-amount checks. Payments can be voided with a reason and are never deleted.
 
-#### 🚚 Suppliers
-Supplier records with "you owe" balances and a ledger statement.
+#### 🚚 Suppliers & Purchase Orders
+Supplier records with "you owe" balances and a ledger statement. Purchase orders go `DRAFT → ORDERED → RECEIVED` (or `CANCELLED`); receiving adds stock and updates the product cost. Supplier payments share the customer payments flow.
 
-#### 📈 Dashboard
-Sales, receivables and low-stock overview with charts. Staff see a reduced view without costs, profit or payables.
+#### 📈 Dashboard & Reports
+Sales, receivables and low-stock overview with charts. Reports cover sales and gross profit for any period, inventory value at cost, customer and supplier balances, and recent activity. Staff see a reduced dashboard without costs, profit or payables.
 
 #### 🔐 Auth, Roles & Tenancy
-Self-service sign-up creates an isolated business. **Owner / Manager / Staff** roles are enforced by the API; every business row is scoped to its tenant at the database level.
+Self-service sign-up creates an isolated business. **Owner / Manager / Staff** roles are enforced by the API; every business row is scoped to its tenant at the database level. Owners manage users and business settings; everyone can change their own password.
 
 </td>
 </tr>
@@ -110,14 +110,14 @@ Self-service sign-up creates an isolated business. **Owner / Manager / Staff** r
 | Role-based access control | ✅ | ✅ |
 | Multi-tenant data isolation | ✅ | — |
 | Arabic & English localization | — | ✅ |
-| Purchase orders | ✅ | 🚧 In progress |
-| Supplier payments | ✅ | 🗓️ Planned |
-| Reports (sales, inventory value, balances, activity) | ✅ | 🗓️ Planned |
-| Business settings | ✅ | 🗓️ Planned |
-| User management | ✅ | 🗓️ Planned |
-| Change password | ✅ | 🗓️ Planned |
+| Purchase orders | ✅ | ✅ |
+| Supplier payments | ✅ | ✅ |
+| Reports (sales, inventory value, balances, activity) | ✅ | ✅ |
+| Business settings | ✅ | ✅ |
+| User management | ✅ | ✅ |
+| Change password | ✅ | ✅ |
 
-<sub>✅ Available &nbsp;·&nbsp; 🚧 In progress &nbsp;·&nbsp; 🗓️ Planned &nbsp;·&nbsp; — Not applicable</sub>
+<sub>✅ Available &nbsp;·&nbsp; — Not applicable</sub>
 
 ---
 
@@ -271,7 +271,7 @@ flowchart LR
 
 ## 🖼️ Screenshots
 
-Screenshots of the dashboard, ledger statements and the Arabic / English layouts will be added once the remaining screens are complete.
+Screenshots of the dashboard, ledger statements and the Arabic / English layouts are not added yet.
 
 ---
 
@@ -491,12 +491,11 @@ All endpoints are served under `/api` and documented with Swagger at `/api/docs`
 ## 📌 Project Status
 
 > [!NOTE]
-> TradeFlow is **under active development**. The backend MVP API is complete; the web app covers most day-to-day flows, and the remaining screens are being built.
+> The MVP is **feature-complete**: every API endpoint has a screen in the web app, in Arabic and English.
 
 <table>
 <tr>
 <th>✅ Implemented</th>
-<th>🚧 In progress</th>
 <th>🗓️ Planned</th>
 </tr>
 <tr>
@@ -506,22 +505,13 @@ All endpoints are served under `/api` and documented with Swagger at `/api/docs`
 - Multi-tenancy & RBAC
 - SQL Server schema, migrations, seed
 - API unit & e2e test suites
-- Web: auth, dashboard, products, categories, inventory, customers, sales orders, customer payments, suppliers
-- Arabic / English with RTL / LTR
+- Web: auth, dashboard, products, categories, inventory, customers, sales orders, customer payments, suppliers, purchase orders, supplier payments, reports, settings, users
+- Arabic / English with RTL / LTR, responsive down to phone width
 
 </td>
 <td valign="top">
 
-- Purchase orders UI
-
-</td>
-<td valign="top">
-
-- Supplier payments UI
-- Reports UI
-- Business settings & user management UI
-- Change-password UI
-- Final review, accessibility pass, screenshots
+- Screenshots in this README
 
 </td>
 </tr>

@@ -1,6 +1,6 @@
 # Session handoff — TradeFlow
 
-_Last updated: 2026-11-21, session 6. Checkpoint: Phases 5 (reports, `fca0404`) and 6 (settings and users) done and pushed; Phase 7 (finalisation) next._
+_Last updated: 2026-11-21, end of session 6 (safe shutdown). Checkpoint: the approved roadmap is complete — Phases 5 (reports, `fca0404`), 6 (settings and users, `b44aabb`) and 7 (finalisation, this commit) done and pushed. Only the user-run API e2e suite remains unverified._
 
 ## Project
 
@@ -9,7 +9,7 @@ TradeFlow is a bilingual (Arabic RTL by default, English LTR) B2B wholesale mana
 ## Status
 
 - **Backend:** MVP API complete (all endpoints in PROJECT_HANDOFF.md). Purchase-order list and detail return `paidAmount`, `outstanding` and `paymentStatus` (`1ba62fa`).
-- **Frontend built and verified:** auth, dashboard, products, categories, inventory, customers, sales orders, customer payments (`02ce643`), suppliers (`50078ff`), purchase orders (`fa43352`), supplier payments (`55b21d0`), reports (`fca0404`), settings and users (session 6). Every MVP screen now exists. README exists (`292d43d`); refresh it at finalisation.
+- **Frontend built and verified:** auth, dashboard, products, categories, inventory, customers, sales orders, customer payments (`02ce643`), suppliers (`50078ff`), purchase orders (`fa43352`), supplier payments (`55b21d0`), reports (`fca0404`), settings and users (`b44aabb`). Every MVP screen exists. README refreshed in Phase 7.
 
 ## Roadmap for this run (user-approved order)
 
@@ -19,7 +19,7 @@ TradeFlow is a bilingual (Arabic RTL by default, English LTR) B2B wholesale mana
 4. ~~Supplier payments~~ (done)
 5. ~~Reports~~ (done, session 6)
 6. ~~Settings and users~~ (done, session 6)
-7. Finalisation — **next**: full review, e2e on `tradeflow_test`, lint/a11y, README, handoffs
+7. ~~Finalisation~~ (done, session 6; API e2e left to the user, see below)
 
 ## Phase 1 — customer payments
 
@@ -145,6 +145,14 @@ Verification (actual results, 2026-11-21): web `tsc -b` OK; vitest 51/51 (`pages
 
 Demo data from Phase 6: one extra **deactivated** user "QA Tester" (`qa.tester@demo.tradeflow.local`, MANAGER). Users can't be deleted (no API); it is harmless. Business settings unchanged.
 
+## Phase 7 — finalisation (done, session 6)
+
+- Lint: `oxlint` across `apps/web` and `oxlint --type-aware src/ test/` in `apps/api` show only the pre-existing warnings listed under Known issues; nothing new.
+- A11y fixes: dialog and sheet close buttons read `common.actions.close` ("Close" / "إغلاق") instead of hard-coded English (`components/ui/dialog.tsx`, `components/ui/sheet.tsx`, minimal edits to the shadcn files; key added to `i18n/locales/{ar,en}/common.json`). `components/ProductPicker.tsx` gets `aria-label` from its placeholder when it has no `id` (with an `id`, its `<label htmlFor>` names it). Verified in the browser (Arabic): inventory filter combobox is named "كل المنتجات", dialog close button "إغلاق".
+- README: feature table, key features, status badge and Project Status reflect the finished MVP; scripts table checked against the package scripts. No screenshots added.
+- API e2e: **not run** — the agent permission guard refused it again (setting `PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION`). Left to the user.
+- Final checks (actual): web `tsc -b` OK, vitest 51/51, oxlint no new warnings, `vite build` OK; API `tsc --noEmit` OK, vitest 11/11.
+
 ## How to run (dev)
 
 - `.claude/launch.json` (local, untracked) has `api` (`node dist/main.js` in `apps/api`, port 3000) and `web` (`npx vite`, port 5173). Rebuild the API with `npm run build -w @tradeflow/api` after API changes.
@@ -152,23 +160,24 @@ Demo data from Phase 6: one extra **deactivated** user "QA Tester" (`qa.tester@d
 
 ## Known issues / notes
 
-- **Unverified:** the API e2e suite (blocked by the agent permission guard in sessions 4 and 5; not attempted in session 6); the supplier `IN_USE` delete refusal on seeded data (see Phase 2).
+- **Unverified:** the API e2e suite (blocked by the agent permission guard in sessions 4, 5 and 6); the supplier `IN_USE` delete refusal on seeded data (see Phase 2).
+- Session 6 decisions: report tabs live in `?tab=`; balances are summed in exact BigInt cents (`splitBalances`); single-column grids holding scrollable tables use `grid-cols-[minmax(0,1fr)]`; `reloadSession()` on the auth context refreshes tenant/user after settings changes; temporary passwords come from `generatePassword` (crypto, unambiguous alphabet); a password change signs the user out because the API revokes every session. No new dependencies.
+- Session 6 commits: `fca0404` (reports), `b44aabb` (settings, users, password change), finalisation commit (a11y labels, README, this handoff).
 - The session-5 stash ("WIP phase 5 reports") was dropped after the Phase 5 commit was pushed; its content is all in that commit.
 - The browser pane was left signed in as the demo OWNER, in Arabic.
 - Dev-only: when several auth files change at once, Vite HMR can reload the page twice while a refresh is in flight; the second load replays the rotated refresh token, the API revokes the family (by design) and you land on `/login`. Not reproducible on normal navigation (refresh calls are deduplicated in `lib/api.ts`).
 - Demo data now includes two voided test payments on customer 2 (Phase 1), PO-00003 received and PO-00004 cancelled (Phase 3), one voided 500.00 supplier payment on PO-00003 (Phase 4). The test supplier created in Phase 2 was deleted.
 
 - Payable-order list fetches up to 100 orders per billed status per party (API page cap: customers CONFIRMED + DELIVERED, suppliers RECEIVED); older unpaid orders beyond that wouldn't be offered (payment can still go on account).
-- Shadcn dialog close button label is hard-coded English "Close" (pre-existing).
-- `ProductPicker` has no built-in accessible name (pre-existing).
 - oxlint pre-existing warnings: shadcn `only-export-components`, `router.tsx`, `AdjustStockDialog.tsx` (`set-state-in-effect`); API: 2× `no-misused-spread` in `parties.module.ts`, 1 in an e2e spec.
 - Global npm 10 crashes on Node 26: use `npx -y npm@11`. In PowerShell use `npx.cmd`; don't change the execution policy.
 - `npm audit`: 3 high from the dev-only Prisma CLI dependency `effect` (accepted).
 
 ## Exact next step
 
-0. (User) Run the API e2e suite once: `npm run test:e2e -w @tradeflow/api` (resets only `tradeflow_test`); the agent's permission guard blocks it (sessions 4 and 5).
-1. Phase 7 (finalisation): full review of the web app (consistency, a11y — e.g. the pre-existing "Close" label and `ProductPicker` name below), oxlint across `apps/web/src` and `apps/api`, API e2e on `tradeflow_test` if the permission guard allows (else leave it to the user), refresh README (features, screenshots optional, setup), final handoff update. Don't add features.
+1. (User) Run the API e2e suite once: `npm run test:e2e -w @tradeflow/api` (resets only `tradeflow_test`); the agent's permission guard blocks it (sessions 4–6). Fix anything it reports.
+2. (User decision) Whether to fast-forward `main` to `feat/foundation` — never without explicit approval. Local `main` was already 1 commit ahead of `origin/main` before session 6 (left untouched).
+3. Optional, only if the user asks: README screenshots, a `LICENSE` file (package.json says MIT). The roadmap has no further feature work; don't invent any.
 
 ## Constraints to keep
 
