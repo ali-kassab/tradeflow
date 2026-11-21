@@ -1,8 +1,10 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider } from 'next-themes';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router/dom';
 import { AuthProvider } from '@/auth/AuthProvider';
+import { AppDirection } from '@/components/AppDirection';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import './i18n';
@@ -25,13 +27,19 @@ const queryClient = new QueryClient({
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <RouterProvider router={router} />
-          <Toaster position="top-center" />
-        </TooltipProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    {/* index.html applies the saved theme before first paint, so next-themes' own inline
+        script isn't needed in this client-only app; a non-JS type keeps React from warning. */}
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="tf.theme" disableTransitionOnChange scriptProps={{ type: 'application/json' }}>
+      <QueryClientProvider client={queryClient}>
+        <AppDirection>
+          <AuthProvider>
+            <TooltipProvider>
+              <RouterProvider router={router} />
+              <Toaster position="top-center" />
+            </TooltipProvider>
+          </AuthProvider>
+        </AppDirection>
+      </QueryClientProvider>
+    </ThemeProvider>
   </StrictMode>,
 );

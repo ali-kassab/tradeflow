@@ -1,0 +1,62 @@
+{
+  "title": "Suppliers",
+  "description": "Who you buy stock from, with what you owe each one.",
+  "add": "Add supplier",
+  "addTitle": "New supplier",
+  "editTitle": "Edit supplier",
+  "searchPlaceholder": "Search by name, phone or email",
+  "created": "Supplier added.",
+  "empty": "No matching suppliers.",
+  "inactive": "Inactive",
+  "back": "All suppliers",
+  "orders": "Purchase orders",
+  "newOrder": "New purchase order",
+  "payments": "Payments",
+  "recordPayment": "Record payment",
+  "notFound": "This supplier doesn't exist or was deleted.",
+  "filters": {
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "all": "All"
+  },
+  "columns": {
+    "name": "Supplier",
+    "phone": "Phone",
+    "email": "Email",
+    "balance": "You owe"
+  },
+  "fields": {
+    "name": "Supplier name",
+    "phone": "Phone",
+    "email": "Email",
+    "address": "Address",
+    "taxNumber": "Tax number",
+    "notes": "Notes",
+    "isActive": "Supplier is active"
+  },
+  "validation": {
+    "required": "This field is required.",
+    "tooLong": "Too long.",
+    "email": "Enter a valid email address."
+  },
+  "deleteTitle": "Delete supplier?",
+  "deleteBody": "“{{name}}” will be deleted permanently. Suppliers with purchase orders or payments can't be deleted — deactivate them instead.",
+  "summary": {
+    "billed": "Total received",
+    "paid": "Total paid",
+    "balance": "Balance",
+    "owed": "You owe",
+    "credit": "Paid in advance",
+    "settled": "Settled"
+  },
+  "tabs": {
+    "statement": "Statement",
+    "details": "Details"
+  },
+  "statement": {
+    "caption": "Account statement for {{name}}",
+    "empty": "No received purchase orders or payments yet. Received orders and payments to this supplier will appear here.",
+    "hint": "Debit is the value of goods received from the supplier; credit is what you paid them. A negative balance means you paid in advance."
+  }
+}

@@ -5,6 +5,15 @@
     "label": "Language",
     "switchTo": "العربية"
   },
+  "theme": {
+    "label": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "account": {
+    "menu": "Account menu"
+  },
   "nav": {
     "main": "Main menu",
     "dashboard": "Dashboard",
@@ -12,13 +21,20 @@
     "inventory": "Inventory",
     "customers": "Customers",
     "salesOrders": "Sales orders",
-    "payments": "Payments",
+    "payments": "Customer payments",
+    "supplierPayments": "Supplier payments",
     "suppliers": "Suppliers",
     "purchaseOrders": "Purchase orders",
     "reports": "Reports",
     "settings": "Settings",
     "users": "Users",
-    "categories": "Categories"
+    "categories": "Categories",
+    "groups": {
+      "sales": "Sales",
+      "stock": "Catalog & stock",
+      "purchasing": "Purchasing",
+      "business": "Business"
+    }
   },
   "roles": {
     "OWNER": "Owner",
@@ -26,6 +42,7 @@
     "STAFF": "Staff"
   },
   "actions": {
+    "close": "Close",
     "signOut": "Sign out",
     "retry": "Try again",
     "toggleSidebar": "Show or hide the menu",
@@ -51,6 +68,12 @@
     "body": "Check the link or go back to the dashboard.",
     "back": "Back to dashboard"
   },
+  "purchaseStatus": {
+    "DRAFT": "Draft",
+    "ORDERED": "Ordered",
+    "RECEIVED": "Received",
+    "CANCELLED": "Cancelled"
+  },
   "orderStatus": {
     "DRAFT": "Draft",
     "CONFIRMED": "Confirmed",
@@ -74,5 +97,37 @@
     "summary": "Page {{page}} of {{pageCount}} — {{total}} items",
     "previous": "Previous",
     "next": "Next"
+  },
+  "picker": {
+    "product": "Choose a product",
+    "searchProduct": "Search products…",
+    "anyProduct": "All products",
+    "customer": "Choose a customer",
+    "searchCustomer": "Search customers…",
+    "supplier": "Choose a supplier",
+    "searchSupplier": "Search suppliers…"
+  },
+  "movementType": {
+    "OPENING": "Opening stock",
+    "SALE": "Sale",
+    "SALE_CANCEL": "Sale cancelled",
+    "PURCHASE_RECEIPT": "Purchase received",
+    "ADJUSTMENT": "Manual adjustment"
+  },
+  "statement": {
+    "date": "Date",
+    "entry": "Entry",
+    "reference": "Reference",
+    "debit": "Debit",
+    "credit": "Credit",
+    "balance": "Balance",
+    "closing": "Closing balance",
+    "type": {
+      "ORDER_CONFIRMED": "Sales order confirmed",
+      "ORDER_CANCELLED": "Sales order cancelled",
+      "PURCHASE_RECEIVED": "Purchase received",
+      "PAYMENT": "Payment",
+      "PAYMENT_VOIDED": "Payment voided"
+    }
   }
 }

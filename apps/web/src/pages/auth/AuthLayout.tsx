@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LanguageSwitch } from '@/components/LanguageSwitch';
 import { Logo } from '@/components/Logo';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 // Static sample rows for the brand panel: a ledger excerpt whose running balance
 // follows the same rule the app uses (balance = previous + debit − credit).
@@ -38,22 +39,29 @@ export function AuthLayout({ title, subtitle, children }: { title: string; subti
   const { t } = useTranslation('auth');
   return (
     <div className="grid min-h-svh lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
-      <aside className="relative hidden flex-col justify-between bg-sidebar p-10 text-white lg:flex">
+      {/* Ink panel in both themes: the brand side reads like the cover of a ledger. */}
+      <aside className="relative hidden flex-col justify-between bg-[#13252A] p-12 text-white lg:flex dark:bg-[#0C1417]">
         <Logo className="text-white" />
-        <div className="space-y-8">
-          <h2 className="max-w-md text-3xl leading-snug font-semibold text-balance">{t('brand.headline')}</h2>
+        <div className="space-y-6">
+          <h2 className="max-w-md text-[2rem] leading-tight font-semibold tracking-tight text-balance">{t('brand.headline')}</h2>
           <p className="max-w-md leading-relaxed text-white/70">{t('brand.body')}</p>
-          <LedgerMotif />
+          <div className="relative mt-4 max-w-sm rounded-xl border border-white/10 bg-white/[0.04] px-5 py-3">
+            <span aria-hidden="true" className="bg-rule absolute inset-y-3 start-0 w-0.5 rounded-full" />
+            <LedgerMotif />
+          </div>
         </div>
-        <div className="h-1 w-16 rounded-full bg-primary" />
+        <span aria-hidden="true" />
       </aside>
-      <main className="flex flex-col px-4 py-6 sm:px-10">
+      <main className="bg-background flex flex-col px-4 py-6 sm:px-10">
         <div className="flex items-center justify-between">
           <Logo className="lg:invisible" />
-          <LanguageSwitch />
+          <div className="flex items-center gap-0.5">
+            <LanguageSwitch />
+            <ThemeToggle />
+          </div>
         </div>
         <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center py-10">
-          <h1 className="text-2xl font-semibold">{title}</h1>
+          <h1 className="text-[1.625rem] leading-tight font-semibold tracking-tight">{title}</h1>
           <p className="text-muted-foreground mt-1.5 mb-8">{subtitle}</p>
           {children}
         </div>

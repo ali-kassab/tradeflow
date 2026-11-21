@@ -1,0 +1,92 @@
+{
+  "title": "Purchase orders",
+  "description": "Stock you buy from suppliers, from draft to receipt.",
+  "add": "New purchase order",
+  "searchPlaceholder": "Search by order number or supplier",
+  "empty": "No matching purchase orders.",
+  "back": "All purchase orders",
+  "notFound": "This purchase order doesn't exist.",
+  "filters": {
+    "status": "Status",
+    "all": "All statuses"
+  },
+  "columns": {
+    "number": "Order",
+    "supplier": "Supplier",
+    "date": "Date",
+    "status": "Status",
+    "items": "Items",
+    "total": "Total",
+    "payment": "Payment",
+    "outstanding": "Outstanding"
+  },
+  "editor": {
+    "newTitle": "New purchase order",
+    "editTitle": "Edit {{number}}",
+    "supplier": "Supplier",
+    "expectedDate": "Expected delivery (optional)",
+    "lines": "Items",
+    "addProduct": "Add a product",
+    "alreadyListed": "This product is already on the order. Change its quantity instead.",
+    "tooManyLines": "An order can have up to {{max}} items.",
+    "product": "Product",
+    "quantity": "Qty",
+    "unitCost": "Unit cost",
+    "lineTotal": "Line total",
+    "inStock": "In stock: {{qty}}",
+    "remove": "Remove",
+    "noLines": "Add at least one product.",
+    "notes": "Notes",
+    "total": "Total",
+    "costHint": "The unit cost starts at the product's current cost. When the order is received, each product's cost price becomes the cost on this order.",
+    "saveDraft": "Save draft",
+    "created": "Draft {{number}} saved.",
+    "saved": "Draft saved.",
+    "validation": {
+      "supplier": "Choose a supplier.",
+      "quantity": "Whole number, 1 or more.",
+      "money": "Enter a valid cost (up to 2 decimals).",
+      "fix": "Fix the highlighted fields."
+    }
+  },
+  "detail": {
+    "supplier": "Supplier",
+    "orderDate": "Order date",
+    "expectedDate": "Expected delivery",
+    "timeline": "History",
+    "created": "Created",
+    "ordered": "Ordered",
+    "received": "Received",
+    "cancelled": "Cancelled",
+    "paid": "Paid",
+    "outstanding": "Outstanding",
+    "payments": "Payments",
+    "noPayments": "No payments recorded against this order.",
+    "voided": "Voided",
+    "notes": "Notes",
+    "notBilledHint": "Nothing is owed to the supplier until the order is received."
+  },
+  "actions": {
+    "edit": "Edit",
+    "order": "Mark as ordered",
+    "receive": "Receive stock",
+    "cancel": "Cancel order",
+    "recordPayment": "Record payment"
+  },
+  "orderDialog": {
+    "title": "Mark {{number}} as ordered?",
+    "body": "Use this once the order is sent to {{name}}. It can't be edited afterwards, but can still be received or cancelled.",
+    "done": "Order marked as ordered."
+  },
+  "receiveDialog": {
+    "title": "Receive {{number}}?",
+    "body": "Every item is added to stock now, each product's cost price is updated to this order's cost, and {{total}} is added to what you owe {{name}}. Received orders can't be cancelled.",
+    "done": "Stock received."
+  },
+  "cancelDialog": {
+    "title": "Cancel {{number}}?",
+    "body": "The order will be cancelled. Stock and balances don't change.",
+    "done": "Order cancelled.",
+    "keep": "Keep order"
+  }
+}

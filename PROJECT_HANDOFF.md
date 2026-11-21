@@ -27,6 +27,7 @@ Wholesalers manage products, stock, retailer customers, suppliers, sales and pur
 - **Stock is deducted on CONFIRM** (atomic conditional update; never negative, plus a DB CHECK). Cancelling a CONFIRMED order restocks. DELIVERED orders cannot be cancelled.
 - Quantities are whole numbers. Money is `DECIMAL(14,2)`, computed with Prisma Decimal, rounded half-up.
 - Order totals: subtotal = Σ qty × unitPrice; tax = (subtotal − discount) × rate%; total = subtotal − discount + tax. The discount is a fixed amount ≤ subtotal.
+  - The web editor previews totals with `apps/web/src/lib/order-math.ts` (BigInt cents, half-up), an exact mirror of `computeOrderTotals` in `apps/api/src/common/money.ts`. Change both together; the server stays authoritative.
 - Price resolution: manager override → customer price → product sale price. STAFF cannot override prices.
 - **Customer balance** = Σ total of CONFIRMED + DELIVERED orders − Σ non-voided customer payments.
   - A cancelled order leaves the balance, but its payments stay, so they become **customer credit** (negative balance).
@@ -48,7 +49,7 @@ Wholesalers manage products, stock, retailer customers, suppliers, sales and pur
 | Reports | ✅ | ✅ | ❌ |
 | Dashboard | full | full | sales/receivables only (no profit, stock value, payables) |
 
-Enforced in the API (`@Roles`, `ManagerOrAbove`, `OwnerOnly`, `canSeeCosts`). The UI only mirrors it.
+Enforced in the API (`@Roles`, `ManagerOrAbove`, `OwnerOnly`, `canSeeCosts`). The UI only mirrors it: `NAV` entries in `layout/AppLayout.tsx` take an `allow(role)` filter, and role-restricted routes are wrapped in `auth/RoleGate.tsx` (router `Manager` wrapper), which shows the translated `FORBIDDEN` message instead of a page full of 403s.
 
 ## Architecture
 
@@ -119,6 +120,8 @@ SQL Server adaptations (keep them):
 - `react-i18next` with resources in `src/i18n/locales/{ar,en}/*.json`. Default `ar`; the choice is persisted in `localStorage`.
 - `<html lang dir>` is switched at runtime. Use only logical Tailwind classes (`ms-/me-/ps-/pe-/start-/end-`); shadcn is configured with `rtl: true`.
 - API errors are translated by `code`, so there is no server-side localisation.
+- Radix primitives don't read `<html dir>`: `src/components/AppDirection.tsx` wraps the app in Radix `Direction.Provider` fed by `i18n.dir()`. Keep it at the root, or Tabs/Select/menus render LTR inside Arabic.
+- Tailwind 4 `divide-x`/`space-x` are already logical: never add `rtl:*-reverse`.
 - Numbers use **Western digits** in Arabic (`ar-EG-u-nu-latn` via `Intl`). Default currency is EGP.
 - Font: IBM Plex Sans Arabic (bundled via @fontsource, no CDN).
 - Design tokens:
@@ -127,13 +130,14 @@ SQL Server adaptations (keep them):
   - ledger green `#0F6E5A` (primary)
   - carton amber `#C8891B` (low stock/warnings)
   - danger `#B4382F`
-- The signature UI element is a ledger-style statement (debit/credit/running balance, tabular numerals). Everything else stays quiet.
+- The signature UI element is a ledger-style statement (debit/credit/running balance, tabular numerals). Everything else stays quiet. It is the shared `src/components/LedgerStatement.tsx` (customers and suppliers); its labels live in `common.statement`.
 
 ## Testing
 
 - Unit: `npm test -w @tradeflow/api` and `npm test -w @tradeflow/web` (Vitest). Vitest compiles with oxc, configured with `decorator: { legacy: true, emitDecoratorMetadata: true }` because Nest DI and class-transformer need decorator metadata.
 - e2e: `npm run test:e2e -w @tradeflow/api`. Uses `TEST_DATABASE_URL`; the DB name must contain "test", and it is reset from migrations on each run. Suites cover auth, workflows/financial consistency (incl. concurrent overselling), tenant isolation (reads, writes and cross-references, plus DB-level FK checks), and RBAC.
 - Prisma blocks `migrate reset` when run by an AI agent unless `PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION` holds the user's exact consent text. The user consented (2026-11-20) with: "Yes, I consent to resetting tradeflow and tradeflow_test" — that covers only those two databases. A human running the tests needs nothing.
+- **Verification status (2026-11-21, session 8):** type checks, lint, builds, API unit 11/11 and web unit 51/51 pass, and every screen was checked in the browser. The e2e suite has **not** been run against the final code (the agent's permission guard blocks it; the user hasn't run it yet), so the MVP is feature-complete but not fully verified.
 - Live smoke test: `node apps/api/scripts/smoke.mjs [baseUrl]` (defaults to the web proxy `http://localhost:5173/api`) signs in as each demo role and checks main endpoints and role-dependent shapes. `node apps/api/scripts/with-test-db.mjs <cmd>` runs a command against `TEST_DATABASE_URL`.
 
 ## Setup (local, no Docker)
@@ -149,5 +153,22 @@ SQL Server adaptations (keep them):
 - Repo `D:\Workspace\tradeflow`. Target: public GitHub repo `tradeflow` under the authenticated account (`ali-kassab`).
 - Commits use only the user's git identity, with **no AI/Claude author or co-author trailers**. No PRs. Never force-push.
 - Before every push: check for secrets, confirm `.env` is ignored, review staged files.
-- Branch policy (user decision, 2026-11-20): commit and push directly to **`main`** (fast-forwarded from `feat/foundation`, which is kept as is). No PRs, never force-push, never rewrite history.
+- Branch policy (confirmed by the user 2026-11-21): all work is committed on and pushed to **`feat/foundation`** only. Don't switch to, merge into or modify `main` without the user's explicit approval (`main` is fast-forwardable from `feat/foundation`). No PRs, never force-push, never rewrite history.
+- Before every commit: verify `git config user.name/user.email` and `gh auth status` match the user's existing identity (`ali-kassab`); if anything is missing or inconsistent, stop and ask. Inspect the staged diff before committing and the author/committer after.
 - Original company repositories are never modified.
+
+## Installed Skills policy
+
+- Before a task, discover the installed Skills that apply, read their instructions, and follow them. Relevant here: web UI `frontend-design`, `vercel-react-best-practices`; browser testing `webapp-testing` or the built-in browser.
+- The `spring-*`, `flyway-migrations` and `multi-tenancy` Skills target Spring Boot/Java and don't apply to this NestJS/Prisma stack.
+- Never claim a Skill was used unless its instructions were actually read and followed; report which Skills were used and where.
+- Project architecture, security requirements and existing conventions always win over generic Skill advice.
+
+## Reuse-First Development policy
+
+- Use existing project components and installed libraries first (shadcn/ui primitives, `radix-ui`, `PageHeader`, `PaginationBar`, `ConfirmDialog`, `FormField`, `ProductPicker`, `CustomerPicker`, `SupplierPicker`, `LedgerStatement`, `RecordPaymentDialog`, `VoidPaymentDialog`, `lib/order-math`, `lib/format`, `lib/notify`, TanStack Query, react-hook-form + zod).
+- For anything new, evaluate mature, compatible, free/open-source options before building custom code; check maintenance, licence, accessibility and bundle impact, and avoid unnecessary dependencies.
+- Customise reused components to the design tokens, Arabic RTL, English LTR and responsive layout.
+- Customer and supplier payments share one UI: `PaymentsView`, `RecordPaymentDialog` and `VoidPaymentDialog` take a `kind` (`customer` | `supplier`); per-kind endpoints, billed statuses and cache keys live in `pages/payments/payment-kinds.ts`.
+- Dialog forms live in a child component rendered inside `DialogContent` (Radix mounts it only while open), so each opening starts fresh without a reset effect; add a `key` when a preset prop can change while open (`RecordPaymentDialog`, `AdjustStockDialog`).
+- Don't refactor or replace existing components merely to apply this policy.

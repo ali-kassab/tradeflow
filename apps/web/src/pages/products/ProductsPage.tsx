@@ -1,10 +1,12 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { PencilIcon, PlusIcon, SearchIcon, Trash2Icon } from 'lucide-react';
+import { HistoryIcon, PencilIcon, PlusIcon, SearchIcon, Trash2Icon } from 'lucide-react';
+import { Link } from 'react-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useSession } from '@/auth/context';
 import { isManagerOrAbove } from '@/auth/types';
+import { TableEmpty } from '@/components/EmptyState';
 import { Alert } from '@/components/Alert';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { PageHeader } from '@/components/PageHeader';
@@ -88,7 +90,7 @@ export default function ProductsPage() {
   };
 
   const showCost = canManage; // STAFF never receives cost data from the API
-  const columns = 6 + (showCost ? 1 : 0) + (canManage ? 1 : 0);
+  const columns = 7 + (showCost ? 1 : 0);
 
   return (
     <div>
@@ -148,7 +150,7 @@ export default function ProductsPage() {
 
       {products.isError ? <Alert>{tc('status.loadError')}</Alert> : null}
 
-      <div className="bg-card overflow-x-auto rounded-lg border">
+      <div className="panel overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -159,7 +161,7 @@ export default function ProductsPage() {
               <TableHead className="text-end">{t('columns.salePrice')}</TableHead>
               {showCost ? <TableHead className="text-end">{t('columns.costPrice')}</TableHead> : null}
               <TableHead className="text-end">{t('columns.stock')}</TableHead>
-              {canManage ? <TableHead className="w-24"><span className="sr-only">{tc('actions.actions')}</span></TableHead> : null}
+              <TableHead className={canManage ? 'w-32' : 'w-12'}><span className="sr-only">{tc('actions.actions')}</span></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -173,11 +175,7 @@ export default function ProductsPage() {
                 ))
               : null}
             {products.data?.data.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={columns} className="text-muted-foreground py-10 text-center">
-                  {t('empty')}
-                </TableCell>
-              </TableRow>
+              <TableEmpty colSpan={columns}>{t('empty')}</TableEmpty>
             ) : null}
             {products.data?.data.map((p) => (
               <TableRow key={p.id} className={p.isActive ? undefined : 'text-muted-foreground'}>
@@ -202,18 +200,25 @@ export default function ProductsPage() {
                     <Badge className="bg-warning/15 text-warning-foreground ms-2">{t('lowStock')}</Badge>
                   ) : null}
                 </TableCell>
-                {canManage ? (
-                  <TableCell>
-                    <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon-sm" onClick={() => openForm(p)} aria-label={`${tc('actions.edit')}: ${p.name}`}>
-                        <PencilIcon />
-                      </Button>
-                      <Button variant="ghost" size="icon-sm" onClick={() => setDeleting(p)} aria-label={`${tc('actions.delete')}: ${p.name}`}>
-                        <Trash2Icon />
-                      </Button>
-                    </div>
-                  </TableCell>
-                ) : null}
+                <TableCell>
+                  <div className="flex justify-end gap-1">
+                    <Button variant="ghost" size="icon-sm" asChild>
+                      <Link to={`/inventory?productId=${p.id}`} aria-label={`${t('history')}: ${p.name}`} title={t('history')}>
+                        <HistoryIcon />
+                      </Link>
+                    </Button>
+                    {canManage ? (
+                      <>
+                        <Button variant="ghost" size="icon-sm" onClick={() => openForm(p)} aria-label={`${tc('actions.edit')}: ${p.name}`}>
+                          <PencilIcon />
+                        </Button>
+                        <Button variant="ghost" size="icon-sm" onClick={() => setDeleting(p)} aria-label={`${tc('actions.delete')}: ${p.name}`}>
+                          <Trash2Icon />
+                        </Button>
+                      </>
+                    ) : null}
+                  </div>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

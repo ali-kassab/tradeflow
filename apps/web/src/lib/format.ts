@@ -37,6 +37,21 @@ export function formatMoney(value: string | number, currency: string, lang: stri
   }).format(Number(value));
 }
 
+/**
+ * The same text as `formatMoney`, split so the figure and the currency can be set at
+ * different sizes. Joining `parts` gives exactly the `formatMoney` string.
+ */
+export function formatMoneyParts(value: string | number, currency: string, lang: string) {
+  return numberFormat(`money|${currency}`, lang, {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+    .formatToParts(Number(value))
+    .map((p) => ({ text: p.value, currency: p.type === 'currency' }));
+}
+
 export function formatNumber(value: number, lang: string) {
   return numberFormat('int', lang, { maximumFractionDigits: 0 }).format(value);
 }
@@ -49,4 +64,15 @@ export function formatDate(value: string | Date, lang: string) {
 
 export function formatShortDay(value: string | Date, lang: string) {
   return dateFormat('day', lang, { month: 'short', day: 'numeric' }).format(new Date(value));
+}
+
+/** Signed percentage, e.g. "+5.5%" / "-10%"; takes a value in percent (10 → 10%). */
+export function formatPercent(value: number, lang: string) {
+  return numberFormat('pct', lang, { style: 'percent', maximumFractionDigits: 1, signDisplay: 'exceptZero' }).format(value / 100);
+}
+
+export function formatDateTime(value: string | Date, lang: string) {
+  return dateFormat('datetime', lang, { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(
+    new Date(value),
+  );
 }

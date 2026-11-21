@@ -64,5 +64,6 @@
     "addTitle": "New category",
     "deleteTitle": "Delete category?",
     "deleteBody": "“{{name}}” will be deleted. Categories that contain products can’t be deleted."
-  }
+  },
+  "history": "Stock history"
 }

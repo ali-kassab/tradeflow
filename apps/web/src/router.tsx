@@ -1,7 +1,9 @@
 import { type ReactNode, Suspense, lazy } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, Outlet, createBrowserRouter, useLocation } from 'react-router';
+import { RoleGate } from '@/auth/RoleGate';
 import { useAuth } from '@/auth/context';
+import { isManagerOrAbove, isOwner } from '@/auth/types';
 import { RouteError } from '@/components/RouteError';
 import { Spinner } from '@/components/ui/spinner';
 import { AppLayout } from '@/layout/AppLayout';
@@ -12,6 +14,22 @@ const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'));
 const DashboardPage = lazy(() => import('@/pages/dashboard/DashboardPage'));
 const ProductsPage = lazy(() => import('@/pages/products/ProductsPage'));
 const CategoriesPage = lazy(() => import('@/pages/products/CategoriesPage'));
+const InventoryPage = lazy(() => import('@/pages/inventory/InventoryPage'));
+const CustomersPage = lazy(() => import('@/pages/customers/CustomersPage'));
+const CustomerDetailPage = lazy(() => import('@/pages/customers/CustomerDetailPage'));
+const SalesOrdersPage = lazy(() => import('@/pages/sales-orders/SalesOrdersPage'));
+const SalesOrderDetailPage = lazy(() => import('@/pages/sales-orders/SalesOrderDetailPage'));
+const SalesOrderEditorPage = lazy(() => import('@/pages/sales-orders/SalesOrderEditorPage'));
+const PaymentsPage = lazy(() => import('@/pages/payments/PaymentsPage'));
+const SupplierPaymentsPage = lazy(() => import('@/pages/payments/SupplierPaymentsPage'));
+const SuppliersPage = lazy(() => import('@/pages/suppliers/SuppliersPage'));
+const SupplierDetailPage = lazy(() => import('@/pages/suppliers/SupplierDetailPage'));
+const PurchaseOrdersPage = lazy(() => import('@/pages/purchase-orders/PurchaseOrdersPage'));
+const PurchaseOrderDetailPage = lazy(() => import('@/pages/purchase-orders/PurchaseOrderDetailPage'));
+const PurchaseOrderEditorPage = lazy(() => import('@/pages/purchase-orders/PurchaseOrderEditorPage'));
+const ReportsPage = lazy(() => import('@/pages/reports/ReportsPage'));
+const SettingsPage = lazy(() => import('@/pages/settings/SettingsPage'));
+const UsersPage = lazy(() => import('@/pages/users/UsersPage'));
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'));
 
 function FullPageSpinner() {
@@ -26,6 +44,24 @@ function FullPageSpinner() {
 
 function Page({ children }: { children: ReactNode }) {
   return <Suspense fallback={<FullPageSpinner />}>{children}</Suspense>;
+}
+
+/** Pages the API only serves to managers and owners. */
+function Manager({ children }: { children: ReactNode }) {
+  return (
+    <RoleGate allow={isManagerOrAbove}>
+      <Page>{children}</Page>
+    </RoleGate>
+  );
+}
+
+/** Pages the API only serves to owners. */
+function Owner({ children }: { children: ReactNode }) {
+  return (
+    <RoleGate allow={isOwner}>
+      <Page>{children}</Page>
+    </RoleGate>
+  );
 }
 
 function RequireAuth() {
@@ -59,6 +95,24 @@ export const router = createBrowserRouter([
       { index: true, element: <Page><DashboardPage /></Page> },
       { path: '/products', element: <Page><ProductsPage /></Page> },
       { path: '/categories', element: <Page><CategoriesPage /></Page> },
+      { path: '/inventory', element: <Page><InventoryPage /></Page> },
+      { path: '/customers', element: <Page><CustomersPage /></Page> },
+      { path: '/customers/:id', element: <Page><CustomerDetailPage /></Page> },
+      { path: '/sales-orders', element: <Page><SalesOrdersPage /></Page> },
+      { path: '/sales-orders/new', element: <Page><SalesOrderEditorPage /></Page> },
+      { path: '/sales-orders/:id', element: <Page><SalesOrderDetailPage /></Page> },
+      { path: '/sales-orders/:id/edit', element: <Page><SalesOrderEditorPage /></Page> },
+      { path: '/payments', element: <Page><PaymentsPage /></Page> },
+      { path: '/suppliers', element: <Manager><SuppliersPage /></Manager> },
+      { path: '/suppliers/:id', element: <Manager><SupplierDetailPage /></Manager> },
+      { path: '/purchase-orders', element: <Manager><PurchaseOrdersPage /></Manager> },
+      { path: '/purchase-orders/new', element: <Manager><PurchaseOrderEditorPage /></Manager> },
+      { path: '/purchase-orders/:id', element: <Manager><PurchaseOrderDetailPage /></Manager> },
+      { path: '/purchase-orders/:id/edit', element: <Manager><PurchaseOrderEditorPage /></Manager> },
+      { path: '/supplier-payments', element: <Manager><SupplierPaymentsPage /></Manager> },
+      { path: '/reports', element: <Manager><ReportsPage /></Manager> },
+      { path: '/settings', element: <Page><SettingsPage /></Page> },
+      { path: '/users', element: <Owner><UsersPage /></Owner> },
       { path: '*', element: <Page><NotFoundPage /></Page> },
     ],
   },

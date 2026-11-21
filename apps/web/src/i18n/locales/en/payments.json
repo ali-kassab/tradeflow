@@ -1,0 +1,70 @@
+{
+  "record": "Record payment",
+  "empty": "No payments recorded yet.",
+  "emptySearch": "No matching payments.",
+  "party": {
+    "customer": {
+      "title": "Customer payments",
+      "description": "Money received from customers. Payments are never deleted; a mistake is voided with a reason.",
+      "searchPlaceholder": "Search by customer or reference",
+      "column": "Customer",
+      "field": "Customer",
+      "validation": "Choose a customer.",
+      "balance": "Current balance: {{amount}}",
+      "noOpenOrders": "This customer has no unpaid orders; the payment goes on account.",
+      "paidAt": "Date received",
+      "voidBody": "The payment of {{amount}} from {{name}} stays on record but no longer counts toward the balance. This can't be undone."
+    },
+    "supplier": {
+      "title": "Supplier payments",
+      "description": "Money paid to suppliers. Payments are never deleted; a mistake is voided with a reason.",
+      "searchPlaceholder": "Search by supplier or reference",
+      "column": "Supplier",
+      "field": "Supplier",
+      "validation": "Choose a supplier.",
+      "balance": "You owe: {{amount}}",
+      "noOpenOrders": "No received orders from this supplier are waiting for payment; the payment goes on account.",
+      "paidAt": "Date paid",
+      "voidBody": "The payment of {{amount}} to {{name}} stays on record but no longer counts toward what you owe. This can't be undone."
+    }
+  },
+  "columns": {
+    "date": "Date",
+    "order": "Applied to",
+    "method": "Method",
+    "reference": "Reference",
+    "amount": "Amount"
+  },
+  "onAccount": "On account",
+  "voided": "Voided",
+  "voidedReason": "Voided: {{reason}}",
+  "form": {
+    "title": "Record a payment",
+    "order": "Apply to order",
+    "orderHint": "Optional. Leave it on account to reduce the overall balance.",
+    "outstanding": "Outstanding on {{number}}: {{amount}}",
+    "payInFull": "Pay in full",
+    "amount": "Amount",
+    "method": "Method",
+    "reference": "Reference",
+    "referenceHint": "Optional, e.g. a receipt, transfer or cheque number.",
+    "notes": "Notes",
+    "submit": "Record payment",
+    "recorded": "Payment of {{amount}} recorded."
+  },
+  "validation": {
+    "amount": "Enter an amount above zero (up to 2 decimals).",
+    "exceeds": "This is more than the {{amount}} outstanding on the order.",
+    "date": "Choose a date that isn't in the future.",
+    "tooLong": "Too long.",
+    "reason": "Give a reason (at least 2 characters)."
+  },
+  "void": {
+    "action": "Void",
+    "title": "Void this payment?",
+    "reason": "Reason",
+    "submit": "Void payment",
+    "keep": "Keep payment",
+    "done": "Payment voided."
+  }
+}

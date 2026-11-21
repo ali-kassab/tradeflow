@@ -5,6 +5,15 @@
     "label": "اللغة",
     "switchTo": "English"
   },
+  "theme": {
+    "label": "المظهر",
+    "light": "فاتح",
+    "dark": "داكن",
+    "system": "حسب الجهاز"
+  },
+  "account": {
+    "menu": "قائمة الحساب"
+  },
   "nav": {
     "main": "القائمة الرئيسية",
     "dashboard": "لوحة المتابعة",
@@ -12,13 +21,20 @@
     "inventory": "المخزون",
     "customers": "العملاء",
     "salesOrders": "أوامر البيع",
-    "payments": "المدفوعات",
+    "payments": "مدفوعات العملاء",
+    "supplierPayments": "مدفوعات الموردين",
     "suppliers": "الموردون",
     "purchaseOrders": "أوامر الشراء",
     "reports": "التقارير",
     "settings": "الإعدادات",
     "users": "المستخدمون",
-    "categories": "التصنيفات"
+    "categories": "التصنيفات",
+    "groups": {
+      "sales": "المبيعات",
+      "stock": "الأصناف والمخزون",
+      "purchasing": "المشتريات",
+      "business": "الإدارة"
+    }
   },
   "roles": {
     "OWNER": "مالك",
@@ -26,6 +42,7 @@
     "STAFF": "موظف"
   },
   "actions": {
+    "close": "إغلاق",
     "signOut": "تسجيل الخروج",
     "retry": "إعادة المحاولة",
     "toggleSidebar": "إظهار القائمة أو إخفاؤها",
@@ -51,6 +68,12 @@
     "body": "تحقق من الرابط أو عُد إلى لوحة المتابعة.",
     "back": "العودة إلى لوحة المتابعة"
   },
+  "purchaseStatus": {
+    "DRAFT": "مسودة",
+    "ORDERED": "مطلوب من المورد",
+    "RECEIVED": "مستلم",
+    "CANCELLED": "ملغى"
+  },
   "orderStatus": {
     "DRAFT": "مسودة",
     "CONFIRMED": "مؤكد",
@@ -74,5 +97,37 @@
     "summary": "صفحة {{page}} من {{pageCount}} — {{total}} عنصر",
     "previous": "السابق",
     "next": "التالي"
+  },
+  "picker": {
+    "product": "اختر منتجًا",
+    "searchProduct": "ابحث عن منتج…",
+    "anyProduct": "كل المنتجات",
+    "customer": "اختر عميلًا",
+    "searchCustomer": "ابحث عن عميل…",
+    "supplier": "اختر موردًا",
+    "searchSupplier": "ابحث عن مورد…"
+  },
+  "movementType": {
+    "OPENING": "رصيد افتتاحي",
+    "SALE": "بيع",
+    "SALE_CANCEL": "إلغاء بيع",
+    "PURCHASE_RECEIPT": "استلام مشتريات",
+    "ADJUSTMENT": "تسوية يدوية"
+  },
+  "statement": {
+    "date": "التاريخ",
+    "entry": "البيان",
+    "reference": "المرجع",
+    "debit": "مدين",
+    "credit": "دائن",
+    "balance": "الرصيد",
+    "closing": "الرصيد الختامي",
+    "type": {
+      "ORDER_CONFIRMED": "تأكيد أمر بيع",
+      "ORDER_CANCELLED": "إلغاء أمر بيع",
+      "PURCHASE_RECEIVED": "استلام مشتريات",
+      "PAYMENT": "دفعة",
+      "PAYMENT_VOIDED": "إلغاء دفعة"
+    }
   }
 }

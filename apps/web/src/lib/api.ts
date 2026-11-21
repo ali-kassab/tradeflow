@@ -83,3 +83,9 @@ export function errorCode(error: unknown): string {
   }
   return 'INTERNAL_ERROR';
 }
+
+/** The `details` object of an API error (e.g. INSUFFICIENT_STOCK carries the product and quantities). */
+export function errorDetails<T>(error: unknown): T | undefined {
+  if (axios.isAxiosError<ApiErrorBody>(error)) return error.response?.data?.details as T | undefined;
+  return undefined;
+}

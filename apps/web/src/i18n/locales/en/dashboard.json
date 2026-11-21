@@ -11,7 +11,8 @@
     "grossProfitThisMonth": "Gross profit this month",
     "lowStock": "Items below reorder level",
     "orders_one": "{{count}} order",
-    "orders_other": "{{count}} orders"
+    "orders_other": "{{count}} orders",
+    "grossProfit": "Gross profit"
   },
   "chart": {
     "title": "Sales, last 30 days",
@@ -25,5 +26,11 @@
     "title": "Latest customer payments",
     "empty": "No payments yet."
   },
-  "loadError": "Couldn't load the dashboard."
+  "loadError": "Couldn't load the dashboard.",
+  "sections": {
+    "today": "Today",
+    "position": "Money position",
+    "stock": "Stock"
+  },
+  "viewAll": "View all"
 }

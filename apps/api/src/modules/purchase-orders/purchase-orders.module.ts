@@ -117,7 +117,12 @@ export class PurchaseOrdersService {
       }),
       this.prisma.purchaseOrder.count({ where }),
     ]);
-    return paginated(rows.map(({ _count, ...o }) => ({ ...o, itemCount: _count.items })), total, q);
+    const paid = await this.paidByOrder(actor.tenantId, rows.map((r) => r.id));
+    return paginated(
+      rows.map(({ _count, ...o }) => ({ ...o, itemCount: _count.items, ...paymentSummary(o.status, o.total, paid.get(o.id)) })),
+      total,
+      q,
+    );
   }
 
   async get(actor: AuthUser, id: number) {
@@ -130,13 +135,8 @@ export class PurchaseOrdersService {
       },
     });
     if (!order) throw notFound('Purchase order');
-    const paid = money(order.payments.filter((p) => !p.voidedAt).reduce((a, p) => a.plus(p.amount), dec(0)));
-    const billed = order.status === PurchaseOrderStatus.RECEIVED;
-    return {
-      ...order,
-      paidAmount: paid.toFixed(2),
-      outstanding: (billed ? money(dec(order.total).minus(paid)) : dec(0)).toFixed(2),
-    };
+    const paid = order.payments.filter((p) => !p.voidedAt).reduce((a, p) => a.plus(p.amount), dec(0));
+    return { ...order, ...paymentSummary(order.status, order.total, paid) };
   }
 
   async create(actor: AuthUser, dto: CreatePurchaseOrderDto) {
@@ -252,6 +252,16 @@ export class PurchaseOrdersService {
     });
   }
 
+  private async paidByOrder(tenantId: number, orderIds: number[]) {
+    if (orderIds.length === 0) return new Map<number, Prisma.Decimal>();
+    const rows = await this.prisma.supplierPayment.groupBy({
+      by: ['purchaseOrderId'],
+      where: { tenantId, purchaseOrderId: { in: orderIds }, voidedAt: null },
+      _sum: { amount: true },
+    });
+    return new Map(rows.map((r) => [r.purchaseOrderId!, dec(r._sum.amount)]));
+  }
+
   private async lock(tx: Prisma.TransactionClient, tenantId: number, id: number) {
     await tx.$queryRaw`SELECT id FROM PurchaseOrder WITH (UPDLOCK, ROWLOCK) WHERE id = ${id} AND tenantId = ${tenantId}`;
     const order = await tx.purchaseOrder.findFirst({
@@ -287,6 +297,21 @@ export class PurchaseOrdersService {
     });
     return { items, total: money(sum(items.map((i) => i.lineTotal))) };
   }
+}
+
+/** Same shape as sales orders: only RECEIVED orders are billed (owed to the supplier). */
+function paymentSummary(status: string, total: Prisma.Decimal, paidRaw?: Prisma.Decimal) {
+  const paid = money(paidRaw ?? 0);
+  const billed = status === PurchaseOrderStatus.RECEIVED;
+  const outstanding = billed ? money(dec(total).minus(paid)) : dec(0);
+  const paymentStatus = !billed
+    ? 'NOT_BILLED'
+    : outstanding.lessThanOrEqualTo(0)
+      ? 'PAID'
+      : paid.greaterThan(0)
+        ? 'PARTIAL'
+        : 'UNPAID';
+  return { paidAmount: paid.toFixed(2), outstanding: outstanding.toFixed(2), paymentStatus };
 }
 
 const invalidStatus = (status: string) =>
