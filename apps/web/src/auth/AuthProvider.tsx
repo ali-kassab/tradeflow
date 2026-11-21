@@ -75,6 +75,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [clear]);
 
+  const reloadSession = useCallback(async () => {
+    const session = await loadSession();
+    setState({ status: 'authenticated', session });
+  }, []);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       status: state.status,
@@ -82,8 +87,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       register,
       logout,
+      reloadSession,
     }),
-    [state, login, register, logout],
+    [state, login, register, logout, reloadSession],
   );
 
   return <AuthContext value={value}>{children}</AuthContext>;

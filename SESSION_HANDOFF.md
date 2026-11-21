@@ -1,6 +1,6 @@
 # Session handoff — TradeFlow
 
-_Last updated: 2026-11-21, session 6. Checkpoint: Phase 5 (reports) done and pushed; Phase 6 (settings and users) next._
+_Last updated: 2026-11-21, session 6. Checkpoint: Phases 5 (reports, `fca0404`) and 6 (settings and users) done and pushed; Phase 7 (finalisation) next._
 
 ## Project
 
@@ -9,8 +9,7 @@ TradeFlow is a bilingual (Arabic RTL by default, English LTR) B2B wholesale mana
 ## Status
 
 - **Backend:** MVP API complete (all endpoints in PROJECT_HANDOFF.md). Purchase-order list and detail return `paidAmount`, `outstanding` and `paymentStatus` (`1ba62fa`).
-- **Frontend built and verified:** auth, dashboard, products, categories, inventory, customers, sales orders, customer payments (`02ce643`), suppliers (`50078ff`), purchase orders (`fa43352`), supplier payments (`55b21d0`), reports (session 6).
-- **Frontend not built yet:** settings, users. README exists (`292d43d`); refresh it at finalisation.
+- **Frontend built and verified:** auth, dashboard, products, categories, inventory, customers, sales orders, customer payments (`02ce643`), suppliers (`50078ff`), purchase orders (`fa43352`), supplier payments (`55b21d0`), reports (`fca0404`), settings and users (session 6). Every MVP screen now exists. README exists (`292d43d`); refresh it at finalisation.
 
 ## Roadmap for this run (user-approved order)
 
@@ -19,8 +18,8 @@ TradeFlow is a bilingual (Arabic RTL by default, English LTR) B2B wholesale mana
 3. ~~Purchase orders~~ (done)
 4. ~~Supplier payments~~ (done)
 5. ~~Reports~~ (done, session 6)
-6. Settings (tenant, owner) and users (owner) — **next**
-7. Finalisation: full review, e2e on `tradeflow_test`, lint/a11y, README, handoffs
+6. ~~Settings and users~~ (done, session 6)
+7. Finalisation — **next**: full review, e2e on `tradeflow_test`, lint/a11y, README, handoffs
 
 ## Phase 1 — customer payments
 
@@ -128,6 +127,24 @@ Verification (actual results, 2026-11-21): web `tsc -b` OK; vitest 45/45; oxlint
 - STAFF: no Reports nav entry; `/reports` shows the permission message; API `GET /reports/{sales,inventory,balances,activity}` → 403 for staff, 200 for manager.
 - Dataviz skill: single-series chart only (no categorical palette, so no validator run), no legend for one series, tooltip via `ChartTooltip`, table view in `<details>`.
 
+## Phase 6 — settings and users (done, session 6)
+
+| Area | Files |
+|---|---|
+| `/settings` (every role): Business section — owner edits name, currency (ISO 3 letters, upper-cased), default VAT % (0–100, ≤ 2 decimals; sent as a number); other roles see it read-only. Save refreshes the session in place (`reloadSession`), so the sidebar name, money formatting and new-order VAT update without a reload. Your password section — current + new (8–128) + repeat; on success the API revokes every session, so the UI signs out and goes to `/login` with a toast | `apps/web/src/pages/settings/SettingsPage.tsx`, `settings-schemas.ts` |
+| `/users` (owner, router `Owner` wrapper = `RoleGate` with `isOwner`): list (name + "(you)", email, role, active/deactivated, last sign-in); Add user (name, email, temporary password with "Generate", role); Edit (name, role, "Can sign in" — role and access locked for yourself, mirroring `CANNOT_MODIFY_SELF`; only the name is sent then); Reset password (not on yourself). Editing your own name reloads the session | `pages/users/UsersPage.tsx`, `UserFormDialog.tsx`, `ResetPasswordDialog.tsx`, `PasswordField.tsx` (shadcn `InputGroup`), `user-schemas.ts` (zod mirrors of the DTOs, `generatePassword`: crypto random, unambiguous alphabet, rejection sampling) |
+| `reloadSession()` on the auth context (re-reads `/auth/me`) | `auth/context.ts`, `auth/AuthProvider.tsx` |
+| Types `TenantSettings`, `UserAccount`; i18n `settings` and `users` namespaces (ar/en); nav entries Users (`allow: isOwner`) and Settings (all) | `lib/types.ts`, `i18n/*`, `layout/AppLayout.tsx`, `router.tsx` |
+
+Verification (actual results, 2026-11-21): web `tsc -b` OK; vitest 51/51 (`pages/users/user-schemas.spec.ts` + locale parity for the new namespaces); oxlint on changed dirs 0 new warnings (router.tsx keeps its pre-existing `only-export-components` warnings); `vite build` OK (SettingsPage 5.7 kB, UsersPage 10.3 kB).
+- STAFF: nav has Settings, no Users/Reports; `/settings` shows the business read-only (name, EGP, 14%) and the password form; `/users` shows the permission message.
+- OWNER, English: users list shows the 3 demo users; empty Add → name/email/password errors; Generate fills a 12-char password and clears the error; created "QA Tester" (STAFF); own Edit has role and access disabled; QA Tester role → Manager; reset with "short" blocked, then reset OK (API: old password 401, new 200). API: duplicate email (different case) → 409 `EMAIL_TAKEN`; owner PATCH own role → 400 `CANNOT_MODIFY_SELF`.
+- Settings as owner: currency "EG" and VAT 100.5 blocked client-side; saved "usd"/15 → stored USD, new sales order editor shows 15% and $; business rename updated the sidebar in place (no reload); all restored to the original name, EGP, 14 (confirmed via `GET /tenant`).
+- Password change as QA Tester: mismatch → field error; wrong current → toast "Current password is incorrect." (still signed in); correct → toast + redirected to `/login`; API: old 401, new 200. Then deactivated QA Tester as owner → list shows "Deactivated"; login → 401 `ACCOUNT_DISABLED`.
+- Arabic, 375 px: `/users` and `/settings` RTL, scrollWidth = 375 (users table scrolls inside its card).
+
+Demo data from Phase 6: one extra **deactivated** user "QA Tester" (`qa.tester@demo.tradeflow.local`, MANAGER). Users can't be deleted (no API); it is harmless. Business settings unchanged.
+
 ## How to run (dev)
 
 - `.claude/launch.json` (local, untracked) has `api` (`node dist/main.js` in `apps/api`, port 3000) and `web` (`npx vite`, port 5173). Rebuild the API with `npm run build -w @tradeflow/api` after API changes.
@@ -137,7 +154,8 @@ Verification (actual results, 2026-11-21): web `tsc -b` OK; vitest 45/45; oxlint
 
 - **Unverified:** the API e2e suite (blocked by the agent permission guard in sessions 4 and 5; not attempted in session 6); the supplier `IN_USE` delete refusal on seeded data (see Phase 2).
 - The session-5 stash ("WIP phase 5 reports") was dropped after the Phase 5 commit was pushed; its content is all in that commit.
-- The browser pane was left signed in as the demo STAFF user after the gating check.
+- The browser pane was left signed in as the demo OWNER, in Arabic.
+- Dev-only: when several auth files change at once, Vite HMR can reload the page twice while a refresh is in flight; the second load replays the rotated refresh token, the API revokes the family (by design) and you land on `/login`. Not reproducible on normal navigation (refresh calls are deduplicated in `lib/api.ts`).
 - Demo data now includes two voided test payments on customer 2 (Phase 1), PO-00003 received and PO-00004 cancelled (Phase 3), one voided 500.00 supplier payment on PO-00003 (Phase 4). The test supplier created in Phase 2 was deleted.
 
 - Payable-order list fetches up to 100 orders per billed status per party (API page cap: customers CONFIRMED + DELIVERED, suppliers RECEIVED); older unpaid orders beyond that wouldn't be offered (payment can still go on account).
@@ -150,8 +168,7 @@ Verification (actual results, 2026-11-21): web `tsc -b` OK; vitest 45/45; oxlint
 ## Exact next step
 
 0. (User) Run the API e2e suite once: `npm run test:e2e -w @tradeflow/api` (resets only `tradeflow_test`); the agent's permission guard blocks it (sessions 4 and 5).
-1. Phase 6: settings (`GET/PATCH /tenant`: business name, currency, default VAT %; owner only) and users (`/users`: list, create, edit role/active, reset password; owner only), plus the current user's password change (`POST /auth/change-password`, any role). Routes behind an owner gate (`RoleGate` with an owner predicate), nav entries with `allow`. Read the DTOs in `apps/api/src/modules/{tenant,users,auth}` first.
-2. Then Phase 7 (finalisation) per the roadmap.
+1. Phase 7 (finalisation): full review of the web app (consistency, a11y — e.g. the pre-existing "Close" label and `ProductPicker` name below), oxlint across `apps/web/src` and `apps/api`, API e2e on `tradeflow_test` if the permission guard allows (else leave it to the user), refresh README (features, screenshots optional, setup), final handoff update. Don't add features.
 
 ## Constraints to keep
 

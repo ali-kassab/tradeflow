@@ -17,6 +17,8 @@ export interface AuthContextValue {
   login(input: LoginInput): Promise<void>;
   register(input: RegisterInput): Promise<void>;
   logout(): Promise<void>;
+  /** Re-reads /auth/me after the user or business changes (name, currency, VAT). */
+  reloadSession(): Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null);

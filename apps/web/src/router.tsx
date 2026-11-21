@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Navigate, Outlet, createBrowserRouter, useLocation } from 'react-router';
 import { RoleGate } from '@/auth/RoleGate';
 import { useAuth } from '@/auth/context';
-import { isManagerOrAbove } from '@/auth/types';
+import { isManagerOrAbove, isOwner } from '@/auth/types';
 import { RouteError } from '@/components/RouteError';
 import { Spinner } from '@/components/ui/spinner';
 import { AppLayout } from '@/layout/AppLayout';
@@ -28,6 +28,8 @@ const PurchaseOrdersPage = lazy(() => import('@/pages/purchase-orders/PurchaseOr
 const PurchaseOrderDetailPage = lazy(() => import('@/pages/purchase-orders/PurchaseOrderDetailPage'));
 const PurchaseOrderEditorPage = lazy(() => import('@/pages/purchase-orders/PurchaseOrderEditorPage'));
 const ReportsPage = lazy(() => import('@/pages/reports/ReportsPage'));
+const SettingsPage = lazy(() => import('@/pages/settings/SettingsPage'));
+const UsersPage = lazy(() => import('@/pages/users/UsersPage'));
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'));
 
 function FullPageSpinner() {
@@ -48,6 +50,15 @@ function Page({ children }: { children: ReactNode }) {
 function Manager({ children }: { children: ReactNode }) {
   return (
     <RoleGate allow={isManagerOrAbove}>
+      <Page>{children}</Page>
+    </RoleGate>
+  );
+}
+
+/** Pages the API only serves to owners. */
+function Owner({ children }: { children: ReactNode }) {
+  return (
+    <RoleGate allow={isOwner}>
       <Page>{children}</Page>
     </RoleGate>
   );
@@ -100,6 +111,8 @@ export const router = createBrowserRouter([
       { path: '/purchase-orders/:id/edit', element: <Manager><PurchaseOrderEditorPage /></Manager> },
       { path: '/supplier-payments', element: <Manager><SupplierPaymentsPage /></Manager> },
       { path: '/reports', element: <Manager><ReportsPage /></Manager> },
+      { path: '/settings', element: <Page><SettingsPage /></Page> },
+      { path: '/users', element: <Owner><UsersPage /></Owner> },
       { path: '*', element: <Page><NotFoundPage /></Page> },
     ],
   },

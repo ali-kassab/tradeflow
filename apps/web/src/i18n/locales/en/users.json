@@ -1,0 +1,48 @@
+{
+  "title": "Users",
+  "description": "People who can sign in to this business, and what they can do.",
+  "add": "Add user",
+  "addTitle": "Add a user",
+  "addDescription": "They sign in with this email and the temporary password you give them.",
+  "editTitle": "Edit user",
+  "editLabel": "Edit {{name}}",
+  "created": "{{name}} can now sign in.",
+  "you": "(you)",
+  "never": "Never",
+  "hint": "Managers handle stock, suppliers, purchases and reports. Staff sell and take payments, without seeing costs. Only owners manage users and business settings.",
+  "columns": {
+    "status": "Access",
+    "lastLogin": "Last sign-in"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Deactivated"
+  },
+  "fields": {
+    "name": "Name",
+    "email": "Email",
+    "role": "Role",
+    "roleHint": "Owner and manager can see costs and profit; staff can't.",
+    "tempPassword": "Temporary password",
+    "tempPasswordHint": "Share it with the user yourself. They can change it under Settings.",
+    "generate": "Generate",
+    "isActive": "Can sign in",
+    "isActiveHint": "Turning this off signs the user out everywhere. Their records stay.",
+    "selfHint": "You can't change your own role or access."
+  },
+  "reset": {
+    "action": "Reset password",
+    "label": "Reset password for {{name}}",
+    "title": "Reset password for {{name}}",
+    "description": "This replaces their password and signs them out on every device.",
+    "submit": "Set new password",
+    "done": "Password reset for {{name}}."
+  },
+  "validation": {
+    "required": "Required.",
+    "nameLength": "Use 2 to 120 characters.",
+    "email": "Enter a valid email address.",
+    "passwordMin": "Use at least 8 characters.",
+    "passwordMax": "Use at most 128 characters."
+  }
+}

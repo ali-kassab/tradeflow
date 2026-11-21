@@ -1,9 +1,9 @@
-import { BanknoteIcon, BoxesIcon, ChartColumnIcon, ClipboardListIcon, HandCoinsIcon, LayoutDashboardIcon, LogOutIcon, type LucideIcon, PackageIcon, ReceiptIcon, TagsIcon, TruckIcon, UsersIcon } from 'lucide-react';
+import { BanknoteIcon, BoxesIcon, ChartColumnIcon, ClipboardListIcon, HandCoinsIcon, LayoutDashboardIcon, LogOutIcon, type LucideIcon, PackageIcon, ReceiptIcon, SettingsIcon, TagsIcon, TruckIcon, UserCogIcon, UsersIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavLink, Outlet, useMatch, useResolvedPath } from 'react-router';
 import { useAuth, useSession } from '@/auth/context';
-import { type Role, isManagerOrAbove } from '@/auth/types';
+import { type Role, isManagerOrAbove, isOwner } from '@/auth/types';
 import { LanguageSwitch } from '@/components/LanguageSwitch';
 import { Logo } from '@/components/Logo';
 import { Button } from '@/components/ui/button';
@@ -43,6 +43,8 @@ const NAV: NavEntry[] = [
   { to: '/purchase-orders', end: false, icon: ClipboardListIcon, label: 'nav.purchaseOrders', allow: isManagerOrAbove },
   { to: '/supplier-payments', end: false, icon: HandCoinsIcon, label: 'nav.supplierPayments', allow: isManagerOrAbove },
   { to: '/reports', end: false, icon: ChartColumnIcon, label: 'nav.reports', allow: isManagerOrAbove },
+  { to: '/users', end: false, icon: UserCogIcon, label: 'nav.users', allow: isOwner },
+  { to: '/settings', end: false, icon: SettingsIcon, label: 'nav.settings' },
 ];
 
 function NavItem({ to, end, children }: { to: string; end?: boolean; children: ReactNode }) {

@@ -1,4 +1,5 @@
 /** Response shapes of the TradeFlow API (see apps/api). Money is a decimal string. */
+import type { Role } from '@/auth/types';
 
 export interface Paginated<T> {
   data: T[];
@@ -296,5 +297,24 @@ export interface ActivityEntry {
   metadata: Record<string, unknown> | null;
   userId: number;
   userName: string | null;
+  createdAt: string;
+}
+
+/** GET /tenant (PATCH is owner-only). */
+export interface TenantSettings {
+  id: number;
+  name: string;
+  currency: string;
+  defaultTaxRate: string;
+}
+
+/** GET /users (owner only). */
+export interface UserAccount {
+  id: number;
+  name: string;
+  email: string;
+  role: Role;
+  isActive: boolean;
+  lastLoginAt: string | null;
   createdAt: string;
 }
