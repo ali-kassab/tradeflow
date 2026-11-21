@@ -1,0 +1,110 @@
+{
+  "title": "Reports",
+  "description": "Sales, stock value, balances and recent activity for your business.",
+  "tabs": {
+    "sales": "Sales",
+    "inventory": "Inventory value",
+    "balances": "Balances",
+    "activity": "Activity"
+  },
+  "sales": {
+    "from": "From",
+    "to": "To",
+    "invalidRange": "Choose a start date on or before the end date.",
+    "summaryTitle": "Result for the period",
+    "orders": "Orders",
+    "subtotal": "Subtotal",
+    "discount": "Discounts",
+    "netSales": "Net sales",
+    "cost": "Cost of goods sold",
+    "grossProfit": "Gross profit",
+    "margin": "margin {{value}}",
+    "taxAndTotal": "Plus VAT {{tax}}, invoiced total",
+    "chartTitle": "Daily net sales, {{from}} – {{to}}",
+    "chartSeries": "Net sales",
+    "dailyTable": "Show the daily figures as a table",
+    "day": "Day",
+    "topCustomers": "Top customers",
+    "customer": "Customer",
+    "revenue": "Sales",
+    "empty": "No billed sales in this period.",
+    "topProducts": "Top products",
+    "product": "Product",
+    "quantity": "Quantity",
+    "marginColumn": "Margin",
+    "productsHint": "Product figures are line totals before order discounts. Orders count from the day they were confirmed."
+  },
+  "inventory": {
+    "value": "Stock value at cost",
+    "units": "Units in stock",
+    "lowStock": "Items at or below reorder level",
+    "lowOnly": "Show only items to reorder",
+    "product": "Product",
+    "stock": "In stock",
+    "reorderLevel": "Reorder level",
+    "cost": "Unit cost",
+    "rowValue": "Value",
+    "lowBadge": "Reorder",
+    "total": "Total",
+    "empty": "No active products yet.",
+    "noLowStock": "Every item is above its reorder level.",
+    "hint": "Active products only, valued at their current cost price."
+  },
+  "balances": {
+    "name": "Name",
+    "phone": "Phone",
+    "creditLimit": "Credit limit",
+    "balance": "Balance",
+    "overLimit": "Over limit",
+    "customers": {
+      "title": "Customer balances",
+      "owed": "Owed by customers",
+      "credit": "Customer credit",
+      "creditTag": "credit",
+      "empty": "No customer owes or holds credit."
+    },
+    "suppliers": {
+      "title": "Supplier balances",
+      "owed": "Owed to suppliers",
+      "credit": "Paid to suppliers in advance",
+      "creditTag": "in advance",
+      "empty": "Nothing owed to or prepaid with suppliers."
+    },
+    "hint": "Only non-zero balances are listed, largest first."
+  },
+  "activity": {
+    "when": "When",
+    "user": "By",
+    "action": "Action",
+    "reference": "Reference",
+    "details": "Details",
+    "unknownUser": "Unknown user",
+    "reason": "Reason: {{reason}}",
+    "entity": {
+      "payment": "Payments",
+      "product": "Stock history"
+    },
+    "actions": {
+      "salesOrder": {
+        "confirmed": "Sales order confirmed",
+        "delivered": "Sales order delivered",
+        "cancelled": "Sales order cancelled"
+      },
+      "purchaseOrder": {
+        "ordered": "Purchase order placed",
+        "received": "Purchase order received",
+        "cancelled": "Purchase order cancelled"
+      },
+      "payment": {
+        "received": "Customer payment recorded",
+        "sent": "Supplier payment recorded",
+        "voided": "Payment voided"
+      },
+      "stock": {
+        "adjusted": "Stock adjusted"
+      }
+    },
+    "empty": "Nothing has happened yet.",
+    "hint": "The latest 100 actions."
+  }
+}

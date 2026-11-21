@@ -244,3 +244,57 @@ export interface SupplierPaymentListItem extends SupplierPayment {
   supplier: { id: number; name: string };
   purchaseOrder: { id: number; number: string } | null;
 }
+
+/** GET /reports/sales: billed (CONFIRMED + DELIVERED) orders, by confirmation date. */
+export interface SalesReport {
+  from: string;
+  to: string;
+  summary: {
+    orders: number;
+    subtotal: string;
+    discount: string;
+    tax: string;
+    total: string;
+    /** subtotal − discount (before VAT). */
+    netSales: string;
+    cost: string;
+    grossProfit: string;
+  };
+  byDay: { date: string; orders: number; revenue: string }[];
+  byCustomer: { id: number; name: string; orders: number; revenue: string }[];
+  /** Line totals before order-level discounts. */
+  byProduct: { id: number; name: string; sku: string; quantity: number; revenue: string; cost: string; grossProfit: string }[];
+}
+
+export interface InventoryReport {
+  rows: {
+    id: number;
+    sku: string;
+    name: string;
+    unit: string;
+    stockQty: number;
+    reorderLevel: number;
+    costPrice: string;
+    salePrice: string;
+    value: string;
+    isLowStock: boolean;
+  }[];
+  value: string;
+  units: number;
+}
+
+export interface BalancesReport {
+  customers: { id: number; name: string; phone: string | null; creditLimit: string | null; balance: string }[];
+  suppliers: { id: number; name: string; phone: string | null; balance: string }[];
+}
+
+export interface ActivityEntry {
+  id: number;
+  action: string;
+  entityType: string;
+  entityId: number;
+  metadata: Record<string, unknown> | null;
+  userId: number;
+  userName: string | null;
+  createdAt: string;
+}

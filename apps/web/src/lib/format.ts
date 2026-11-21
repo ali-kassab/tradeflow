@@ -55,3 +55,9 @@ export function formatShortDay(value: string | Date, lang: string) {
 export function formatPercent(value: number, lang: string) {
   return numberFormat('pct', lang, { style: 'percent', maximumFractionDigits: 1, signDisplay: 'exceptZero' }).format(value / 100);
 }
+
+export function formatDateTime(value: string | Date, lang: string) {
+  return dateFormat('datetime', lang, { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(
+    new Date(value),
+  );
+}

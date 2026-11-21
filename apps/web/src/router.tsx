@@ -27,6 +27,7 @@ const SupplierDetailPage = lazy(() => import('@/pages/suppliers/SupplierDetailPa
 const PurchaseOrdersPage = lazy(() => import('@/pages/purchase-orders/PurchaseOrdersPage'));
 const PurchaseOrderDetailPage = lazy(() => import('@/pages/purchase-orders/PurchaseOrderDetailPage'));
 const PurchaseOrderEditorPage = lazy(() => import('@/pages/purchase-orders/PurchaseOrderEditorPage'));
+const ReportsPage = lazy(() => import('@/pages/reports/ReportsPage'));
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'));
 
 function FullPageSpinner() {
@@ -98,6 +99,7 @@ export const router = createBrowserRouter([
       { path: '/purchase-orders/:id', element: <Manager><PurchaseOrderDetailPage /></Manager> },
       { path: '/purchase-orders/:id/edit', element: <Manager><PurchaseOrderEditorPage /></Manager> },
       { path: '/supplier-payments', element: <Manager><SupplierPaymentsPage /></Manager> },
+      { path: '/reports', element: <Manager><ReportsPage /></Manager> },
       { path: '*', element: <Page><NotFoundPage /></Page> },
     ],
   },
