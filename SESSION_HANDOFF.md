@@ -1,6 +1,6 @@
 # Session handoff — TradeFlow
 
-_Last updated: 2026-11-21, session 5. Checkpoint: Phases 3 (purchase orders) and 4 (supplier payments) done and pushed; next is Phase 5 (reports)._
+_Last updated: 2026-11-21, end of session 5 (safe shutdown). Checkpoint: Phases 3 (purchase orders, `fa43352`) and 4 (supplier payments, `55b21d0`) done and pushed; Phase 5 (reports) started, work in progress parked in a git stash (nothing of it committed)._
 
 ## Project
 
@@ -9,7 +9,7 @@ TradeFlow is a bilingual (Arabic RTL by default, English LTR) B2B wholesale mana
 ## Status
 
 - **Backend:** MVP API complete (all endpoints in PROJECT_HANDOFF.md). Purchase-order list and detail return `paidAmount`, `outstanding` and `paymentStatus` (`1ba62fa`).
-- **Frontend built and verified:** auth, dashboard, products, categories, inventory, customers, sales orders, customer payments (`02ce643`), suppliers (`50078ff`), purchase orders (`fa43352`), **supplier payments** (session 5).
+- **Frontend built and verified:** auth, dashboard, products, categories, inventory, customers, sales orders, customer payments (`02ce643`), suppliers (`50078ff`), purchase orders (`fa43352`), supplier payments (`55b21d0`).
 - **Frontend not built yet:** reports, settings, users. README exists (`292d43d`); refresh it at finalisation.
 
 ## Roadmap for this run (user-approved order)
@@ -18,7 +18,7 @@ TradeFlow is a bilingual (Arabic RTL by default, English LTR) B2B wholesale mana
 2. ~~Suppliers~~ (done)
 3. ~~Purchase orders~~ (done)
 4. ~~Supplier payments~~ (done)
-5. Reports (sales, inventory value, balances, activity — backend `/reports/*`) — **next**
+5. Reports (sales, inventory value, balances, activity — backend `/reports/*`) — **in progress** (WIP in `stash@{0}`, see Phase 5)
 6. Settings (tenant, owner) and users (owner)
 7. Finalisation: full review, e2e on `tradeflow_test`, lint/a11y, README, handoffs
 
@@ -106,6 +106,21 @@ Verification (actual results, 2026-11-21): web `tsc -b` OK; vitest 36/36; oxlint
 
 Demo data from Phase 4: one **voided** 500.00 supplier payment on PO-00003 (reason "UI verification entry"); balances unchanged.
 
+## Phase 5 — reports (in progress; stopped at the user's shutdown request)
+
+Not committed. The partial work is parked in a named git stash so the branch stays consistent:
+`stash@{0}: On feat/foundation: WIP phase 5 reports (session 5): types, formatDateTime, report-utils(+spec), SalesReport`. Restore it with `git stash apply stash@{0}` (keep the stash until the work is committed); check `git stash list` first.
+
+Contents of the stash:
+- `apps/web/src/lib/types.ts`: `SalesReport`, `InventoryReport`, `BalancesReport`, `ActivityEntry` (shapes match `apps/api/src/modules/reports/reports.module.ts`).
+- `apps/web/src/lib/format.ts`: `formatDateTime`.
+- `apps/web/src/pages/reports/report-utils.ts` + `report-utils.spec.ts`: `defaultRange` (last 30 days incl. today), `isValidRange`, `marginPercent`, `ACTIVITY_ACTIONS`/`isKnownAction` (the 10 actions the API logs: salesOrder.confirmed/delivered/cancelled, purchaseOrder.ordered/received/cancelled, payment.received/sent/voided, stock.adjusted), `activityHref` (salesOrder → `/sales-orders/:id`, purchaseOrder → `/purchase-orders/:id`, customerPayment → `/payments`, supplierPayment → `/supplier-payments`, product → `/inventory?productId=`), `metaValue`.
+- `apps/web/src/pages/reports/SalesReport.tsx`: sales tab (from/to date inputs, ledger-style summary orders/subtotal/discount/net sales/cost/gross profit + margin, VAT and total; single-series daily bar chart like the dashboard with a `<details>` daily table; top customers and top products with gross profit and margin). Uses namespace `reports` with `sales.*` keys.
+
+State of that WIP: **it does not type-check yet** (`tsc -b` fails: the `reports` i18n namespace doesn't exist). The helper tests were written but not run. Dataviz skill read: single-series charts only, so no categorical palette and no validator run needed; keep a table view for each chart, no legend for one series, hover tooltip via `ChartTooltip`.
+
+Remaining for Phase 5: `i18n/locales/{ar,en}/reports.json` (register in `i18n/resources.ts`), `InventoryReport`, `BalancesReport`, `ActivityReport` tabs, `ReportsPage.tsx` (tabs, ideally `?tab=` in the URL), `/reports` route behind `Manager`, nav entry with `allow: isManagerOrAbove`, then tsc/vitest/oxlint/build and browser checks (manager EN/AR, 375 px, STAFF gating).
+
 ## How to run (dev)
 
 - `.claude/launch.json` (local, untracked) has `api` (`node dist/main.js` in `apps/api`, port 3000) and `web` (`npx vite`, port 5173). Rebuild the API with `npm run build -w @tradeflow/api` after API changes.
@@ -113,7 +128,8 @@ Demo data from Phase 4: one **voided** 500.00 supplier payment on PO-00003 (reas
 
 ## Known issues / notes
 
-- **Unverified:** the API e2e suite (blocked by the agent permission guard in sessions 4 and 5); the supplier `IN_USE` delete refusal on seeded data (see Phase 2).
+- **Unverified:** the API e2e suite (blocked by the agent permission guard in sessions 4 and 5); the supplier `IN_USE` delete refusal on seeded data (see Phase 2); the parked Phase 5 WIP (does not compile yet, tests not run).
+- Shutdown checks on the committed state (`55b21d0`, WIP stashed): web `tsc -b` OK, vitest 36/36, oxlint on changed dirs 0 warnings; API `tsc --noEmit` OK, vitest 11/11.
 - Demo data now includes two voided test payments on customer 2 (Phase 1), PO-00003 received and PO-00004 cancelled (Phase 3), one voided 500.00 supplier payment on PO-00003 (Phase 4). The test supplier created in Phase 2 was deleted.
 
 - Payable-order list fetches up to 100 orders per billed status per party (API page cap: customers CONFIRMED + DELIVERED, suppliers RECEIVED); older unpaid orders beyond that wouldn't be offered (payment can still go on account).
@@ -125,13 +141,14 @@ Demo data from Phase 4: one **voided** 500.00 supplier payment on PO-00003 (reas
 
 ## Exact next step
 
-0. (User) Run the API e2e suite once: `npm run test:e2e -w @tradeflow/api` (resets only `tradeflow_test`); the agent's permission guard blocks it.
-1. Phase 5 — reports page(s), manager+ (`Manager` route wrapper, nav `allow`), reusing recharts via `components/ui/chart.tsx` as the dashboard does, `LedgerStatement`-style tabular numerals, and `lib/format`. API (all `ManagerOrAbove`):
-   - `GET /reports/sales?from&to` (inclusive dates, default last 30 days) → `{from, to, summary {orders, subtotal, discount, tax, total, netSales, cost, grossProfit}, byDay [{date, orders, revenue}] (gap-filled), byCustomer [{id, name, orders, revenue}] (top 20), byProduct [{id, name, sku, quantity, revenue, cost, grossProfit}] (top 20)}`.
+0. (User) Run the API e2e suite once: `npm run test:e2e -w @tradeflow/api` (resets only `tradeflow_test`); the agent's permission guard blocks it (sessions 4 and 5).
+1. Restore the Phase 5 WIP: `git stash list`, then `git stash apply stash@{0}` (the entry named "WIP phase 5 reports (session 5)"). Drop the stash only after the work is committed.
+2. Finish Phase 5 as listed under "Remaining for Phase 5" above. API facts (all `ManagerOrAbove`):
+   - `GET /reports/sales?from&to` (inclusive dates, default last 30 days) → `{from, to, summary {orders, subtotal, discount, tax, total, netSales, cost, grossProfit}, byDay [{date, orders, revenue}] (gap-filled), byCustomer [{id, name, orders, revenue}] (top 20), byProduct [{id, name, sku, quantity, revenue, cost, grossProfit}] (top 20, line totals before order discounts)}`.
    - `GET /reports/inventory` → `{rows [{id, sku, name, unit, stockQty, reorderLevel, costPrice, salePrice, value, isLowStock}], value, units}` (active products).
    - `GET /reports/balances` → `{customers [{id, name, phone, creditLimit, balance}], suppliers [{id, name, phone, balance}]}` (non-zero only, largest first).
-   - `GET /reports/activity` → last 100 `ActivityLog` rows `{id, action, entityType, entityId, metadata, userId, userName, createdAt}`; `action` values like `salesOrder.confirmed`, `purchaseOrder.received` need translated labels.
-2. Then Phase 6 (settings: tenant name/currency/VAT, owner; users: list/create/edit/reset password, owner) and Phase 7 (finalisation) per the roadmap.
+   - `GET /reports/activity` → last 100 rows `{id, action, entityType, entityId, metadata, userId, userName, createdAt}`; metadata: number/total (orders), amount (payments), reason (voids), quantity/note (stock).
+3. Then Phase 6 (settings: tenant name/currency/VAT, owner; users: list/create/edit/reset password, owner) and Phase 7 (finalisation) per the roadmap.
 
 ## Constraints to keep
 
