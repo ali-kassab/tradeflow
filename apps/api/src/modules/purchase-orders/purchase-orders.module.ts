@@ -5,7 +5,6 @@ import {
   Injectable,
   Module,
   Param,
-  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -35,6 +34,8 @@ import { dec, money, sum } from '../../common/money.js';
 import { PageQueryDto, paginated, skipTake } from '../../common/pagination.js';
 import { assertOwned, logActivity, nextDocumentNumber } from '../../common/tx.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
+import { ParseIdPipe } from '../../common/validation.js';
+import { MAX_MONEY } from '../catalog/catalog.dto.js';
 import { InventoryModule } from '../inventory/inventory.module.js';
 import { StockService } from '../inventory/stock.service.js';
 
@@ -53,6 +54,7 @@ class PurchaseItemDto {
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
+  @Max(MAX_MONEY)
   unitCost?: number;
 }
 
@@ -71,7 +73,7 @@ class CreatePurchaseOrderDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsDateString()
+  @IsDateString({ strict: true })
   expectedDate?: string;
 
   @ApiPropertyOptional()
@@ -330,7 +332,7 @@ export class PurchaseOrdersController {
   }
 
   @Get(':id')
-  get(@CurrentUser() u: AuthUser, @Param('id', ParseIntPipe) id: number) {
+  get(@CurrentUser() u: AuthUser, @Param('id', ParseIdPipe) id: number) {
     return this.orders.get(u, id);
   }
 
@@ -340,22 +342,22 @@ export class PurchaseOrdersController {
   }
 
   @Patch(':id')
-  update(@CurrentUser() u: AuthUser, @Param('id', ParseIntPipe) id: number, @Body() dto: CreatePurchaseOrderDto) {
+  update(@CurrentUser() u: AuthUser, @Param('id', ParseIdPipe) id: number, @Body() dto: CreatePurchaseOrderDto) {
     return this.orders.update(u, id, dto);
   }
 
   @Post(':id/order')
-  markOrdered(@CurrentUser() u: AuthUser, @Param('id', ParseIntPipe) id: number) {
+  markOrdered(@CurrentUser() u: AuthUser, @Param('id', ParseIdPipe) id: number) {
     return this.orders.markOrdered(u, id);
   }
 
   @Post(':id/receive')
-  receive(@CurrentUser() u: AuthUser, @Param('id', ParseIntPipe) id: number) {
+  receive(@CurrentUser() u: AuthUser, @Param('id', ParseIdPipe) id: number) {
     return this.orders.receive(u, id);
   }
 
   @Post(':id/cancel')
-  cancel(@CurrentUser() u: AuthUser, @Param('id', ParseIntPipe) id: number) {
+  cancel(@CurrentUser() u: AuthUser, @Param('id', ParseIdPipe) id: number) {
     return this.orders.cancel(u, id);
   }
 }

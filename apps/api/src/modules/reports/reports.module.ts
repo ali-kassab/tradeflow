@@ -13,17 +13,29 @@ import { PaymentsModule } from '../payments/payments.module.js';
 class RangeQueryDto {
   @ApiPropertyOptional({ example: '2026-01-01', description: 'Inclusive. Defaults to 30 days ago.' })
   @IsOptional()
-  @IsDateString()
+  @IsDateString({ strict: true })
   from?: string;
 
   @ApiPropertyOptional({ example: '2026-01-31', description: 'Inclusive. Defaults to today.' })
   @IsOptional()
-  @IsDateString()
+  @IsDateString({ strict: true })
   to?: string;
 }
 
 const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 const addDays = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+/** Local YYYY-MM-DD key, the same calendar the day boundaries above use. */
+export const localDayKey = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+/**
+ * Reads a `from`/`to` query value as a *local* calendar day. `new Date('2026-01-31')`
+ * would be UTC midnight, which shifts the range by the server's UTC offset and drops
+ * orders confirmed shortly after local midnight (or a whole day west of UTC).
+ */
+export function parseDay(value: string): Date {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : startOfDay(new Date(value));
+}
 const str = (v: Prisma.Decimal | number | bigint | null | undefined) => money(dec(v === null || v === undefined ? 0 : v.toString())).toFixed(2);
 const BILLED_SQL = Prisma.join(BILLED_SALES);
 
@@ -109,8 +121,8 @@ export class ReportsService {
 
   async sales(actor: AuthUser, q: RangeQueryDto) {
     const t = actor.tenantId;
-    const to = q.to ? addDays(new Date(q.to), 1) : addDays(startOfDay(new Date()), 1);
-    const from = q.from ? new Date(q.from) : addDays(to, -30);
+    const to = q.to ? addDays(parseDay(q.to), 1) : addDays(startOfDay(new Date()), 1);
+    const from = q.from ? parseDay(q.from) : addDays(to, -30);
 
     const [summary, byDay, byCustomer, byProduct] = await Promise.all([
       this.salesSummary(t, from, to),
@@ -198,23 +210,28 @@ export class ReportsService {
   // ---------- shared queries ----------
 
   private async dailySales(tenantId: number, from: Date, to: Date) {
-    const rows = await this.prisma.$queryRaw<{ day: Date | string; orders: bigint; revenue: Prisma.Decimal }[]>`
-      SELECT CAST(confirmedAt AS date) AS day, COUNT(*) AS orders, SUM(total) AS revenue
-      FROM SalesOrder
-      WHERE tenantId = ${tenantId} AND status IN (${BILLED_SQL})
-        AND confirmedAt >= ${from} AND confirmedAt < ${to}
-      GROUP BY CAST(confirmedAt AS date) ORDER BY day`;
-    const byDay = new Map(
-      rows.map((r) => [
-        (r.day instanceof Date ? r.day.toISOString() : String(r.day)).slice(0, 10),
-        { orders: Number(r.orders), revenue: str(r.revenue) },
-      ]),
-    );
+    // Bucketed in JS by *local* day: confirmedAt is stored in UTC, so SQL's
+    // CAST(confirmedAt AS date) would put orders confirmed just after local
+    // midnight on the previous (UTC) day, out of step with the range and the
+    // dashboard's "today" figures.
+    const rows = await this.prisma.salesOrder.findMany({
+      where: { tenantId, status: { in: BILLED_SALES }, confirmedAt: { gte: from, lt: to } },
+      select: { confirmedAt: true, total: true },
+    });
+    const byDay = new Map<string, { orders: number; revenue: Prisma.Decimal }>();
+    for (const r of rows) {
+      const key = localDayKey(r.confirmedAt!);
+      const day = byDay.get(key) ?? { orders: 0, revenue: dec(0) };
+      day.orders += 1;
+      day.revenue = day.revenue.plus(r.total);
+      byDay.set(key, day);
+    }
     // Fill gaps so charts get a continuous series.
     const out: { date: string; orders: number; revenue: string }[] = [];
     for (let d = startOfDay(from); d < to; d = addDays(d, 1)) {
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      out.push({ date: key, ...(byDay.get(key) ?? { orders: 0, revenue: '0.00' }) });
+      const key = localDayKey(d);
+      const day = byDay.get(key);
+      out.push({ date: key, orders: day?.orders ?? 0, revenue: str(day?.revenue) });
     }
     return out;
   }

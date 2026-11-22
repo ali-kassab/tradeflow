@@ -9,11 +9,12 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiProperty, ApiPropertyOptional, ApiTags } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsIn, IsInt, IsOptional, IsString, Length, Min, NotEquals } from 'class-validator';
+import { IsIn, IsInt, IsOptional, IsString, Length, Max, Min, NotEquals } from 'class-validator';
 import { StockMovementType } from '../../common/enums.js';
 import { type AuthUser, CurrentUser, ManagerOrAbove } from '../../common/auth.js';
 import { PageQueryDto, paginated, skipTake } from '../../common/pagination.js';
 import { assertOwned, logActivity } from '../../common/tx.js';
+import { Trim } from '../../common/validation.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { StockService } from './stock.service.js';
 
@@ -27,9 +28,12 @@ class AdjustStockDto {
   @ApiProperty({ description: 'Signed whole-unit change, e.g. -3 for damaged goods' })
   @IsInt()
   @NotEquals(0)
+  @Min(-10_000_000)
+  @Max(10_000_000)
   quantity: number;
 
   @ApiProperty({ description: 'Reason for the adjustment (required for audit)' })
+  @Trim()
   @IsString()
   @Length(2, 255)
   note: string;

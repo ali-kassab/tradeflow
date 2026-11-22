@@ -10,7 +10,7 @@ in **Arabic (RTL)** or **English (LTR)**.
 
 <br />
 
-![Status](https://img.shields.io/badge/status-MVP%20feature--complete%20%C2%B7%20e2e%20pending-B45309?style=flat-square)
+![Status](https://img.shields.io/badge/status-MVP%20%C2%B7%20e2e%20passing-0F6E5A?style=flat-square)
 ![Node](https://img.shields.io/badge/node-%E2%89%A5%2022-0891B2?style=flat-square&logo=nodedotjs&logoColor=white)
 ![Languages](https://img.shields.io/badge/i18n-Arabic%20%C2%B7%20English-06B6D4?style=flat-square)
 ![Architecture](https://img.shields.io/badge/architecture-modular%20monolith-312E81?style=flat-square)
@@ -292,7 +292,7 @@ tradeflow/
 │   │   │   │                     # sales-orders, purchase-orders, payments, reports
 │   │   │   ├── app.module.ts
 │   │   │   └── main.ts
-│   │   ├── test/                 # e2e suites: auth, RBAC, tenancy, workflows
+│   │   ├── test/                 # e2e suites: auth, RBAC, tenancy, workflows, regressions
 │   │   └── .env.example
 │   └── web/                      # React + Vite SPA
 │       └── src/
@@ -493,10 +493,12 @@ All endpoints are served under `/api` and documented with Swagger at `/api/docs`
 > [!NOTE]
 > The MVP is **feature-complete**: every API endpoint has a screen in the web app, in Arabic and English.
 
+> [!NOTE]
+> **Verification status (2026-11-21 audit).** Type checks, lint, builds, API unit tests (16), web unit tests (52) and the API end-to-end suites (33, against SQL Server) pass. A live smoke test passes for all three roles. In the browser, every route was opened in Arabic on desktop and at phone width (375 px, dark theme) without errors or horizontal scrolling; English and the light theme were spot-checked on the main pages.
+> The audit ran the e2e suites on an already-migrated `tradeflow_test`; `npm run test:e2e -w @tradeflow/api` additionally wipes and re-migrates it first.
+
 > [!WARNING]
-> **Verification status.** Type checks, lint, builds and unit tests (API 11, web 51) pass, and every screen was checked by hand in the browser.
-> The API **end-to-end suite has not been run against the final code yet**, so the MVP is not yet fully verified.
-> Run it with `npm run test:e2e -w @tradeflow/api` (it wipes and recreates `tradeflow_test` only).
+> **Known limitations before real-world use:** the login page always shows the demo credentials; "today" and report days follow the server's local timezone (there is no per-business timezone); product/party search treats `%` and `_` as wildcards.
 
 <table>
 <tr>
@@ -509,7 +511,7 @@ All endpoints are served under `/api` and documented with Swagger at `/api/docs`
 - Complete MVP REST API
 - Multi-tenancy & RBAC
 - SQL Server schema, migrations, seed
-- API unit tests and e2e suites (auth, RBAC, tenancy, workflows)
+- API unit tests and e2e suites (auth, RBAC, tenancy, workflows, audit regressions)
 - Web unit tests (order math, form helpers, locale key parity)
 - Web: auth, dashboard, products, categories, inventory, customers, sales orders, customer payments, suppliers, purchase orders, supplier payments, reports, settings, users
 - Arabic / English with RTL / LTR, responsive down to phone width
@@ -517,7 +519,8 @@ All endpoints are served under `/api` and documented with Swagger at `/api/docs`
 </td>
 <td valign="top">
 
-- Run the API e2e suite against the final code
+- Hide the demo-credentials hint outside demo deployments
+- Per-business timezone for dashboard and reports
 - Screenshots in this README
 
 </td>

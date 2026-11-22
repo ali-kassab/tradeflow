@@ -6,13 +6,13 @@ import {
   HttpCode,
   Module,
   Param,
-  ParseIntPipe,
   Patch,
   Post,
   Query,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { type AuthUser, CurrentUser, ManagerOrAbove } from '../../common/auth.js';
+import { ParseIdPipe } from '../../common/validation.js';
 import { InventoryModule } from '../inventory/inventory.module.js';
 import { CategoryDto, CreateProductDto, ProductQueryDto, UpdateProductDto } from './catalog.dto.js';
 import { CatalogService } from './catalog.service.js';
@@ -36,14 +36,14 @@ export class CategoriesController {
 
   @ManagerOrAbove()
   @Patch(':id')
-  update(@CurrentUser() user: AuthUser, @Param('id', ParseIntPipe) id: number, @Body() dto: CategoryDto) {
+  update(@CurrentUser() user: AuthUser, @Param('id', ParseIdPipe) id: number, @Body() dto: CategoryDto) {
     return this.catalog.updateCategory(user, id, dto);
   }
 
   @ManagerOrAbove()
   @HttpCode(204)
   @Delete(':id')
-  remove(@CurrentUser() user: AuthUser, @Param('id', ParseIntPipe) id: number) {
+  remove(@CurrentUser() user: AuthUser, @Param('id', ParseIdPipe) id: number) {
     return this.catalog.deleteCategory(user, id);
   }
 }
@@ -60,7 +60,7 @@ export class ProductsController {
   }
 
   @Get(':id')
-  get(@CurrentUser() user: AuthUser, @Param('id', ParseIntPipe) id: number) {
+  get(@CurrentUser() user: AuthUser, @Param('id', ParseIdPipe) id: number) {
     return this.catalog.getProduct(user, id);
   }
 
@@ -72,14 +72,14 @@ export class ProductsController {
 
   @ManagerOrAbove()
   @Patch(':id')
-  update(@CurrentUser() user: AuthUser, @Param('id', ParseIntPipe) id: number, @Body() dto: UpdateProductDto) {
+  update(@CurrentUser() user: AuthUser, @Param('id', ParseIdPipe) id: number, @Body() dto: UpdateProductDto) {
     return this.catalog.updateProduct(user, id, dto);
   }
 
   @ManagerOrAbove()
   @HttpCode(204)
   @Delete(':id')
-  remove(@CurrentUser() user: AuthUser, @Param('id', ParseIntPipe) id: number) {
+  remove(@CurrentUser() user: AuthUser, @Param('id', ParseIdPipe) id: number) {
     return this.catalog.deleteProduct(user, id);
   }
 }

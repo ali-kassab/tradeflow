@@ -13,6 +13,7 @@ import {
   Min,
 } from 'class-validator';
 import { PageQueryDto } from '../../common/pagination.js';
+import { IsOptionalNotNull } from '../../common/validation.js';
 
 const trim = () => Transform(({ value }) => (typeof value === 'string' ? value.trim() : value));
 const Money = () => IsNumber({ maxDecimalPlaces: 2 });
@@ -39,7 +40,7 @@ export class CreateProductDto {
   name: string;
 
   @ApiPropertyOptional({ example: 'carton' })
-  @IsOptional()
+  @IsOptionalNotNull()
   @trim()
   @IsString()
   @Length(1, 30)
@@ -51,7 +52,7 @@ export class CreateProductDto {
   categoryId?: number | null;
 
   @ApiPropertyOptional({ description: 'Hidden from STAFF users' })
-  @IsOptional()
+  @IsOptionalNotNull()
   @Money()
   @Min(0)
   @Max(MAX_MONEY)
@@ -64,22 +65,27 @@ export class CreateProductDto {
   salePrice: number;
 
   @ApiPropertyOptional({ default: 0 })
-  @IsOptional()
+  @IsOptionalNotNull()
   @IsInt()
   @Min(0)
+  @Max(10_000_000)
   reorderLevel?: number;
 
   @ApiPropertyOptional({ default: 0, description: 'Initial stock, recorded as an OPENING movement' })
-  @IsOptional()
+  @IsOptionalNotNull()
   @IsInt()
   @Min(0)
   @Max(10_000_000)
   openingStock?: number;
 }
 
-export class UpdateProductDto extends PartialType(OmitType(CreateProductDto, ['openingStock'] as const)) {
+// skipNullProperties: false → an explicit null is validated, so only categoryId
+// (declared @IsOptional) can be cleared with null; the other columns are NOT NULL.
+export class UpdateProductDto extends PartialType(OmitType(CreateProductDto, ['openingStock'] as const), {
+  skipNullProperties: false,
+}) {
   @ApiPropertyOptional()
-  @IsOptional()
+  @IsOptionalNotNull()
   @IsBoolean()
   isActive?: boolean;
 }
