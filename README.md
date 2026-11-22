@@ -10,6 +10,7 @@ in **Arabic (RTL)** or **English (LTR)**.
 
 <br />
 
+[![CI](https://github.com/ali-kassab/tradeflow/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ali-kassab/tradeflow/actions/workflows/ci.yml)
 ![Status](https://img.shields.io/badge/status-MVP%20%C2%B7%20e2e%20passing-0F6E5A?style=flat-square)
 ![Node](https://img.shields.io/badge/node-%E2%89%A5%2022-0891B2?style=flat-square&logo=nodedotjs&logoColor=white)
 ![Languages](https://img.shields.io/badge/i18n-Arabic%20%C2%B7%20English-06B6D4?style=flat-square)
@@ -292,7 +293,7 @@ tradeflow/
 │   │   │   │                     # sales-orders, purchase-orders, payments, reports
 │   │   │   ├── app.module.ts
 │   │   │   └── main.ts
-│   │   ├── test/                 # e2e suites: auth, RBAC, tenancy, workflows, regressions
+│   │   ├── test/                 # e2e suites: auth, RBAC, tenancy, workflows, delete guards, regressions
 │   │   └── .env.example
 │   └── web/                      # React + Vite SPA
 │       └── src/
@@ -494,8 +495,7 @@ All endpoints are served under `/api` and documented with Swagger at `/api/docs`
 > The MVP is **feature-complete**: every API endpoint has a screen in the web app, in Arabic and English.
 
 > [!NOTE]
-> **Verification status (2026-11-21 audit).** Type checks, lint, builds, API unit tests (16), web unit tests (52) and the API end-to-end suites (33, against SQL Server) pass. A live smoke test passes for all three roles. In the browser, every route was opened in Arabic on desktop and at phone width (375 px, dark theme) without errors or horizontal scrolling; English and the light theme were spot-checked on the main pages.
-> The audit ran the e2e suites on an already-migrated `tradeflow_test`; `npm run test:e2e -w @tradeflow/api` additionally wipes and re-migrates it first.
+> **Verification status (2026-11-22).** GitHub Actions (`.github/workflows/ci.yml`) runs on every push to `main` and every pull request: type checks, lint, API unit tests (16), web unit tests (52), production builds, and the full API end-to-end suite (39 tests, including the database reset) against a disposable SQL Server 2022 container, followed by the demo seed. A live smoke test passes for all three roles. In the browser, every route was opened in Arabic on desktop and at phone width (375 px, dark theme) without errors or horizontal scrolling; English and the light theme were spot-checked on the main pages, and a sales-order confirmation was checked end to end (stock, customer balance, dashboard).
 
 > [!WARNING]
 > **Known limitations before real-world use:** the login page always shows the demo credentials; "today" and report days follow the server's local timezone (there is no per-business timezone); product/party search treats `%` and `_` as wildcards.
@@ -511,7 +511,8 @@ All endpoints are served under `/api` and documented with Swagger at `/api/docs`
 - Complete MVP REST API
 - Multi-tenancy & RBAC
 - SQL Server schema, migrations, seed
-- API unit tests and e2e suites (auth, RBAC, tenancy, workflows, audit regressions)
+- API unit tests and e2e suites (auth, RBAC, tenancy, workflows, delete guards, audit regressions)
+- Continuous integration on GitHub Actions (checks, builds, SQL Server e2e)
 - Web unit tests (order math, form helpers, locale key parity)
 - Web: auth, dashboard, products, categories, inventory, customers, sales orders, customer payments, suppliers, purchase orders, supplier payments, reports, settings, users
 - Arabic / English with RTL / LTR, responsive down to phone width
@@ -532,7 +533,6 @@ All endpoints are served under `/api` and documented with Swagger at `/api/docs`
 ## 🔭 Future Improvements
 
 - Docker-based local setup
-- Continuous integration for linting, type checks and tests
 - Export statements and reports to PDF / Excel
 - Returns, credit notes and partial deliveries
 - Multiple warehouses

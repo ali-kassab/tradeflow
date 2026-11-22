@@ -1,8 +1,28 @@
 # Session handoff — TradeFlow
 
-_Last updated: 2026-11-22, session 10. Checkpoint: release-readiness audit done; status **READY WITH KNOWN ISSUES**. API e2e 33/33 passes on the final code (run without the destructive reset step). Session 9 work is committed on `feat/foundation` as `68d7c9d` but is **NOT on GitHub**. Contrary to the earlier note, it was never pushed. See "Session 10" for the push blocker. No feature work in progress._
+_Last updated: 2026-11-22, end of session 11. Checkpoint: repository consolidated. **`main` is the only branch and the GitHub default branch**; `feat/foundation` was merged and deleted. GitHub Actions CI is green on `main` (including the full e2e suite with the database reset). Status **READY WITH KNOWN LIMITATIONS**. No feature work in progress._
 
-## Session 10 — status check, push blocked
+## Session 11 — repository consolidation, QA and CI
+
+The user authorised (in chat): merging into `main`, pushing, making `main` the default branch, and deleting `feat/foundation` once it was safely integrated.
+
+- **Git:** the latest remote state was fetched (Git Bash can't reach github.com from this machine, but PowerShell `git` and `gh` can). `origin/main` was `ad846e1` (PR #3 merge, the user's), whose tree equals `8ca45f5`. Only `68d7c9d` (session 9 audit fixes) and `e784987` (session 10 handoff) were missing. Local `main` (which had no unique commits) was fast-forwarded to `ad846e1`, then `feat/foundation` was merged with `--no-ff`. The result is `4465ee1`; no conflicts, and its tree equals `e784987`. Pushed. The GitHub default branch was changed from `feat/foundation` to `main` (verified through the API). The GitHub compare showed `feat/foundation` was 0 ahead of `main` with 0 differing files, so it was deleted on GitHub and locally (`git branch -d`). `git ls-remote --heads` now lists only `main`.
+- **New test:** `apps/api/test/delete-guards.e2e-spec.ts` (6 tests). Deleting a supplier with a PO, or with only an on-account payment, gets 409 `IN_USE` and the row stays. An unused supplier gets 204. A customer with an order, or a product on an order, gets 409. Deleting a category keeps its products and sets their `categoryId` to NULL. STAFF delete of customers or suppliers gets 403. This closes the unverified supplier `IN_USE` item. No bugs found.
+- **CI:** new `.github/workflows/ci.yml` (see PROJECT_HANDOFF "Git / GitHub policy"). Its SQL Server service container exists only in CI; local setup remains Docker-free. Run 45023673714 on `37506ba`: both jobs succeeded. API unit 16/16, web unit 52/52, e2e 6 files / 39/39 after "Database reset successful", demo seed OK. Lint warnings in CI are the accepted pre-existing ones.
+- **Local checks (actual):**
+  - Typecheck and unit tests: API `tsc` OK, unit 16/16; web `tsc -b` OK, vitest 52/52.
+  - Lint: API oxlint 2 warnings, web oxlint 33 warnings, 0 errors (all pre-existing).
+  - Builds: `nest build` OK, `vite build` OK.
+  - e2e without the reset step: 33/33 (existing suites), then delete-guards 6/6. Setting the Prisma consent variable was again refused by the agent classifier, and that was not worked around.
+  - Smoke test: 26/26 on the first run. Immediate re-runs failed at login with 429 from the documented auth throttle (10/min); expected, not a bug.
+- **Browser (dev stack, demo MANAGER, first time in the browser for this role):**
+  - Workflow: confirmed draft SO-00012 in the UI (Arabic, desktop). Checked through the API: WATER-24 47→42, PASTA-400 400→360, SALE ledger entry −5, customer 5 balance 2,457.84→3,620.64, dashboard today 1,162.80 / 1 order, month 27,595.98→28,758.78, receivables 12,789.98→13,952.78. The customer page shows the new balance and statement row.
+  - Language and theme: English LTR plus the light theme on the dashboard (theme persisted in `tf.theme`).
+  - 375 px, Arabic, dark: `/`, `/sales-orders/12`, `/purchase-orders`, `/reports?tab=balances` and `/customers/5` have no horizontal scroll.
+  - Errors: the console shows only the expected pre-login 401s; no API errors.
+- **Dev data change:** SO-00012 (customer 5) is now CONFIRMED in the dev DB `tradeflow`.
+
+## Session 10 — status check, push blocked (resolved in session 11)
 
 - Local `feat/foundation` is 1 ahead / 2 behind `origin/feat/foundation`. Local-only: `68d7c9d` (session 9 audit fixes) and this handoff commit. Remote-only: the GitHub PR merge commits `8a52918` (PR #1 feat/foundation → main) and `02daf93` (PR #2 main → feat/foundation), made by the user on 2026-11-21. Their tree is identical to `8ca45f5` (`git diff 8ca45f5 origin/feat/foundation` is empty), so a merge of `origin/feat/foundation` into local has no conflicts and changes no content.
 - `origin/main` is now `8a52918` (the user merged PR #1 on GitHub). The local `main` ref was not touched.
@@ -208,7 +228,8 @@ Started from `8ca45f5` (UI redesign committed); tree clean apart from the untrac
 
 ## Known issues / notes
 
-- **Unverified:** the e2e `globalSetup` reset step (`prisma migrate reset`) as run by the agent; the supplier `IN_USE` delete refusal on seeded data (see Phase 2).
+- **Verified in session 11:** the e2e reset step (in CI) and the supplier `IN_USE` refusal (new e2e suite). Still agent-blocked locally: running the reset step on this machine (the classifier refuses the Prisma consent variable).
+- **Not exercised in the browser:** every write flow under every role. Session 11 covered the manager SO confirm; earlier sessions covered the others per phase. CI e2e covers the API side.
 - **Known limitations (session 9, not fixed):** login page always shows the demo credentials; no per-business timezone (server local day); search treats `%`/`_` as LIKE wildcards; inactive customers can still be used on orders via the API (UI pickers hide them); access tokens stay valid up to 15 min after a password change (deactivation is immediate). Test caveat: the local-midnight regression test only detects the report-day bug when the machine's timezone is not UTC (it does here, Egypt Standard Time).
 - Session 6 decisions: report tabs live in `?tab=`; balances are summed in exact BigInt cents (`splitBalances`); single-column grids holding scrollable tables use `grid-cols-[minmax(0,1fr)]`; `reloadSession()` on the auth context refreshes tenant/user after settings changes; temporary passwords come from `generatePassword` (crypto, unambiguous alphabet); a password change signs the user out because the API revokes every session. No new dependencies.
 - Session 6 commits: `fca0404` (reports), `b44aabb` (settings, users, password change), finalisation commit (a11y labels, README, this handoff).
@@ -225,16 +246,15 @@ Started from `8ca45f5` (UI redesign committed); tree clean apart from the untrac
 
 ## Exact next step
 
-0. Once the user approves the merge and the network is back: `git fetch origin`, check `git diff 8ca45f5 origin/feat/foundation` is still empty, run `git merge --no-edit origin/feat/foundation` as the verified identity, then `git push origin feat/foundation`, and check the remote contains `68d7c9d` and the handoff commit.
-1. (User) Run `npm run test:e2e -w @tradeflow/api` once yourself (resets only `tradeflow_test`) so the e2e reset step is exercised; expect 33/33. Fix anything it reports.
-2. (User decision, before real-world use) The three known limitations: hide the demo-credentials hint outside demo deployments, a per-business timezone, escaping `%`/`_` in search. Don't start them without approval.
-3. (User decision) Whether to fast-forward `main` to `feat/foundation` — never without explicit approval. Local `main` was already 1 commit ahead of `origin/main` before session 6 (left untouched).
-4. Optional, only if the user asks: README screenshots, a `LICENSE` file (package.json says MIT). The roadmap has no further feature work; don't invent any.
+1. Nothing is pending. Check that the latest CI run on `main` is green (`gh run list --limit 3`).
+2. (User decision, before real-world use) The known limitations: hide the demo-credentials hint outside demo deployments, a per-business timezone, escaping `%`/`_` in search. Don't start them without approval.
+3. Optional, only if the user asks: README screenshots, a `LICENSE` file (package.json says MIT), branch protection requiring CI on `main`. The roadmap has no further feature work; don't invent any.
 
 ## Constraints to keep
 
-- SQL Server only; no Docker. Follow "SQL Server adaptations" in PROJECT_HANDOFF.md.
-- Branch `feat/foundation` only; never touch `main`. No PRs, no force-push, no history rewrite.
+- SQL Server only; no Docker in the local setup (the CI SQL Server service container is the one exception). Follow "SQL Server adaptations" in PROJECT_HANDOFF.md.
+- `main` is the single authoritative and default branch; `feat/foundation` no longer exists. PRs and merges only when the user asks; no force-push, no history rewrite. Keep CI green.
+- In this environment Git Bash can't reach github.com; use PowerShell `git` for fetch and push (`gh` works from both).
 - Commits only as the user's verified identity (`ali-kassab`), no AI co-author trailers; verify identity before each commit.
 - Never print or commit `apps/api/.env`.
 - e2e resets `tradeflow_test` only; agent `prisma migrate reset` needs `PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION="Yes, I consent to resetting tradeflow and tradeflow_test"`.
