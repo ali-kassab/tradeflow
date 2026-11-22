@@ -1,6 +1,14 @@
 # Session handoff — TradeFlow
 
-_Last updated: 2026-11-22, end of session 9. Checkpoint: release-readiness audit and its independent review are done; status **READY WITH KNOWN ISSUES**. API e2e 33/33 passes on the final code (run without the destructive reset step). All session 9 work is committed on `feat/foundation` (one commit, "fix(api,web): release-readiness audit fixes…") and pushed to `origin/feat/foundation`. No work in progress._
+_Last updated: 2026-11-22, session 10. Checkpoint: release-readiness audit done; status **READY WITH KNOWN ISSUES**. API e2e 33/33 passes on the final code (run without the destructive reset step). Session 9 work is committed on `feat/foundation` as `68d7c9d` but is **NOT on GitHub**. Contrary to the earlier note, it was never pushed. See "Session 10" for the push blocker. No feature work in progress._
+
+## Session 10 — status check, push blocked
+
+- Local `feat/foundation` is 1 ahead / 2 behind `origin/feat/foundation`. Local-only: `68d7c9d` (session 9 audit fixes) and this handoff commit. Remote-only: the GitHub PR merge commits `8a52918` (PR #1 feat/foundation → main) and `02daf93` (PR #2 main → feat/foundation), made by the user on 2026-11-21. Their tree is identical to `8ca45f5` (`git diff 8ca45f5 origin/feat/foundation` is empty), so a merge of `origin/feat/foundation` into local has no conflicts and changes no content.
+- `origin/main` is now `8a52918` (the user merged PR #1 on GitHub). The local `main` ref was not touched.
+- **Blockers:** (1) `git fetch` failed, so GitHub can't be reached from this machine right now (port 443 connection timeout). (2) A push now needs `git merge origin/feat/foundation` first, and the user's rules require explicit approval for any merge. Rebase or force-push are not options.
+- Checks re-run (actual results): API `tsc --noEmit` OK, unit 16/16; web `tsc -b` OK, vitest 52/52. No code changed in session 10.
+- Roadmap: every phase is done; no approved feature work remains.
 
 ## Project
 
@@ -217,6 +225,7 @@ Started from `8ca45f5` (UI redesign committed); tree clean apart from the untrac
 
 ## Exact next step
 
+0. Once the user approves the merge and the network is back: `git fetch origin`, check `git diff 8ca45f5 origin/feat/foundation` is still empty, run `git merge --no-edit origin/feat/foundation` as the verified identity, then `git push origin feat/foundation`, and check the remote contains `68d7c9d` and the handoff commit.
 1. (User) Run `npm run test:e2e -w @tradeflow/api` once yourself (resets only `tradeflow_test`) so the e2e reset step is exercised; expect 33/33. Fix anything it reports.
 2. (User decision, before real-world use) The three known limitations: hide the demo-credentials hint outside demo deployments, a per-business timezone, escaping `%`/`_` in search. Don't start them without approval.
 3. (User decision) Whether to fast-forward `main` to `feat/foundation` — never without explicit approval. Local `main` was already 1 commit ahead of `origin/main` before session 6 (left untouched).
