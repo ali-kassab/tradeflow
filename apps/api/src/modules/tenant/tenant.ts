@@ -1,26 +1,27 @@
 import { Body, Controller, Get, Injectable, Module, Patch } from '@nestjs/common';
 import { ApiBearerAuth, ApiPropertyOptional, ApiTags } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsNumber, IsOptional, IsString, Length, Matches, Max, Min } from 'class-validator';
+import { IsNumber, IsString, Length, Matches, Max, Min } from 'class-validator';
 import { type AuthUser, CurrentUser, OwnerOnly } from '../../common/auth.js';
+import { IsOptionalNotNull } from '../../common/validation.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 
 class UpdateTenantDto {
   @ApiPropertyOptional()
-  @IsOptional()
+  @IsOptionalNotNull()
   @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsString()
   @Length(2, 120)
   name?: string;
 
   @ApiPropertyOptional({ example: 'EGP', description: 'ISO 4217 code' })
-  @IsOptional()
+  @IsOptionalNotNull()
   @Transform(({ value }) => (typeof value === 'string' ? value.trim().toUpperCase() : value))
   @Matches(/^[A-Z]{3}$/)
   currency?: string;
 
   @ApiPropertyOptional({ example: 14, description: 'Default VAT % for new sales orders' })
-  @IsOptional()
+  @IsOptionalNotNull()
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   @Max(100)

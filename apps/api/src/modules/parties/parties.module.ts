@@ -7,7 +7,6 @@ import {
   Injectable,
   Module,
   Param,
-  ParseIntPipe,
   Patch,
   Post,
   Put,
@@ -26,6 +25,7 @@ import {
   IsOptional,
   IsString,
   Length,
+  Max,
   MaxLength,
   Min,
   ValidateNested,
@@ -36,7 +36,9 @@ import { ErrorCode, conflict, notFound } from '../../common/errors.js';
 import { dec } from '../../common/money.js';
 import { PageQueryDto, paginated, skipTake } from '../../common/pagination.js';
 import { assertOwned } from '../../common/tx.js';
+import { ParseIdPipe, IsOptionalNotNull } from '../../common/validation.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
+import { MAX_MONEY } from '../catalog/catalog.dto.js';
 import { LedgerService } from '../payments/ledger.service.js';
 import { PaymentsModule } from '../payments/payments.module.js';
 
@@ -90,19 +92,22 @@ class CreateCustomerDto extends PartyDto {
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
+  @Max(MAX_MONEY)
   creditLimit?: number | null;
 }
 
-class UpdateCustomerDto extends PartialType(CreateCustomerDto) {
+// skipNullProperties: false → null is validated, so only the nullable contact fields and
+// creditLimit (declared @IsOptional) accept it; name and isActive are NOT NULL.
+class UpdateCustomerDto extends PartialType(CreateCustomerDto, { skipNullProperties: false }) {
   @ApiPropertyOptional()
-  @IsOptional()
+  @IsOptionalNotNull()
   @IsBoolean()
   isActive?: boolean;
 }
 
-class UpdateSupplierDto extends PartialType(PartyDto) {
+class UpdateSupplierDto extends PartialType(PartyDto, { skipNullProperties: false }) {
   @ApiPropertyOptional()
-  @IsOptional()
+  @IsOptionalNotNull()
   @IsBoolean()
   isActive?: boolean;
 }
@@ -122,6 +127,7 @@ class CustomerPriceItemDto {
   @ApiProperty()
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
+  @Max(MAX_MONEY)
   price: number;
 }
 
@@ -301,7 +307,7 @@ export class CustomersController {
   }
 
   @Get(':id')
-  get(@CurrentUser() u: AuthUser, @Param('id', ParseIntPipe) id: number) {
+  get(@CurrentUser() u: AuthUser, @Param('id', ParseIdPipe) id: number) {
     return this.customers.get(u, id);
   }
 
@@ -311,30 +317,30 @@ export class CustomersController {
   }
 
   @Patch(':id')
-  update(@CurrentUser() u: AuthUser, @Param('id', ParseIntPipe) id: number, @Body() dto: UpdateCustomerDto) {
+  update(@CurrentUser() u: AuthUser, @Param('id', ParseIdPipe) id: number, @Body() dto: UpdateCustomerDto) {
     return this.customers.update(u, id, dto);
   }
 
   @ManagerOrAbove()
   @HttpCode(204)
   @Delete(':id')
-  remove(@CurrentUser() u: AuthUser, @Param('id', ParseIntPipe) id: number) {
+  remove(@CurrentUser() u: AuthUser, @Param('id', ParseIdPipe) id: number) {
     return this.customers.remove(u, id);
   }
 
   @Get(':id/statement')
-  statement(@CurrentUser() u: AuthUser, @Param('id', ParseIntPipe) id: number) {
+  statement(@CurrentUser() u: AuthUser, @Param('id', ParseIdPipe) id: number) {
     return this.customers.statement(u, id);
   }
 
   @Get(':id/prices')
-  prices(@CurrentUser() u: AuthUser, @Param('id', ParseIntPipe) id: number) {
+  prices(@CurrentUser() u: AuthUser, @Param('id', ParseIdPipe) id: number) {
     return this.customers.prices(u, id);
   }
 
   @ManagerOrAbove()
   @Put(':id/prices')
-  setPrices(@CurrentUser() u: AuthUser, @Param('id', ParseIntPipe) id: number, @Body() dto: SetCustomerPricesDto) {
+  setPrices(@CurrentUser() u: AuthUser, @Param('id', ParseIdPipe) id: number, @Body() dto: SetCustomerPricesDto) {
     return this.customers.setPrices(u, id, dto);
   }
 }
@@ -352,7 +358,7 @@ export class SuppliersController {
   }
 
   @Get(':id')
-  get(@CurrentUser() u: AuthUser, @Param('id', ParseIntPipe) id: number) {
+  get(@CurrentUser() u: AuthUser, @Param('id', ParseIdPipe) id: number) {
     return this.suppliers.get(u, id);
   }
 
@@ -362,18 +368,18 @@ export class SuppliersController {
   }
 
   @Patch(':id')
-  update(@CurrentUser() u: AuthUser, @Param('id', ParseIntPipe) id: number, @Body() dto: UpdateSupplierDto) {
+  update(@CurrentUser() u: AuthUser, @Param('id', ParseIdPipe) id: number, @Body() dto: UpdateSupplierDto) {
     return this.suppliers.update(u, id, dto);
   }
 
   @HttpCode(204)
   @Delete(':id')
-  remove(@CurrentUser() u: AuthUser, @Param('id', ParseIntPipe) id: number) {
+  remove(@CurrentUser() u: AuthUser, @Param('id', ParseIdPipe) id: number) {
     return this.suppliers.remove(u, id);
   }
 
   @Get(':id/statement')
-  statement(@CurrentUser() u: AuthUser, @Param('id', ParseIntPipe) id: number) {
+  statement(@CurrentUser() u: AuthUser, @Param('id', ParseIdPipe) id: number) {
     return this.suppliers.statement(u, id);
   }
 }

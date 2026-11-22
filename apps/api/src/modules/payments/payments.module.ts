@@ -5,7 +5,6 @@ import {
   Injectable,
   Module,
   Param,
-  ParseIntPipe,
   Post,
   Query,
 } from '@nestjs/common';
@@ -19,6 +18,7 @@ import {
   IsOptional,
   IsString,
   Length,
+  Max,
   MaxLength,
   Min,
 } from 'class-validator';
@@ -29,13 +29,16 @@ import { ErrorCode, badRequest, conflict, notFound } from '../../common/errors.j
 import { dec, money } from '../../common/money.js';
 import { PageQueryDto, paginated, skipTake } from '../../common/pagination.js';
 import { assertOwned, logActivity } from '../../common/tx.js';
+import { ParseIdPipe, Trim } from '../../common/validation.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
+import { MAX_MONEY } from '../catalog/catalog.dto.js';
 import { BILLED_SALES, LedgerService } from './ledger.service.js';
 
 class RecordPaymentBase {
   @ApiProperty({ example: 1500.5 })
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0.01)
+  @Max(MAX_MONEY)
   amount: number;
 
   @ApiProperty({ enum: PaymentMethod })
@@ -44,7 +47,7 @@ class RecordPaymentBase {
 
   @ApiPropertyOptional({ description: 'Defaults to now' })
   @IsOptional()
-  @IsDateString()
+  @IsDateString({ strict: true })
   paidAt?: string;
 
   @ApiPropertyOptional()
@@ -84,6 +87,7 @@ class RecordSupplierPaymentDto extends RecordPaymentBase {
 
 class VoidPaymentDto {
   @ApiProperty()
+  @Trim()
   @IsString()
   @Length(2, 255)
   reason: string;
@@ -298,7 +302,7 @@ export class PaymentsController {
 
   @ManagerOrAbove()
   @Post('customer/:id/void')
-  voidCustomer(@CurrentUser() user: AuthUser, @Param('id', ParseIntPipe) id: number, @Body() dto: VoidPaymentDto) {
+  voidCustomer(@CurrentUser() user: AuthUser, @Param('id', ParseIdPipe) id: number, @Body() dto: VoidPaymentDto) {
     return this.payments.voidCustomer(user, id, dto);
   }
 
@@ -316,7 +320,7 @@ export class PaymentsController {
 
   @ManagerOrAbove()
   @Post('supplier/:id/void')
-  voidSupplier(@CurrentUser() user: AuthUser, @Param('id', ParseIntPipe) id: number, @Body() dto: VoidPaymentDto) {
+  voidSupplier(@CurrentUser() user: AuthUser, @Param('id', ParseIdPipe) id: number, @Body() dto: VoidPaymentDto) {
     return this.payments.voidSupplier(user, id, dto);
   }
 }

@@ -62,6 +62,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
             code: ErrorCode.INVALID_REFERENCE,
             message: 'A referenced record does not exist',
           };
+        case 'P2020':
+          // e.g. stock or a computed order total beyond the INT / DECIMAL(14,2) range.
+          return { statusCode: 400, code: ErrorCode.VALIDATION_ERROR, message: 'Value out of range' };
         case 'P2025':
           return { statusCode: 404, code: ErrorCode.NOT_FOUND, message: 'Record not found' };
       }

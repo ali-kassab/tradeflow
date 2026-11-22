@@ -46,6 +46,7 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
+  useSidebar,
 } from '@/components/ui/sidebar';
 
 // Only pages that exist are listed. `allow` hides entries the API would refuse for the role.
@@ -102,10 +103,12 @@ const NAV: NavGroup[] = [
 function NavItem({ to, end, children }: { to: string; end?: boolean; children: ReactNode }) {
   const match = useMatch({ path: useResolvedPath(to).pathname, end: end ?? false });
   const active = Boolean(match);
+  // On phones the sidebar is a sheet over the page: close it once a destination is chosen.
+  const { isMobile, setOpenMobile } = useSidebar();
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild isActive={active} className="relative h-9 gap-2.5 px-2.5 data-active:bg-card data-active:shadow-panel [&_svg]:opacity-80 data-active:[&_svg]:text-primary data-active:[&_svg]:opacity-100">
-        <NavLink to={to} end={end}>
+        <NavLink to={to} end={end} onClick={() => isMobile && setOpenMobile(false)}>
           {/* The amber column rule from the logo marks where you are. */}
           {active ? <span aria-hidden="true" className="bg-rule absolute inset-y-2 start-0 w-0.5 rounded-full" /> : null}
           {children}

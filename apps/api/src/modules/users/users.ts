@@ -5,7 +5,6 @@ import {
   Injectable,
   Module,
   Param,
-  ParseIntPipe,
   Patch,
   Post,
 } from '@nestjs/common';
@@ -15,7 +14,6 @@ import {
   IsBoolean,
   IsEmail,
   IsEnum,
-  IsOptional,
   IsString,
   Length,
   MaxLength,
@@ -25,6 +23,7 @@ import * as argon2 from 'argon2';
 import { Role } from '../../common/enums.js';
 import { type AuthUser, CurrentUser, OwnerOnly } from '../../common/auth.js';
 import { ErrorCode, badRequest, conflict, notFound } from '../../common/errors.js';
+import { ParseIdPipe, IsOptionalNotNull } from '../../common/validation.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 
 class CreateUserDto {
@@ -51,9 +50,12 @@ class CreateUserDto {
   role: Role;
 }
 
-class UpdateUserDto extends PartialType(PickType(CreateUserDto, ['name', 'role'] as const)) {
+// skipNullProperties: false → { name: null } / { role: null } are rejected (NOT NULL columns).
+class UpdateUserDto extends PartialType(PickType(CreateUserDto, ['name', 'role'] as const), {
+  skipNullProperties: false,
+}) {
   @ApiPropertyOptional()
-  @IsOptional()
+  @IsOptionalNotNull()
   @IsBoolean()
   isActive?: boolean;
 }
@@ -164,7 +166,7 @@ export class UsersController {
   @Patch(':id')
   update(
     @CurrentUser() user: AuthUser,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseIdPipe) id: number,
     @Body() dto: UpdateUserDto,
   ) {
     return this.users.update(user, id, dto);
@@ -173,7 +175,7 @@ export class UsersController {
   @Post(':id/reset-password')
   async resetPassword(
     @CurrentUser() user: AuthUser,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseIdPipe) id: number,
     @Body() dto: ResetPasswordDto,
   ) {
     await this.users.resetPassword(user, id, dto);
