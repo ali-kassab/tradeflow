@@ -1,0 +1,103 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '26'
+
+jobs:
+  checks:
+    name: Typecheck, lint, unit tests, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - name: Install
+        run: npm ci
+
+      - name: API typecheck
+        run: npm run typecheck -w @tradeflow/api
+      - name: API lint
+        run: npm run lint -w @tradeflow/api
+      - name: API unit tests
+        run: npm test -w @tradeflow/api
+      - name: API build
+        run: npm run build -w @tradeflow/api
+
+      - name: Web typecheck
+        run: npm run typecheck -w @tradeflow/web
+      - name: Web lint
+        run: npm run lint -w @tradeflow/web
+      - name: Web unit tests
+        run: npm test -w @tradeflow/web
+      - name: Web production build
+        run: npm run build -w @tradeflow/web
+
+  e2e:
+    name: API e2e (SQL Server)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: 'Y'
+          # Throwaway password for a disposable container that only exists for this job.
+          # It is not a secret and is not used anywhere else.
+          MSSQL_SA_PASSWORD: CiOnly_Throwaway_9x
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P CiOnly_Throwaway_9x -Q 'SELECT 1' -b"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      NODE_ENV: test
+      # The e2e global setup refuses any database whose name lacks "test", then
+      # runs `prisma migrate reset --force` on it.
+      TEST_DATABASE_URL: sqlserver://localhost:1433;database=tradeflow_test;user=sa;password=CiOnly_Throwaway_9x;encrypt=true;trustServerCertificate=true
+      DATABASE_URL: sqlserver://localhost:1433;database=tradeflow_test;user=sa;password=CiOnly_Throwaway_9x;encrypt=true;trustServerCertificate=true
+      CORS_ORIGINS: http://localhost:5173
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - name: Install
+        run: npm ci
+
+      - name: Generate a per-run JWT secret
+        run: |
+          secret=$(node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))")
+          echo "::add-mask::$secret"
+          echo "JWT_ACCESS_SECRET=$secret" >> "$GITHUB_ENV"
+
+      - name: Create the test database
+        run: |
+          docker exec ${{ job.services.mssql.id }} /opt/mssql-tools18/bin/sqlcmd -C -b \
+            -S localhost -U sa -P CiOnly_Throwaway_9x \
+            -Q "IF DB_ID('tradeflow_test') IS NULL CREATE DATABASE tradeflow_test"
+
+      - name: API e2e (includes the migrate reset step)
+        run: npm run test:e2e -w @tradeflow/api
+
+      - name: Seed the demo business on the test database
+        run: npm run db:seed -w @tradeflow/api
